@@ -33,6 +33,16 @@ class RigidBody {
     this.friction = opts.friction ?? 0.4;          // Coulomb coefficient
     this.gravityScale = opts.gravityScale ?? 1;    // 0 disables gravity for this body
 
+    // Collision filtering (see references/collision-detection.md). Two bodies
+    // collide when their category/mask bits agree BOTH ways — (a.category &
+    // b.mask) && (b.category & a.mask) — unless a non-zero group overrides it:
+    // equal positive groups always collide, equal negative groups never do.
+    // Use this for layers (player/enemy/scenery) and to exclude jointed parts.
+    this.filterCategory = opts.filterCategory ?? 0x0001;
+    this.filterMask = opts.filterMask ?? 0xFFFF;
+    this.filterGroup = opts.filterGroup ?? 0;
+    this.id = -1;                                  // assigned by World.add
+
     // Sleeping bookkeeping (see world.js). A sleeping body is skipped by the
     // integrator until something wakes it.
     this.sleeping = false;
