@@ -1,0 +1,887 @@
+<title>useful-skills — a workbench of Claude Code skills</title>
+<meta name="description" content="Five install-ready Claude Code skills — canvas rendering, 2D physics, terse replies, self-improving sessions, and full transparency. One command each." />
+<style>
+  :root{
+    --bg:#eef1f7;
+    --bg-panel:#ffffff;
+    --bg-card:#f7f9fc;
+    --border:#d6dceb;
+    --grid-line:rgba(40,55,90,0.07);
+    --text:#16203a;
+    --text-muted:#55617e;
+    --accent:#a3721c;
+    --accent-bright:#8a5f16;
+    --accent-soft:rgba(163,114,28,0.10);
+    --accent-soft-strong:rgba(163,114,28,0.18);
+    --code-bg:#0f1626;
+    --code-text:#dbe4f3;
+    --code-muted:#8090b0;
+    --code-accent:#e3b46c;
+    --shadow:0 1px 2px rgba(20,28,50,0.04), 0 8px 24px -12px rgba(20,28,50,0.18);
+    --radius:14px;
+    --serif:"Iowan Old Style","Palatino Linotype","URW Palladio L",Georgia,"Noto Serif",serif;
+    --sans:"Segoe UI",ui-sans-serif,system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Code","SF Mono","JetBrains Mono",Consolas,"Liberation Mono",monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0b1220;
+      --bg-panel:#101a2e;
+      --bg-card:#121e35;
+      --border:#243354;
+      --grid-line:rgba(217,169,98,0.06);
+      --text:#dfe6f2;
+      --text-muted:#8f9ab3;
+      --accent:#d9a962;
+      --accent-bright:#f0c483;
+      --accent-soft:rgba(217,169,98,0.12);
+      --accent-soft-strong:rgba(217,169,98,0.22);
+      --code-bg:#0a0f1d;
+      --shadow:0 1px 2px rgba(0,0,0,0.3), 0 12px 32px -14px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b1220;
+    --bg-panel:#101a2e;
+    --bg-card:#121e35;
+    --border:#243354;
+    --grid-line:rgba(217,169,98,0.06);
+    --text:#dfe6f2;
+    --text-muted:#8f9ab3;
+    --accent:#d9a962;
+    --accent-bright:#f0c483;
+    --accent-soft:rgba(217,169,98,0.12);
+    --accent-soft-strong:rgba(217,169,98,0.22);
+    --code-bg:#0a0f1d;
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 12px 32px -14px rgba(0,0,0,0.6);
+  }
+  :root[data-theme="light"]{
+    --bg:#eef1f7;
+    --bg-panel:#ffffff;
+    --bg-card:#f7f9fc;
+    --border:#d6dceb;
+    --grid-line:rgba(40,55,90,0.07);
+    --text:#16203a;
+    --text-muted:#55617e;
+    --accent:#a3721c;
+    --accent-bright:#8a5f16;
+    --accent-soft:rgba(163,114,28,0.10);
+    --accent-soft-strong:rgba(163,114,28,0.18);
+    --code-bg:#0f1626;
+    --shadow:0 1px 2px rgba(20,28,50,0.04), 0 8px 24px -12px rgba(20,28,50,0.18);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;} }
+
+  body{
+    margin:0;
+    background-color:var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:34px 34px;
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .skip-link{
+    position:absolute; left:-999px; top:auto;
+    background:var(--accent); color:#0b1220; padding:10px 16px; border-radius:8px; z-index:100;
+    font-family:var(--sans); font-weight:600; text-decoration:none;
+  }
+  .skip-link:focus{ left:16px; top:16px; }
+
+  a{ color:var(--accent); }
+  a:hover{ color:var(--accent-bright); }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+
+  h1,h2,h3{ font-family:var(--serif); font-weight:600; text-wrap:balance; line-height:1.15; margin:0; color:var(--text); }
+  p{ margin:0; }
+  code, .mono{ font-family:var(--mono); }
+
+  .wrap{ max-width:880px; margin:0 auto; padding:0 24px; }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    max-width:880px; margin:0 auto; padding:22px 24px 0;
+    font-family:var(--mono); font-size:0.78rem; color:var(--text-muted);
+  }
+  .topbar a{ color:var(--text-muted); text-decoration:none; border-bottom:1px solid transparent; }
+  .topbar a:hover{ color:var(--accent); border-color:var(--accent); }
+  .topbar .brand{ letter-spacing:0.04em; }
+  .topbar .brand b{ color:var(--text); font-weight:600; }
+
+  /* ---------- hero ---------- */
+  .hero{ padding:56px 0 40px; }
+  .hero-inner{ display:flex; gap:40px; align-items:center; flex-wrap:wrap; }
+  .hero-text{ flex:1 1 340px; min-width:280px; }
+  .eyebrow{
+    font-family:var(--mono); font-size:0.76rem; letter-spacing:0.09em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:14px; display:block;
+  }
+  .hero h1{ font-size:clamp(2.4rem,6vw,3.4rem); margin-bottom:14px; }
+  .hero p.lede{ font-size:1.08rem; color:var(--text-muted); max-width:46ch; margin-bottom:22px; }
+  .hero-cta{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btn{
+    font-family:var(--sans); font-weight:600; font-size:0.92rem; text-decoration:none;
+    padding:11px 18px; border-radius:10px; border:1px solid transparent; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; transition:transform .12s ease, border-color .15s ease, background .15s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn-primary{ background:var(--accent); color:#181008; }
+  .btn-primary:hover{ background:var(--accent-bright); color:#181008; }
+  .btn-ghost{ background:transparent; border-color:var(--border); color:var(--text); }
+  .btn-ghost:hover{ border-color:var(--accent); color:var(--accent); }
+
+  .hero-demo{
+    flex:0 0 auto; width:236px; height:236px; border-radius:20px;
+    background:var(--bg-panel); border:1px solid var(--border); box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .hero-demo canvas{ display:block; }
+  .hero-demo .tag{
+    position:absolute; bottom:10px; left:10px; font-family:var(--mono); font-size:0.68rem;
+    color:var(--text-muted); background:var(--accent-soft); padding:3px 8px; border-radius:6px;
+  }
+
+  /* ---------- nav ---------- */
+  .toc{
+    position:sticky; top:0; z-index:20; backdrop-filter:blur(10px);
+    background:color-mix(in srgb, var(--bg) 82%, transparent);
+    border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+  }
+  .toc-inner{
+    max-width:880px; margin:0 auto; padding:12px 24px; display:flex; gap:18px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:0.8rem;
+  }
+  .toc-inner a{ color:var(--text-muted); text-decoration:none; white-space:nowrap; }
+  .toc-inner a:hover{ color:var(--accent); }
+
+  /* ---------- generic sections ---------- */
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:22px; max-width:64ch; }
+  .section-head h2{ font-size:1.7rem; margin-bottom:10px; }
+  .section-head p{ color:var(--text-muted); }
+
+  .callout{
+    background:var(--bg-card); border:1px solid var(--border); border-left:3px solid var(--accent);
+    border-radius:10px; padding:16px 18px; font-size:0.94rem; color:var(--text-muted);
+  }
+  .callout strong{ color:var(--text); }
+
+  /* ---------- code / command boxes ---------- */
+  .cmd-box{
+    display:flex; align-items:center; gap:10px; background:var(--code-bg); border-radius:10px;
+    padding:12px 12px 12px 16px; overflow-x:auto; box-shadow:var(--shadow);
+  }
+  .cmd-box code{
+    color:var(--code-text); font-size:0.86rem; white-space:pre; flex:1 1 auto;
+  }
+  .cmd-box code .path{ color:var(--code-accent); }
+  .copy-btn{
+    flex:0 0 auto; font-family:var(--sans); font-size:0.78rem; font-weight:600;
+    background:rgba(255,255,255,0.06); color:var(--code-text); border:1px solid rgba(255,255,255,0.12);
+    padding:7px 12px; border-radius:7px; cursor:pointer; transition:background .15s ease;
+  }
+  .copy-btn:hover{ background:rgba(255,255,255,0.14); }
+  .copy-btn.copied{ background:var(--accent); color:#181008; border-color:var(--accent); }
+
+  .cmd-note{ font-size:0.82rem; color:var(--text-muted); margin-top:8px; }
+  .cmd-note code{ font-size:0.82rem; background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+
+  /* ---------- skill articles ---------- */
+  .skill{ padding:56px 0; border-bottom:1px solid var(--border); scroll-margin-top:70px; }
+  .skill-head{ margin-bottom:22px; }
+  .skill-tag{
+    font-family:var(--mono); font-size:0.8rem; color:var(--accent); display:block; margin-bottom:8px;
+  }
+  .skill h2{ font-size:2rem; margin-bottom:8px; }
+  .skill .tagline{ color:var(--text-muted); font-size:1.02rem; max-width:60ch; }
+
+  .chips{ list-style:none; margin:16px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
+  .chips li{
+    font-size:0.82rem; background:var(--accent-soft); color:var(--text); border:1px solid var(--accent-soft-strong);
+    padding:6px 12px; border-radius:999px;
+  }
+
+  .skill-grid{ display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:32px; align-items:start; }
+  @media (max-width:760px){ .skill-grid{ grid-template-columns:1fr; } }
+
+  .block-label{
+    font-family:var(--mono); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--text-muted); margin-bottom:10px; display:block;
+  }
+
+  .filetree{ list-style:none; margin:0; padding:0; }
+  .filetree li{
+    padding:8px 0; border-bottom:1px dashed var(--border); font-size:0.88rem; color:var(--text-muted);
+  }
+  .filetree li:last-child{ border-bottom:none; }
+  .filetree code{ color:var(--text); background:var(--accent-soft); padding:1px 6px; border-radius:5px; font-size:0.82rem; }
+
+  .transcript{ background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .msg{ padding:16px 18px; }
+  .msg + .msg{ border-top:1px solid var(--border); }
+  .msg .who{
+    font-family:var(--mono); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--text-muted); display:block; margin-bottom:6px;
+  }
+  .msg.prompt .who{ color:var(--accent); }
+  .msg p{ font-size:0.92rem; color:var(--text); }
+  .msg.prompt p{ font-family:var(--mono); font-size:0.86rem; }
+
+  .demo-card{
+    background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px; box-shadow:var(--shadow); margin-top:20px;
+  }
+  .demo-card canvas{ display:block; width:100%; height:auto; border-radius:8px; }
+  #hero-demo-2{ aspect-ratio:640/150; }
+  #physics-demo{ aspect-ratio:560/200; }
+  .demo-caption{ font-size:0.78rem; color:var(--text-muted); margin-top:10px; }
+
+  .skill-install{ margin-top:26px; }
+
+  /* ---------- reference table ---------- */
+  .ref-table{ width:100%; border-collapse:collapse; font-size:0.88rem; }
+  .ref-table th, .ref-table td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+  .ref-table th{ font-family:var(--mono); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
+  .ref-table td.name{ font-family:var(--mono); font-size:0.84rem; color:var(--accent); white-space:nowrap; }
+  .ref-table-wrap{ overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-panel); }
+  .ref-table-wrap table{ margin:0; }
+  .ref-table-wrap th:first-child, .ref-table-wrap td:first-child{ padding-left:16px; }
+
+  .row-cmd{ display:flex; align-items:center; gap:8px; }
+  .row-cmd button{ flex:0 0 auto; }
+
+  footer{ padding:44px 0 60px; }
+  footer .wrap{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+  footer p{ color:var(--text-muted); font-size:0.86rem; }
+  footer a{ text-decoration:none; }
+</style>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="topbar">
+  <span class="brand"><b>useful-skills</b> · Claude Code skill workshop</span>
+  <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">github.com/GiladMeirson/useful-skills ↗</a>
+</div>
+
+<header class="hero">
+  <div class="wrap hero-inner">
+    <div class="hero-text">
+      <span class="eyebrow">5 skills · 1 command each</span>
+      <h1>Skills for Claude&nbsp;Code, ready to install.</h1>
+      <p class="lede">A small workshop of <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">SKILL.md</a> packages — canvas rendering, 2D physics, terse replies, self-improving sessions, and a transparency footer. Pick one below and run one line in your terminal.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#install">Get a skill ↓</a>
+        <a class="btn btn-ghost" href="#skills">Browse the five</a>
+      </div>
+    </div>
+    <div class="hero-demo" aria-hidden="true">
+      <canvas id="hero-demo" width="220" height="220"></canvas>
+      <span class="tag">canvas-atelier, live</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Section navigation">
+  <div class="toc-inner">
+    <a href="#how">What's a skill?</a>
+    <a href="#install">Install</a>
+    <a href="#canvas-atelier">canvas-atelier</a>
+    <a href="#physics-2d">physics-2d</a>
+    <a href="#caveman">caveman</a>
+    <a href="#matrix-agents-skill">matrix-agents-skill</a>
+    <a href="#skill-report">skill-report</a>
+  </div>
+</nav>
+
+<main id="main">
+  <div class="wrap">
+
+    <section id="how">
+      <div class="section-head">
+        <h2>What's a skill, exactly?</h2>
+      </div>
+      <p style="max-width:66ch; color:var(--text-muted);">
+        A <strong style="color:var(--text)">skill</strong> is a folder Claude Code reads before it works: one
+        <code class="mono" style="background:var(--accent-soft); padding:1px 6px; border-radius:5px;">SKILL.md</code>
+        file describing <em>when</em> to use it and <em>how</em>, plus optional reference docs and helper scripts it
+        opens only when needed. Drop the folder into <code class="mono" style="background:var(--accent-soft); padding:1px 6px; border-radius:5px;">.claude/skills/</code>
+        inside a project — or into <code class="mono" style="background:var(--accent-soft); padding:1px 6px; border-radius:5px;">~/.claude/skills/</code>
+        to make it available in every project on your machine — and Claude picks it up automatically next session.
+        No build step, no restart beyond starting a new session.
+      </p>
+    </section>
+
+    <section id="install">
+      <div class="section-head">
+        <h2>Install a skill</h2>
+        <p>Every skill installs the same way — one line, no cloning the whole repo. It needs only <code class="mono">npx</code>, which already ships with Node, a Claude Code prerequisite.</p>
+      </div>
+      <div class="cmd-box">
+        <code><span class="path">npx degit</span> GiladMeirson/useful-skills/skills/<span class="code-accent" style="color:var(--code-accent)">&lt;skill-name&gt;</span> .claude/skills/<span style="color:var(--code-accent)">&lt;skill-name&gt;</span></code>
+      </div>
+      <p class="cmd-note">
+        Swap <code>&lt;skill-name&gt;</code> for one of the five below — each skill card has this filled in with a copy button.
+        Run it from your project's root. To install for <em>every</em> project instead of just this one, change the
+        destination to <code>~/.claude/skills/&lt;skill-name&gt;</code> (PowerShell: <code>$HOME/.claude/skills/&lt;skill-name&gt;</code>).
+      </p>
+      <p class="cmd-note">
+        Prefer a guided picker? Clone the repo once and run <code>./install.sh</code> (macOS/Linux/WSL/Git&nbsp;Bash) or
+        <code>./install.ps1</code> (Windows PowerShell) with no arguments for an interactive menu — see the repo README.
+      </p>
+    </section>
+
+    <section id="skills" aria-label="Skills catalog" style="border-bottom:none; padding-bottom:0;">
+      <div class="section-head">
+        <h2>The five skills</h2>
+        <p>Each one is independent — install only what you need.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ CANVAS-ATELIER ============ -->
+  <article class="skill" id="canvas-atelier">
+    <div class="wrap">
+      <div class="skill-head">
+        <span class="skill-tag">#canvas-atelier</span>
+        <h2>Canvas Atelier</h2>
+        <p class="tagline">Gallery-quality drawing &amp; animation on HTML canvas — construction-based shapes, physically-based light and shadow, organic curves instead of geometric primitives, and animation-principle-driven motion.</p>
+        <ul class="chips">
+          <li>draw / illustrate / render / animate on canvas</li>
+          <li>output should look "realistic" or "polished"</li>
+          <li>canvas games, generative art, particle effects</li>
+        </ul>
+      </div>
+
+      <div class="skill-grid">
+        <div>
+          <span class="block-label">Key files</span>
+          <ul class="filetree">
+            <li><code>SKILL.md</code> — the 8-stage workflow: composition → block-in → organic contour → light &amp; shadow → texture → animation → performance → critique</li>
+            <li><code>references/composition.md</code> — focal point, selective fidelity, depth, negative space</li>
+            <li><code>references/lighting-and-shading.md</code> — core-shadow / cast-shadow / ambient-occlusion / rim-light model, with gradient code</li>
+            <li><code>references/organic-curves.md</code> — turning primitives into natural, asymmetric contours</li>
+            <li><code>references/color-theory.md</code> — shadow warmth relative to light temperature, saturation peak at the core-shadow transition</li>
+            <li><code>references/precision-and-form.md</code> — perspective, value-before-color, lost-and-found edges</li>
+            <li><code>references/animation-principles.md</code> — easing, squash &amp; stretch, anticipation, arcs, follow-through</li>
+            <li><code>references/physics-motion.md</code> — Verlet integration for cloth, hair, rope, flags</li>
+            <li><code>scripts/canvas-setup.js</code>, <code>easing.js</code>, <code>bezier-utils.js</code>, <code>noise.js</code>, <code>verlet.js</code> — the helper code each stage calls</li>
+          </ul>
+        </div>
+
+        <div>
+          <span class="block-label">Example</span>
+          <div class="transcript">
+            <div class="msg prompt"><span class="who">Prompt</span><p>Draw a realistic red apple with a stem and a bit of shine, sitting on a wooden table, on an HTML canvas.</p></div>
+            <div class="msg result"><span class="who">What Claude does</span><p>Sizes the canvas for the real display density first, blocks in the apple and table with low-opacity ovals to check proportions, replaces every curve with asymmetric beziers, picks one light source and shades with a graduated gradient (core shadow, cast shadow on the table, a thin rim light), adds a noise layer and a pinpoint specular highlight for the shine — then renders and checks the actual pixels against a critique checklist before calling it done.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-card">
+        <span class="block-label">Live, in this page</span>
+        <canvas id="hero-demo-2" width="640" height="150" style="max-width:100%;" aria-hidden="true"></canvas>
+        <p class="demo-caption">Same technique as the hero orb — core shadow, cast shadow, rim light, and a noise layer composited on an offscreen canvas so it respects the clip region, per the skill's own documented gotcha.</p>
+      </div>
+
+      <div class="skill-install">
+        <span class="block-label">Install</span>
+        <div class="cmd-box">
+          <code id="cmd-canvas-atelier">npx degit GiladMeirson/useful-skills/skills/canvas-atelier .claude/skills/canvas-atelier</code>
+          <button class="copy-btn" data-copy-target="cmd-canvas-atelier" aria-label="Copy install command for canvas-atelier">Copy</button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============ PHYSICS-2D ============ -->
+  <article class="skill" id="physics-2d">
+    <div class="wrap">
+      <div class="skill-head">
+        <span class="skill-tag">#physics-2d</span>
+        <h2>2D Physics Engine</h2>
+        <p class="tagline">A small, tested rigid-body engine — gravity, collisions, bouncing, friction, stacking, joints, raycasting, and a deterministic fixed-timestep loop. For when motion must be <em>simulated</em>, not scripted.</p>
+        <ul class="chips">
+          <li>objects fall, collide, bounce, pile up, swing</li>
+          <li>shot / thrown objects that respond to forces</li>
+          <li>rigid-body dynamics on a 2D (or 3D) canvas</li>
+        </ul>
+      </div>
+
+      <div class="skill-grid">
+        <div>
+          <span class="block-label">Key files</span>
+          <ul class="filetree">
+            <li><code>SKILL.md</code> — workflow: units → fixed-timestep loop → bodies from shapes → collisions &amp; filtering → joints → raycasts → tuning</li>
+            <li><code>scripts/index.js</code> — single entry point, imports all nine modules</li>
+            <li><code>scripts/world.js</code> — the fixed-timestep loop, sleeping, anti-tunneling, filtering</li>
+            <li><code>scripts/body.js</code>, <code>shapes.js</code> — RigidBody state, mass &amp; moment of inertia, AABB</li>
+            <li><code>scripts/broadphase.js</code>, <code>collision.js</code> — spatial-hash culling, SAT narrow phase, contact manifolds</li>
+            <li><code>scripts/solver.js</code> — accumulated-impulse solver: restitution, Coulomb friction, split-impulse correction</li>
+            <li><code>scripts/constraints.js</code> — distance / revolute / spring joints</li>
+            <li><code>scripts/raycast.js</code> — hitscan, line-of-sight, picking, swept CCD</li>
+            <li><code>scripts/selftest.js</code> — Node smoke tests (free-fall, stacking+sleep, friction, joints, filtering)</li>
+            <li><code>demo.html</code> — a full interactive, tabbed demo of the engine</li>
+          </ul>
+        </div>
+        <div>
+          <span class="block-label">Example</span>
+          <div class="transcript">
+            <div class="msg prompt"><span class="who">Prompt</span><p>Crates fall from the top, land on a platform, and stack up — plus a cannon that can shoot a ball to knock them over.</p></div>
+            <div class="msg result"><span class="who">What Claude does</span><p>Creates a <code>World</code> with gravity and a static platform body, spawns box <code>RigidBody</code>s with friction and restitution, drives everything through <code>world.update(dt)</code> on a fixed timestep with interpolated rendering, and wires the cannon's aim to <code>world.raycast(...)</code>. The accumulated-impulse solver keeps the stack resting cleanly instead of jittering or gaining energy.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-card">
+        <span class="block-label">Live, in this page</span>
+        <canvas id="physics-demo" width="560" height="200" style="max-width:100%;" aria-hidden="true"></canvas>
+        <p class="demo-caption">A small flavor demo (gravity, wall bounce, circle–circle separation) — not the full engine. The real thing has a broad phase, sleeping, joints and raycasting; see <code>demo.html</code> in the repo.</p>
+      </div>
+
+      <div class="skill-install">
+        <span class="block-label">Install</span>
+        <div class="cmd-box">
+          <code id="cmd-physics-2d">npx degit GiladMeirson/useful-skills/skills/physics-2d .claude/skills/physics-2d</code>
+          <button class="copy-btn" data-copy-target="cmd-physics-2d" aria-label="Copy install command for physics-2d">Copy</button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============ CAVEMAN ============ -->
+  <article class="skill" id="caveman">
+    <div class="wrap">
+      <div class="skill-head">
+        <span class="skill-tag">#caveman</span>
+        <h2>Caveman</h2>
+        <p class="tagline">Ultra-compressed replies — articles, filler, and hedging cut, all technical substance kept. The skill's own frontmatter claims a measured ~65% drop in output tokens. Supports lite / full / ultra, plus classical-Chinese (wenyan) variants.</p>
+        <ul class="chips">
+          <li>"caveman mode" / "talk like caveman"</li>
+          <li>"less tokens" / "be brief"</li>
+          <li>typing <code style="font-family:var(--mono); background:none;">/caveman</code></li>
+        </ul>
+      </div>
+
+      <div class="skill-grid">
+        <div>
+          <span class="block-label">Key files</span>
+          <ul class="filetree">
+            <li><code>SKILL.md</code> — the whole skill: rules, intensity levels, auto-clarity exceptions (security warnings, irreversible actions), and worked examples. No scripts or references — this one is pure response style.</li>
+          </ul>
+          <div class="callout" style="margin-top:18px;">
+            <strong>Drops back to normal</strong> for security warnings, irreversible-action confirmations, and anywhere compression itself would create ambiguity — then resumes once that part is done.
+          </div>
+        </div>
+        <div>
+          <span class="block-label">Example — "Why does my React component re-render?"</span>
+          <div class="transcript">
+            <div class="msg result"><span class="who">full (default)</span><p>New object ref each render. Inline object prop = new ref = re-render. Wrap in <code>useMemo</code>.</p></div>
+            <div class="msg result"><span class="who">ultra</span><p>Inline obj prop, new ref, re-render. <code>useMemo</code>.</p></div>
+            <div class="msg result"><span class="who">lite</span><p>Your component re-renders because you create a new object reference each render. Wrap it in <code>useMemo</code>.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skill-install">
+        <span class="block-label">Install</span>
+        <div class="cmd-box">
+          <code id="cmd-caveman">npx degit GiladMeirson/useful-skills/skills/caveman .claude/skills/caveman</code>
+          <button class="copy-btn" data-copy-target="cmd-caveman" aria-label="Copy install command for caveman">Copy</button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============ MATRIX-AGENTS-SKILL ============ -->
+  <article class="skill" id="matrix-agents-skill">
+    <div class="wrap">
+      <div class="skill-head">
+        <span class="skill-tag">#matrix-agents-skill</span>
+        <h2>Matrix Agents Skill</h2>
+        <p class="tagline">A meta-skill that turns coding sessions into new skills. Loaded every session, it silently tallies learning patterns — repeated fixes, regression chains, long exploration, architectural decisions — and at session end proposes turning the strongest one into a real, installable skill.</p>
+        <ul class="chips">
+          <li>load in every session, any language or stack</li>
+          <li>triggers: <code style="font-family:var(--mono); background:none;">/forge</code>, <code style="font-family:var(--mono); background:none;">/matrix</code>, "forge", "matrix", פורג', מטריקס</li>
+          <li>proposes at most once per session, never mid-task</li>
+        </ul>
+      </div>
+
+      <div class="skill-grid">
+        <div>
+          <span class="block-label">Key files</span>
+          <ul class="filetree">
+            <li><code>SKILL.md</code> — the pattern table (11 signals across repetition, pain, exploration, decisions, environment), interview questions, and the routing-map format it writes to <code>CLAUDE.md</code></li>
+          </ul>
+          <div class="callout" style="margin-top:18px;">
+            <strong>Runtime files it manages</strong> inside a project, not shipped with the skill: <code style="font-family:var(--mono); background:none;">.claude/skills/matrix-agents-skill/session-tally.md</code> and <code style="font-family:var(--mono); background:none;">declined.md</code>. It also pairs well with the <code style="font-family:var(--mono); background:none;">skill-creator</code> skill, which it delegates the actual file-writing to when available.
+          </div>
+        </div>
+        <div>
+          <span class="block-label">Example — a real session's shape</span>
+          <div class="transcript">
+            <div class="msg result"><span class="who">Mid-session (one line, then keeps working)</span><p>🔨 Skill-worthy pattern detected (regression chain). I'll propose at session end — or type a trigger word now.</p></div>
+            <div class="msg result"><span class="who">End of session</span><p>"Before we wrap up: I noticed fixing the sort broke pagination, then fixing pagination broke the filter. This suggests knowledge worth preserving as a skill so future sessions start with it. Want me to create one?"</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skill-install">
+        <span class="block-label">Install</span>
+        <div class="cmd-box">
+          <code id="cmd-matrix">npx degit GiladMeirson/useful-skills/skills/matrix-agents-skill .claude/skills/matrix-agents-skill</code>
+          <button class="copy-btn" data-copy-target="cmd-matrix" aria-label="Copy install command for matrix-agents-skill">Copy</button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============ SKILL-REPORT ============ -->
+  <article class="skill" id="skill-report" style="border-bottom:none;">
+    <div class="wrap">
+      <div class="skill-head">
+        <span class="skill-tag">#skill-report</span>
+        <h2>Skill Report</h2>
+        <p class="tagline">A one-line transparency footer on every response, listing which skills, subagents, and web tools were actually used — computed from the transcript itself, not from asking Claude to recall what it did.</p>
+        <ul class="chips">
+          <li>runs automatically, every turn</li>
+          <li>enforced by a Stop hook, not left to chance</li>
+          <li>typically installed per-project, not globally</li>
+        </ul>
+      </div>
+
+      <div class="skill-grid">
+        <div>
+          <span class="block-label">Key files</span>
+          <ul class="filetree">
+            <li><code>SKILL.md</code> — the footer format and why it needs a hook to be unconditional</li>
+            <li><code>scripts/report_hook.py</code> — the Stop hook: reads the transcript, finds this turn's <code>Skill</code> / <code>Agent</code> / <code>WebSearch</code> / <code>WebFetch</code> calls, forces a continuation if the footer is missing</li>
+          </ul>
+        </div>
+        <div>
+          <span class="block-label">Example output</span>
+          <div class="transcript">
+            <div class="msg result"><span class="who">After a turn that used tools</span><p><code>Skill report: Skills: dataviz, skill-creator | Subagents: Explore | Web: WebSearch</code></p></div>
+            <div class="msg result"><span class="who">After a plain-answer turn</span><p><code>Skill report: Skills: none | Subagents: none | Web: none</code></p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:26px;">
+        <strong>One extra step this skill needs:</strong> copying the folder isn't enough on its own — the Stop hook
+        has to be registered in your project's <code style="font-family:var(--mono); background:none;">.claude/settings.json</code> too.
+        If you don't already have a <code style="font-family:var(--mono); background:none;">hooks</code> block, add this
+        (merge the <code style="font-family:var(--mono); background:none;">Stop</code> array in if you do):
+      </div>
+      <div class="cmd-box" style="margin-top:12px; align-items:flex-start;">
+        <code id="cmd-hook-json">{
+  "hooks": {
+    "Stop": [
+      { "hooks": [ { "type": "command",
+        "command": "python \"$CLAUDE_PROJECT_DIR/.claude/skills/skill-report/scripts/report_hook.py\"",
+        "timeout": 15 } ] }
+    ]
+  }
+}</code>
+        <button class="copy-btn" data-copy-target="cmd-hook-json" aria-label="Copy settings.json hook snippet">Copy</button>
+      </div>
+
+      <div class="skill-install">
+        <span class="block-label">Install</span>
+        <div class="cmd-box">
+          <code id="cmd-skill-report">npx degit GiladMeirson/useful-skills/.claude/skills/skill-report .claude/skills/skill-report</code>
+          <button class="copy-btn" data-copy-target="cmd-skill-report" aria-label="Copy install command for skill-report">Copy</button>
+        </div>
+        <p class="cmd-note">Note the source path — this one already lives under <code>.claude/skills/</code> in the repo, not <code>skills/</code>.</p>
+      </div>
+    </div>
+  </article>
+
+  <div class="wrap">
+    <section id="all-commands">
+      <div class="section-head">
+        <h2>All five, at a glance</h2>
+        <p>For grabbing more than one at once.</p>
+      </div>
+      <div class="ref-table-wrap">
+        <table class="ref-table">
+          <thead>
+            <tr><th>Skill</th><th>What it does</th><th>Install command</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name">canvas-atelier</td>
+              <td>Realistic canvas drawing &amp; animation</td>
+              <td class="row-cmd"><code style="font-size:0.78rem;">npx degit GiladMeirson/useful-skills/skills/canvas-atelier .claude/skills/canvas-atelier</code>
+                <button class="copy-btn" data-copy-target="cmd-canvas-atelier" aria-label="Copy install command for canvas-atelier">Copy</button></td>
+            </tr>
+            <tr>
+              <td class="name">physics-2d</td>
+              <td>Tested 2D rigid-body physics engine</td>
+              <td class="row-cmd"><code style="font-size:0.78rem;">npx degit GiladMeirson/useful-skills/skills/physics-2d .claude/skills/physics-2d</code>
+                <button class="copy-btn" data-copy-target="cmd-physics-2d" aria-label="Copy install command for physics-2d">Copy</button></td>
+            </tr>
+            <tr>
+              <td class="name">caveman</td>
+              <td>~65% shorter replies, same substance</td>
+              <td class="row-cmd"><code style="font-size:0.78rem;">npx degit GiladMeirson/useful-skills/skills/caveman .claude/skills/caveman</code>
+                <button class="copy-btn" data-copy-target="cmd-caveman" aria-label="Copy install command for caveman">Copy</button></td>
+            </tr>
+            <tr>
+              <td class="name">matrix-agents-skill</td>
+              <td>Turns session learnings into new skills</td>
+              <td class="row-cmd"><code style="font-size:0.78rem;">npx degit GiladMeirson/useful-skills/skills/matrix-agents-skill .claude/skills/matrix-agents-skill</code>
+                <button class="copy-btn" data-copy-target="cmd-matrix" aria-label="Copy install command for matrix-agents-skill">Copy</button></td>
+            </tr>
+            <tr>
+              <td class="name">skill-report</td>
+              <td>Transparency footer on every turn</td>
+              <td class="row-cmd"><code style="font-size:0.78rem;">npx degit GiladMeirson/useful-skills/.claude/skills/skill-report .claude/skills/skill-report</code>
+                <button class="copy-btn" data-copy-target="cmd-skill-report" aria-label="Copy install command for skill-report">Copy</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap" style="padding:0;">
+        <p>Built by Gilad Meirson · <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">source on GitHub</a></p>
+        <p>Skills are plain text — read one before you trust it.</p>
+      </div>
+    </footer>
+  </div>
+</main>
+
+<script>
+(function(){
+  // ---------- copy buttons ----------
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      var targetId = btn.getAttribute('data-copy-target');
+      var target = document.getElementById(targetId);
+      if (!target) return;
+      var text = target.innerText;
+      var ok = true;
+      try{
+        await navigator.clipboard.writeText(text);
+      }catch(e){
+        try{
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus(); ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }catch(e2){ ok = false; }
+      }
+      var original = btn.textContent;
+      btn.textContent = ok ? 'Copied' : 'Select & copy';
+      btn.classList.toggle('copied', ok);
+      setTimeout(function(){ btn.textContent = original; btn.classList.remove('copied'); }, 1600);
+    });
+  });
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- shared: shaded sphere renderer ----------
+  function makeNoiseLayer(w, h){
+    var c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    var nctx = c.getContext('2d');
+    var img = nctx.createImageData(w, h);
+    for (var i = 0; i < img.data.length; i += 4){
+      var v = 128 + (Math.random() - 0.5) * 46;
+      img.data[i] = img.data[i+1] = img.data[i+2] = v;
+      img.data[i+3] = 12;
+    }
+    nctx.putImageData(img, 0, 0);
+    return c;
+  }
+
+  function drawOrb(ctx, cx, cy, r, angle, noiseLayer){
+    // cast shadow, drawn first so the orb sits on top of it
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx - Math.cos(angle) * 8, cy + r * 1.12, r * 0.82, r * 0.2, 0, 0, Math.PI * 2);
+    ctx.filter = 'blur(6px)';
+    ctx.fillStyle = 'rgba(6,9,18,0.35)';
+    ctx.fill();
+    ctx.restore();
+
+    var lx = cx + Math.cos(angle) * r * 0.55;
+    var ly = cy + Math.sin(angle) * r * 0.55;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+
+    var grad = ctx.createRadialGradient(lx, ly, r * 0.04, cx, cy, r * 1.35);
+    grad.addColorStop(0, '#f7e8ca');
+    grad.addColorStop(0.28, '#e3b46c');
+    grad.addColorStop(0.55, '#b07f36');
+    grad.addColorStop(0.8, '#5a3d1c');
+    grad.addColorStop(1, '#241a0e');
+    ctx.fillStyle = grad;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+
+    // rim light on the terminator edge, opposite the key light
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.985, angle + Math.PI - 0.9, angle + Math.PI + 0.9);
+    ctx.lineWidth = r * 0.05;
+    ctx.strokeStyle = '#f0c483';
+    ctx.stroke();
+    ctx.restore();
+
+    // noise composited via drawImage — respects the clip, unlike putImageData
+    ctx.globalAlpha = 1;
+    ctx.drawImage(noiseLayer, cx - r, cy - r, r * 2, r * 2);
+    ctx.restore();
+  }
+
+  // ---------- hero demo ----------
+  (function(){
+    var canvas = document.getElementById('hero-demo');
+    if (!canvas) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W = 220, H = 220;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    var noise = makeNoiseLayer(160, 160);
+    var cx = W / 2, cy = H / 2 - 4, r = 66;
+    var angle = -2.35;
+    var last = performance.now();
+
+    function frame(now){
+      var dt = (now - last) / 1000; last = now;
+      if (!reduce) angle += dt * 0.45;
+      ctx.clearRect(0, 0, W, H);
+      drawOrb(ctx, cx, cy, r, angle, noise);
+      if (!reduce) requestAnimationFrame(frame);
+    }
+    if (reduce){ ctx.clearRect(0,0,W,H); drawOrb(ctx, cx, cy, r, angle, noise); }
+    else requestAnimationFrame(frame);
+  })();
+
+  // ---------- in-article canvas-atelier demo: three orbs, different light angles ----------
+  (function(){
+    var canvas = document.getElementById('hero-demo-2');
+    if (!canvas) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W = 640, H = 150;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    var noise = makeNoiseLayer(140, 140);
+    var orbs = [
+      { cx: 110, cy: 75, r: 46, angle: -2.6 },
+      { cx: 320, cy: 75, r: 46, angle: -1.4 },
+      { cx: 530, cy: 75, r: 46, angle: -0.3 }
+    ];
+    var last = performance.now();
+    function frame(now){
+      var dt = (now - last) / 1000; last = now;
+      ctx.clearRect(0, 0, W, H);
+      orbs.forEach(function(o){
+        if (!reduce) o.angle += dt * 0.3;
+        drawOrb(ctx, o.cx, o.cy, o.r, o.angle, noise);
+      });
+      if (!reduce) requestAnimationFrame(frame);
+    }
+    if (reduce){ ctx.clearRect(0,0,W,H); orbs.forEach(function(o){ drawOrb(ctx, o.cx, o.cy, o.r, o.angle, noise); }); }
+    else requestAnimationFrame(frame);
+  })();
+
+  // ---------- physics-2d flavor demo ----------
+  (function(){
+    var canvas = document.getElementById('physics-demo');
+    if (!canvas) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W = 560, H = 200;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    var GRAVITY = 900, FLOOR = H - 16, FIXED_DT = 1 / 120;
+    var colors = ['#e3b46c', '#c9974c', '#9c7333', '#f3d9a6', '#caa156', '#b07f36', '#7a5626'];
+    var balls = [];
+    for (var i = 0; i < 7; i++){
+      balls.push({
+        x: 40 + i * 74 + (Math.random() * 10 - 5),
+        y: 20 + Math.random() * 40,
+        vx: (Math.random() - 0.5) * 70,
+        vy: 0,
+        r: 12 + Math.random() * 9,
+        color: colors[i % colors.length]
+      });
+    }
+
+    function step(dt){
+      balls.forEach(function(b){
+        b.vy += GRAVITY * dt;   // semi-implicit Euler: velocity updates first...
+        b.x += b.vx * dt;       // ...then position, using the NEW velocity
+        b.y += b.vy * dt;
+        if (b.y + b.r > FLOOR){ b.y = FLOOR - b.r; b.vy *= -0.6; b.vx *= 0.985; }
+        if (b.x - b.r < 0){ b.x = b.r; b.vx *= -0.7; }
+        if (b.x + b.r > W){ b.x = W - b.r; b.vx *= -0.7; }
+      });
+      for (var pass = 0; pass < 2; pass++){
+        for (var i = 0; i < balls.length; i++){
+          for (var j = i + 1; j < balls.length; j++){
+            var a = balls[i], c = balls[j];
+            var dx = c.x - a.x, dy = c.y - a.y;
+            var dist = Math.hypot(dx, dy) || 0.001;
+            var minDist = a.r + c.r;
+            if (dist < minDist){
+              var overlap = (minDist - dist) / 2;
+              var nx = dx / dist, ny = dy / dist;
+              a.x -= nx * overlap; a.y -= ny * overlap;
+              c.x += nx * overlap; c.y += ny * overlap;
+            }
+          }
+        }
+      }
+    }
+
+    function draw(){
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = 'rgba(163,114,28,0.35)';
+      ctx.setLineDash([4, 5]);
+      ctx.beginPath(); ctx.moveTo(0, FLOOR + 1); ctx.lineTo(W, FLOOR + 1); ctx.stroke();
+      ctx.setLineDash([]);
+      balls.forEach(function(b){
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fillStyle = b.color;
+        ctx.fill();
+      });
+    }
+
+    var acc = 0, last = performance.now();
+    function frame(now){
+      var dt = Math.min((now - last) / 1000, 0.05); last = now;
+      acc += dt;
+      while (acc >= FIXED_DT){ step(FIXED_DT); acc -= FIXED_DT; }
+      draw();
+      requestAnimationFrame(frame);
+    }
+    if (reduce){ for (var s = 0; s < 240; s++) step(FIXED_DT); draw(); }
+    else requestAnimationFrame(frame);
+  })();
+})();
+</script>
