@@ -1,0 +1,151 @@
+/* Design tokens.
+ * Direction: a dark instrument atelier — deep ink ground, working brass, aged
+ * verdigris. Every component styles through these variables so the light theme
+ * is a token swap, never a second set of rules.
+ */
+:root {
+  --ink-950: #06090f;
+  --ink-900: #0a0f1b;
+  --ink-850: #0e1526;
+  --ink-800: #131c31;
+  --ink-700: #1b263f;
+  --line: #253251;
+  --line-soft: #1a2439;
+
+  --text: #e7edf8;
+  --dim: #94a3bd;
+  --faint: #64738f;
+
+  --brass: #e0a54e;
+  --brass-hi: #f7d69e;
+  --brass-dim: #a97a2f;
+  --brass-glow: rgba(224, 165, 78, 0.16);
+  --brass-edge: rgba(224, 165, 78, 0.32);
+
+  --verdigris: #6fbfa6;
+  --verdigris-dim: #3d7c6a;
+  --ember: #e0725a;
+
+  --code-bg: #05080e;
+  --code-text: #d8e2f2;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-md: 0 10px 30px -14px rgba(0, 0, 0, .8), 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-lg: 0 30px 70px -30px rgba(0, 0, 0, .9), 0 2px 6px rgba(0, 0, 0, .5);
+
+  --display: "Bodoni MT", "Bodoni 72", Didot, "Playfair Display", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --fs-xs: .74rem;
+  --fs-sm: .84rem;
+  --fs-base: .96rem;
+  --fs-lg: 1.08rem;
+  --fs-xl: 1.3rem;
+  --fs-2xl: 1.7rem;
+  --fs-3xl: 2.3rem;
+  --fs-4xl: clamp(2.4rem, 5.5vw, 3.6rem);
+  --fs-hero: clamp(2.8rem, 8.5vw, 6.2rem);
+
+  --measure: 66ch;
+  --page: 1180px;
+  --col: 760px;
+  --rail: 190px;
+  --radius: 12px;
+  --radius-lg: 18px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --ink-950: #e9edf5;
+    --ink-900: #ffffff;
+    --ink-850: #f4f7fc;
+    --ink-800: #eef2f9;
+    --ink-700: #e3e9f3;
+    --line: #ccd6e6;
+    --line-soft: #dde4ef;
+
+    --text: #0d1728;
+    --dim: #55637d;
+    --faint: #7d8aa3;
+
+    --brass: #9a6a18;
+    --brass-hi: #7a520e;
+    --brass-dim: #b58a3c;
+    --brass-glow: rgba(154, 106, 24, 0.09);
+    --brass-edge: rgba(154, 106, 24, 0.26);
+
+    --verdigris: #2c7a63;
+    --verdigris-dim: #4f9c86;
+    --ember: #b8452c;
+
+    --code-bg: #0a0f1b;
+    --code-text: #d8e2f2;
+
+    --shadow-sm: 0 1px 2px rgba(18, 28, 48, .06);
+    --shadow-md: 0 10px 30px -18px rgba(18, 28, 48, .3), 0 1px 2px rgba(18, 28, 48, .05);
+    --shadow-lg: 0 30px 60px -34px rgba(18, 28, 48, .35), 0 2px 6px rgba(18, 28, 48, .06);
+  }
+}
+
+:root[data-theme="light"] {
+  --ink-950: #e9edf5;
+  --ink-900: #ffffff;
+  --ink-850: #f4f7fc;
+  --ink-800: #eef2f9;
+  --ink-700: #e3e9f3;
+  --line: #ccd6e6;
+  --line-soft: #dde4ef;
+
+  --text: #0d1728;
+  --dim: #55637d;
+  --faint: #7d8aa3;
+
+  --brass: #9a6a18;
+  --brass-hi: #7a520e;
+  --brass-dim: #b58a3c;
+  --brass-glow: rgba(154, 106, 24, 0.09);
+  --brass-edge: rgba(154, 106, 24, 0.26);
+
+  --verdigris: #2c7a63;
+  --verdigris-dim: #4f9c86;
+  --ember: #b8452c;
+
+  --code-bg: #0a0f1b;
+  --code-text: #d8e2f2;
+
+  --shadow-sm: 0 1px 2px rgba(18, 28, 48, .06);
+  --shadow-md: 0 10px 30px -18px rgba(18, 28, 48, .3), 0 1px 2px rgba(18, 28, 48, .05);
+  --shadow-lg: 0 30px 60px -34px rgba(18, 28, 48, .35), 0 2px 6px rgba(18, 28, 48, .06);
+}
+
+:root[data-theme="dark"] {
+  --ink-950: #06090f;
+  --ink-900: #0a0f1b;
+  --ink-850: #0e1526;
+  --ink-800: #131c31;
+  --ink-700: #1b263f;
+  --line: #253251;
+  --line-soft: #1a2439;
+
+  --text: #e7edf8;
+  --dim: #94a3bd;
+  --faint: #64738f;
+
+  --brass: #e0a54e;
+  --brass-hi: #f7d69e;
+  --brass-dim: #a97a2f;
+  --brass-glow: rgba(224, 165, 78, 0.16);
+  --brass-edge: rgba(224, 165, 78, 0.32);
+
+  --verdigris: #6fbfa6;
+  --verdigris-dim: #3d7c6a;
+  --ember: #e0725a;
+
+  --code-bg: #05080e;
+  --code-text: #d8e2f2;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-md: 0 10px 30px -14px rgba(0, 0, 0, .8), 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-lg: 0 30px 70px -30px rgba(0, 0, 0, .9), 0 2px 6px rgba(0, 0, 0, .5);
+}

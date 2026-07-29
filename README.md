@@ -65,8 +65,38 @@ skills/                       the four portable, general-purpose skills
   caveman/
   matrix-agents-skill/
 .claude/skills/skill-report/  a project-scoped skill, dogfooded by this repo itself
-index.html                    full documentation site (open directly, or view published)
+
+site/                         documentation site SOURCE (edit here)
+  index.html
+  css/       tokens · base · layout · components · demos
+  js/lib/    gfx (shading) · render3d (software 3D) · engine2d (physics)
+  js/demos/  hero · atelier · physics · caveman · matrix · report
+build-site.mjs                inlines site/ into the single-file index.html
+index.html                    GENERATED — do not edit by hand
 install.sh / install.ps1      interactive installers
+```
+
+### Working on the site
+
+Edit files under `site/`, then rebuild the single-file page:
+
+```sh
+node build-site.mjs
+```
+
+`site/index.html` is the readable source with normal `<link>` and `<script src>`
+tags; the root `index.html` is a generated bundle with all CSS and JS inlined.
+Both are needed: the split version is what you edit, and the bundle is what gets
+published, because a single self-contained document is the only form that
+survives a strict CSP with no sibling files to fetch.
+
+The demos are not decorative. The physics sandbox runs the same engine design
+the `physics-2d` skill teaches — SAT with face clipping, a block solver for
+two-point manifolds, split-impulse position correction, revolute joints and
+island sleeping — and it is smoke-tested under Node:
+
+```sh
+node skills/physics-2d/scripts/selftest.js
 ```
 
 Skills are plain text — read one before you trust it.

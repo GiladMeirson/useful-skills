@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>useful-skills — a workshop of Claude Code skills</title>
+<meta name="description" content="Five install-ready Claude Code skills: gallery-quality canvas rendering, a tested 2D physics engine, ultra-compressed replies, self-improving sessions, and a transparency footer. One command each." />
+<link rel="stylesheet" href="css/tokens.css" />
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/layout.css" />
+<link rel="stylesheet" href="css/components.css" />
+<link rel="stylesheet" href="css/demos.css" />
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <span class="mark"><span class="dot"></span><b>useful-skills</b></span>
+  <nav>
+    <a href="#install" class="hide-sm">Install</a>
+    <a href="#catalog" class="hide-sm">Catalog</a>
+    <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <canvas id="hero-stage" data-demo="hero" aria-hidden="true"></canvas>
+  <div class="hero-scrim"></div>
+  <div class="shell hero-inner">
+    <div class="hero-copy">
+      <span class="eyebrow">Five skills · one command each</span>
+      <h1>Sharper<br />tools for<br /><em>Claude Code.</em></h1>
+      <p class="lede">
+        A small workshop of skills that teach Claude to draw like an illustrator, simulate like an
+        engine, speak in half the tokens, and remember what it learned. Drop one into a project and
+        it picks it up next session.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#install">Install a skill</a>
+        <a class="btn btn-ghost" href="#catalog">See what they do</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main id="main" class="shell">
+  <div class="body-grid">
+
+    <aside class="rail">
+      <div class="rail-title">Catalog</div>
+      <ol>
+        <li><a href="#canvas-atelier"><span class="num">01</span><span>canvas-atelier</span></a></li>
+        <li><a href="#physics-2d"><span class="num">02</span><span>physics-2d</span></a></li>
+        <li><a href="#caveman"><span class="num">03</span><span>caveman</span></a></li>
+        <li><a href="#matrix-agents-skill"><span class="num">04</span><span>matrix-agents</span></a></li>
+        <li><a href="#skill-report"><span class="num">05</span><span>skill-report</span></a></li>
+      </ol>
+    </aside>
+
+    <div class="column">
+
+      <!-- ============ WHAT / INSTALL ============ -->
+      <section id="install">
+        <div class="section-head reveal">
+          <span class="eyebrow">How this works</span>
+          <h2>A skill is a folder Claude reads before it works.</h2>
+          <p>
+            One <code>SKILL.md</code> describing <em>when</em> to use it and <em>how</em>, plus optional
+            reference documents and helper scripts it opens only when the task calls for them. Put the
+            folder in <code>.claude/skills/</code> and Claude finds it on the next session — no build
+            step, no configuration, no restart beyond starting a new session.
+          </p>
+        </div>
+
+        <div class="reveal">
+          <span class="label">Install any skill</span>
+          <div class="cmd">
+            <pre id="cmd-generic"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">&lt;name&gt;</span> .claude/skills/<span class="tok-path">&lt;name&gt;</span></pre>
+            <button class="copy" data-copy="#cmd-generic">Copy</button>
+          </div>
+          <p class="hint">
+            Needs only <code>npx</code>, which ships with Node — already a Claude Code prerequisite. It
+            copies one folder, not the whole repository. Run it from your project root, or install to
+            <code>~/.claude/skills/&lt;name&gt;</code> to make a skill available in every project.
+            Each skill below has this line filled in and ready to copy.
+          </p>
+        </div>
+      </section>
+
+      <span id="catalog"></span>
+
+      <!-- ============ 01 · CANVAS-ATELIER ============ -->
+      <section class="skill-section" id="canvas-atelier">
+        <div class="skill-head reveal">
+          <span class="skill-index">01 — rendering</span>
+          <h2>canvas-atelier</h2>
+          <p class="tagline">
+            Gallery-quality drawing and animation on HTML canvas: construction-based form,
+            physically-based light, organic curves instead of primitives, and motion that carries weight.
+          </p>
+        </div>
+
+        <div class="prose reveal">
+          <p>
+            Most canvas drawings look like clip art, and the reason is process rather than code. A
+            trained illustrator never draws final lines first — the work moves through stages, and each
+            stage catches a mistake the next one would otherwise bake in permanently. Jump straight from
+            idea to final shapes and you get the flat, symmetric, sterile look that gives generated art
+            away at a glance.
+          </p>
+        </div>
+        <div class="prose reveal" style="margin-top:14px">
+          <p>
+            This skill encodes that process as eight stages, and hands Claude the reference material and
+            helper code for each one. Its sharpest opinions: pick <strong>one</strong> light direction and
+            make every highlight and shadow agree with it; shade with a darker, desaturated version of the
+            local hue rather than black; derive the shadow's warmth from the light's own temperature; put
+            peak saturation at the core-shadow transition rather than the highlight; and never finish
+            without <em>rendering the image and actually looking at it</em>, because gradient math and
+            compositing order fail in ways that are invisible in source and obvious in pixels.
+          </p>
+        </div>
+
+        <div class="panel bleed reveal" style="margin-top:30px">
+          <div class="panel-head">
+            <span class="label">Live · Verlet silk, shaded by fold curvature</span>
+            <span class="readout">drag the banner</span>
+          </div>
+          <div class="demo" data-demo="atelier-cloth">
+            <canvas width="900" height="380" style="aspect-ratio:900/380"
+              aria-label="An animated silk banner rippling in wind, shaded so folds turned toward the light are brighter"></canvas>
+          </div>
+          <p class="panel-note">
+            Connected points can't be animated one eased curve at a time — they come apart. This is Verlet
+            integration with distance constraints, the approach in the skill's
+            <code>references/physics-motion.md</code>, with each quad shaded by how far its own surface
+            has turned from the light. That local-normal shading is the difference between lit cloth and a
+            moving wireframe.
+          </p>
+        </div>
+
+        <div class="reveal" style="margin-top:30px">
+          <span class="label">The workflow, rendered — same subject, five stages</span>
+          <div class="stages" data-demo="atelier-stages">
+            <div class="stage" data-stage="block"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">1 · block-in</div></div>
+            <div class="stage" data-stage="contour"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">2 · contour</div></div>
+            <div class="stage" data-stage="light"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">3 · light</div></div>
+            <div class="stage" data-stage="texture"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">4 · texture</div></div>
+            <div class="stage on" data-stage="final"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">5 · finish</div></div>
+          </div>
+          <p class="hint">
+            Proportion first with flat primitives; primitives replaced by asymmetric beziers; one light
+            direction with core shadow, cast shadow and bounce light; noise to break the plastic
+            smoothness; then the specular hit, stalk and rim light. Skipping to stage five is what
+            produces clip art.
+          </p>
+        </div>
+
+        <div class="two-col reveal" style="margin-top:34px">
+          <div>
+            <span class="label">What ships in the folder</span>
+            <ul class="files">
+              <li><code>SKILL.md</code><span>The eight-stage workflow and a "do this, not that" table</span></li>
+              <li><code>composition.md</code><span>Focal point, selective fidelity, depth, negative space</span></li>
+              <li><code>lighting-and-shading.md</code><span>Core / cast / ambient-occlusion / rim model with gradient code</span></li>
+              <li><code>organic-curves.md</code><span>Turning primitives into believable asymmetric contours</span></li>
+              <li><code>color-theory.md</code><span>Shadow temperature and where saturation should peak</span></li>
+              <li><code>precision-and-form.md</code><span>Perspective, value before colour, lost-and-found edges</span></li>
+              <li><code>animation-principles.md</code><span>Easing, squash and stretch, anticipation, arcs, follow-through</span></li>
+              <li><code>physics-motion.md</code><span>Verlet for cloth, hair, rope, flags</span></li>
+              <li><code>scripts/</code><span><code>canvas-setup</code>, <code>easing</code>, <code>bezier-utils</code>, <code>noise</code>, <code>verlet</code></span></li>
+            </ul>
+          </div>
+          <div>
+            <span class="label">In practice</span>
+            <div class="exchange">
+              <div class="ask">
+                <span class="who">You type</span>
+                <p>Draw a realistic red apple on a wooden table.</p>
+              </div>
+              <div class="got">
+                <span class="who">What changes</span>
+                <p>Without the skill: two <code>arc()</code> calls, a flat red fill, a brown rectangle, a grey ellipse for shadow.</p>
+                <p>With it: the canvas is sized for real pixel density first; the apple is blocked in at low opacity to check proportion; every contour becomes a slightly asymmetric bezier; one light direction drives a multi-stop gradient with a core shadow, a cast shadow that follows the table's angle and bounce light on the shadow side; a noise layer breaks the plastic sheen; a pinpoint specular lands last. Then it renders the image and checks it against a critique list before calling it done.</p>
+              </div>
+            </div>
+            <div class="callout" style="margin-top:16px">
+              <strong>Triggers on</strong> any request to draw, illustrate, render, sketch or animate on
+              canvas — and on words like "realistic", "polished" or "professional" — without needing the
+              skill named.
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal" style="margin-top:26px">
+          <div class="cmd">
+            <pre id="cmd-atelier"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">canvas-atelier</span> .claude/skills/canvas-atelier</pre>
+            <button class="copy" data-copy="#cmd-atelier">Copy</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 02 · PHYSICS-2D ============ -->
+      <section class="skill-section" id="physics-2d">
+        <div class="skill-head reveal">
+          <span class="skill-index">02 — simulation</span>
+          <h2>physics-2d</h2>
+          <p class="tagline">
+            A small, tested rigid-body engine, plus the reasoning behind every choice in it — for when
+            motion has to be simulated rather than scripted.
+          </p>
+        </div>
+
+        <div class="prose reveal">
+          <p>
+            Hand-rolled game physics is usually wrong in ways that only surface later: objects gain energy
+            and vibrate, stacks explode or sink into the floor, fast objects pass through walls, nothing
+            ever comes to rest. None of that is bad luck — each is a specific known mistake with a
+            specific known fix, and this skill ships an engine that already makes the right call, with
+            reference documents explaining why so the engine can be extended or debugged rather than
+            treated as a black box.
+          </p>
+        </div>
+        <div class="prose reveal" style="margin-top:14px">
+          <p>
+            The choices it argues for: velocity before position (semi-implicit Euler, or energy leaks in
+            and the simulation detonates); a fixed timestep accumulator rather than the raw frame delta;
+            <strong>two</strong> contact points for a resting box via face clipping, or it rocks; clamping
+            the <em>accumulated</em> impulse rather than each increment, so resting contacts reach true
+            zero; split-impulse position correction instead of a Baumgarte bias, which injects energy; a
+            slop tolerance so contacts don't flicker; and raycasting rather than substepping to stop a
+            fast bullet.
+          </p>
+        </div>
+
+        <div class="panel bleed reveal" style="margin-top:30px" data-demo="physics">
+          <div class="panel-head">
+            <span class="label">Live · the actual engine</span>
+            <span class="readout" data-readout>bodies <b>—</b></span>
+          </div>
+          <div class="demo">
+            <canvas width="900" height="470" style="aspect-ratio:900/470"
+              aria-label="An interactive physics sandbox with a stacked pyramid of crates and a hanging chain"></canvas>
+            <div class="demo-toolbar">
+              <button class="chip active" data-scene="pyramid">Pyramid &amp; chain</button>
+              <button class="chip" data-scene="ramp">Ramps</button>
+              <button class="chip" data-scene="tower">Tower</button>
+              <button class="chip" data-reset>Reset</button>
+              <span class="spacer"></span>
+              <span class="readout">drag a body · click empty space to fire</span>
+            </div>
+          </div>
+          <p class="panel-note">
+            This runs the engine itself, not an approximation of it: SAT with face clipping for two-point
+            manifolds, a block solver that resolves both points of a contact simultaneously, Coulomb
+            friction, revolute joints for the chain, a real <code>world.raycast</code> for the aiming
+            line, and island-based sleeping — watch the "asleep" counter climb as the pyramid settles,
+            then drop the moment you disturb it.
+          </p>
+        </div>
+
+        <div class="two-col reveal" style="margin-top:34px">
+          <div>
+            <span class="label">What ships in the folder</span>
+            <ul class="files">
+              <li><code>SKILL.md</code><span>Workflow from units to tuning, plus the mistake/fix table</span></li>
+              <li><code>index.js</code><span>One entry point over all nine modules</span></li>
+              <li><code>world.js</code><span>Fixed timestep, sleeping, anti-tunneling, filtering</span></li>
+              <li><code>collision.js</code><span>SAT narrow phase and contact manifolds</span></li>
+              <li><code>solver.js</code><span>Accumulated impulses, restitution, friction, split correction</span></li>
+              <li><code>constraints.js</code><span>Distance, revolute and spring joints</span></li>
+              <li><code>raycast.js</code><span>Hitscan, line of sight, picking, swept CCD</span></li>
+              <li><code>broadphase.js</code><span>Spatial hash culling the O(N²) pair test</span></li>
+              <li><code>selftest.js</code><span>Node smoke tests — free-fall, stacking, friction, joints</span></li>
+              <li><code>demo.html</code><span>A full tabbed demo of the engine</span></li>
+            </ul>
+          </div>
+          <div>
+            <span class="label">In practice</span>
+            <div class="exchange">
+              <div class="ask">
+                <span class="who">You type</span>
+                <p>Crates that stack up, and a cannon to knock them over.</p>
+              </div>
+              <div class="got">
+                <span class="who">What changes</span>
+                <p>Without the skill: boxes that jitter forever, sink into the ground, and explode when the tab is backgrounded.</p>
+                <p>With it: a <code>World</code> with gravity and a static floor, box bodies with friction and restitution, everything driven by <code>world.update(dt)</code> on a fixed step with interpolated rendering, and the cannon wired to <code>world.raycast</code>. The pile settles, stays settled, and goes to sleep.</p>
+              </div>
+            </div>
+            <div class="callout verdigris" style="margin-top:16px">
+              <strong>Pairs with canvas-atelier.</strong> This is the "does it behave correctly" half.
+              Soft connected motion — cloth, hair, rope — belongs to the Verlet approach in
+              canvas-atelier. Simulate rigid bodies here, drape soft detail there.
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal" style="margin-top:26px">
+          <div class="cmd">
+            <pre id="cmd-physics"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">physics-2d</span> .claude/skills/physics-2d</pre>
+            <button class="copy" data-copy="#cmd-physics">Copy</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 03 · CAVEMAN ============ -->
+      <section class="skill-section" id="caveman">
+        <div class="skill-head reveal">
+          <span class="skill-index">03 — output style</span>
+          <h2>caveman</h2>
+          <p class="tagline">
+            Cuts the padding out of every reply and keeps all of the substance. Its own frontmatter claims
+            a measured 65% reduction in output tokens.
+          </p>
+        </div>
+
+        <div class="prose reveal">
+          <p>
+            The skill drops articles, filler ("just", "basically", "actually"), pleasantries and hedging,
+            and allows fragments. What it explicitly refuses to touch is anything load-bearing: technical
+            terms stay exact, code blocks are untouched, error strings are quoted verbatim, and API and
+            CLI names are never abbreviated. It also refuses to invent abbreviations like
+            <code>cfg</code> or <code>impl</code> — the tokenizer splits those the same as the full word,
+            so they save nothing and cost the reader clarity.
+          </p>
+        </div>
+        <div class="prose reveal" style="margin-top:14px">
+          <p>
+            It runs at four intensities plus classical-Chinese (<em>wenyan</em>) variants, preserves
+            whatever language you wrote in, and — the part that makes it safe to leave on — it
+            <strong>drops back to normal prose automatically</strong> for security warnings, irreversible
+            action confirmations, and any multi-step sequence where dropped conjunctions would make the
+            order ambiguous. Compression is never allowed to create doubt about whether to back up before
+            dropping a table.
+          </p>
+        </div>
+
+        <div class="panel bleed reveal" style="margin-top:30px" data-demo="caveman">
+          <div class="panel-head">
+            <span class="label">Live · same answer, four intensities</span>
+            <button class="chip" data-cave-next>Another question</button>
+          </div>
+          <div class="panel-body">
+            <div class="cave-grid">
+              <div class="exchange">
+                <div class="ask"><span class="who">Question</span><p data-cave-q></p></div>
+              </div>
+              <div class="cave-levels">
+                <button class="chip" data-level="normal" aria-pressed="false">off</button>
+                <button class="chip" data-level="lite" aria-pressed="false">lite</button>
+                <button class="chip" data-level="full" aria-pressed="true">full</button>
+                <button class="chip" data-level="ultra" aria-pressed="false">ultra</button>
+              </div>
+              <div class="cave-out" data-cave-out></div>
+              <div class="cave-meter" data-cave-meter></div>
+            </div>
+          </div>
+          <p class="panel-note">
+            Percentages are measured against the "off" answer with a rough token heuristic. Notice what
+            survives all the way to ultra: <code>useMemo</code>, the actual cause, the actual fix. What
+            disappears is everything that was never information.
+          </p>
+        </div>
+
+        <div class="two-col reveal" style="margin-top:34px">
+          <div>
+            <span class="label">What ships in the folder</span>
+            <ul class="files">
+              <li><code>SKILL.md</code><span>The whole skill — rules, the six intensity levels, auto-clarity exceptions, worked examples. No scripts or references; this one is pure response style.</span></li>
+            </ul>
+            <div class="callout" style="margin-top:16px">
+              <strong>Stays on.</strong> The skill is explicit that it persists across turns rather than
+              drifting back after a few replies. Turn it off with "stop caveman" or "normal mode".
+            </div>
+          </div>
+          <div>
+            <span class="label">Intensities</span>
+            <div class="table-wrap">
+              <table class="grid">
+                <tbody>
+                  <tr><td class="name">lite</td><td>Full sentences and articles kept; filler and hedging gone. Professional but tight.</td></tr>
+                  <tr><td class="name">full</td><td>Articles dropped, fragments fine, short synonyms. The default.</td></tr>
+                  <tr><td class="name">ultra</td><td>Conjunctions stripped where cause and effect stay unambiguous. Each fact stated once.</td></tr>
+                  <tr><td class="name">wenyan</td><td>Classical Chinese, in three depths — up to 80–90% character reduction.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal" style="margin-top:26px">
+          <div class="cmd">
+            <pre id="cmd-caveman"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">caveman</span> .claude/skills/caveman</pre>
+            <button class="copy" data-copy="#cmd-caveman">Copy</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 04 · MATRIX-AGENTS-SKILL ============ -->
+      <section class="skill-section" id="matrix-agents-skill">
+        <div class="skill-head reveal">
+          <span class="skill-index">04 — meta</span>
+          <h2>matrix-agents-skill</h2>
+          <p class="tagline">
+            Watches a session for knowledge worth keeping, and turns the best of it into a new skill.
+            The machine that builds machines.
+          </p>
+        </div>
+
+        <div class="prose reveal">
+          <p>
+            Every session creates knowledge and then throws it away: how a flow actually works, why one
+            fix broke something else, which convention the project settled on. This skill runs quietly in
+            the background of ordinary work, appending a line to a tally file after each completed task
+            whenever it matches one of eleven patterns across five families — repetition, pain,
+            exploration, decisions, and environment quirks. It writes the tally down rather than trying to
+            remember, because attention decays over a long session and counts get lost.
+          </p>
+        </div>
+        <div class="prose reveal" style="margin-top:14px">
+          <p>
+            The restraint is the design. It never interrupts mid-task; when a pattern crosses its
+            threshold it emits exactly one line and keeps working. At the end it proposes
+            <strong>at most one</strong> skill — the strongest candidate, ranked pain over exploration
+            over decisions over repetition — and only if the result would save a future session real
+            work. Say no and the topic goes in a <code>declined.md</code> it never raises again. Say yes
+            and the gate opens onto a real interview (quick or deep), including the question that matters
+            most: <em>was anything here an exception that should not become the rule?</em>
+          </p>
+        </div>
+
+        <div class="panel bleed reveal" style="margin-top:30px" data-demo="matrix">
+          <div class="panel-head">
+            <span class="label">Live · a session in fast-forward</span>
+            <button class="chip" data-replay>Replay</button>
+          </div>
+          <div class="demo">
+            <div class="session">
+              <div class="session-feed" data-feed></div>
+              <div class="tally" data-tally></div>
+            </div>
+          </div>
+          <p class="panel-note">
+            Real patterns and real thresholds from the skill's table. Four styling fixes trip pattern #1;
+            two regressions in a row trip #4. Both are candidates, but only one gets proposed — pain
+            outranks repetition, because knowledge bought with a regression saves the most time later.
+          </p>
+        </div>
+
+        <div class="two-col reveal" style="margin-top:34px">
+          <div>
+            <span class="label">What ships in the folder</span>
+            <ul class="files">
+              <li><code>SKILL.md</code><span>The eleven-pattern table with thresholds, the interview question bank, the generated-skill format, and the routing-map block it maintains in <code>CLAUDE.md</code></span></li>
+            </ul>
+            <div class="callout" style="margin-top:16px">
+              <strong>Creates two files as it runs</strong>, not shipped with it:
+              <code>session-tally.md</code> (deleted after each proposal) and <code>declined.md</code>.
+              It also delegates the actual writing to Anthropic's <code>skill-creator</code> skill when
+              that's installed, rather than hand-rolling the format.
+            </div>
+          </div>
+          <div>
+            <span class="label">Why it registers what it builds</span>
+            <div class="exchange">
+              <div class="got">
+                <span class="who">The routing map</span>
+                <p>A skill nobody routes to may as well not exist. After every skill it creates, it updates a delimited block in the project's <code>CLAUDE.md</code> — one line per skill, in the form "trigger condition → path".</p>
+                <p>Because <code>CLAUDE.md</code> loads in every session, that block guarantees a future session knows which skills exist without loading any of them.</p>
+              </div>
+              <div class="ask">
+                <span class="who">Trigger words</span>
+                <p>/forge · /matrix · forge · matrix · פורג' · מטריקס</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal" style="margin-top:26px">
+          <div class="cmd">
+            <pre id="cmd-matrix"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">matrix-agents-skill</span> .claude/skills/matrix-agents-skill</pre>
+            <button class="copy" data-copy="#cmd-matrix">Copy</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 05 · SKILL-REPORT ============ -->
+      <section class="skill-section" id="skill-report">
+        <div class="skill-head reveal">
+          <span class="skill-index">05 — transparency</span>
+          <h2>skill-report</h2>
+          <p class="tagline">
+            A one-line footer on every reply naming which skills, subagents and web tools actually ran —
+            read from the transcript, not from Claude's memory of what it did.
+          </p>
+        </div>
+
+        <div class="prose reveal">
+          <p>
+            Skills fire at Claude's discretion, which makes it genuinely hard to tell whether the one you
+            installed did anything. This skill answers that question on every single turn. The detail that
+            makes it trustworthy is where the answer comes from: a Stop hook reads the session transcript
+            and extracts the real <code>Skill</code>, <code>Agent</code>, <code>WebSearch</code> and
+            <code>WebFetch</code> calls. Asking Claude to recall its own tool use invites a confident,
+            wrong answer; the transcript is ground truth.
+          </p>
+        </div>
+        <div class="prose reveal" style="margin-top:14px">
+          <p>
+            A skill alone can't guarantee it fires every turn, so this one is paired with a hook that
+            checks for the footer and forces one continuation if it's missing — which is why the report is
+            unconditional rather than best-effort. Routine tools are deliberately excluded: Read, Edit,
+            Bash and Grep run on nearly every turn, and listing them would turn signal into noise. The
+            footer surfaces <em>delegated</em> capability.
+          </p>
+        </div>
+
+        <div class="panel bleed reveal" style="margin-top:30px" data-demo="report">
+          <div class="panel-head">
+            <span class="label">Live · one turn, and the footer it produces</span>
+            <button class="chip" data-next-turn>Next turn</button>
+          </div>
+          <div class="demo">
+            <div class="term" data-term></div>
+          </div>
+          <p class="panel-note">
+            Greyed calls are the routine tools the hook ignores on purpose. Note the third turn: when
+            nothing was delegated, the footer still appears and says <code>none</code> three times — an
+            honest negative is the whole point.
+          </p>
+        </div>
+
+        <div class="two-col reveal" style="margin-top:34px">
+          <div>
+            <span class="label">What ships in the folder</span>
+            <ul class="files">
+              <li><code>SKILL.md</code><span>The footer format and why a hook is required for it to be unconditional</span></li>
+              <li><code>scripts/report_hook.py</code><span>The Stop hook — parses the transcript, finds this turn's real tool calls, forces a continuation when the footer is missing, and refuses to loop more than once</span></li>
+            </ul>
+          </div>
+          <div>
+            <span class="label">One extra step</span>
+            <div class="callout">
+              Copying the folder is not enough for this one — the hook has to be registered in your
+              project's <code>.claude/settings.json</code>. Merge this in, adding to an existing
+              <code>Stop</code> array if you already have one.
+            </div>
+            <div class="cmd" style="margin-top:12px">
+              <pre id="cmd-hookjson">{
+  "hooks": {
+    "Stop": [
+      { "hooks": [ { "type": "command",
+        "command": "python \"$CLAUDE_PROJECT_DIR/.claude/skills/skill-report/scripts/report_hook.py\"",
+        "timeout": 15 } ] }
+    ]
+  }
+}</pre>
+              <button class="copy" data-copy="#cmd-hookjson">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal" style="margin-top:26px">
+          <div class="cmd">
+            <pre id="cmd-report"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/<span class="tok-path">.claude/skills/skill-report</span> .claude/skills/skill-report</pre>
+            <button class="copy" data-copy="#cmd-report">Copy</button>
+          </div>
+          <p class="hint">
+            Note the source path — this skill already lives under <code>.claude/skills/</code> in the
+            repository, so it is not under <code>skills/</code> like the other four.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ ALL COMMANDS ============ -->
+      <section id="all">
+        <div class="section-head reveal">
+          <h2>Every command, in one place</h2>
+          <p>For grabbing more than one.</p>
+        </div>
+        <div class="table-wrap reveal">
+          <table class="grid">
+            <thead>
+              <tr><th>Skill</th><th>Install</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="name">canvas-atelier</td>
+                <td><div class="mini-cmd"><code>npx degit GiladMeirson/useful-skills/skills/canvas-atelier .claude/skills/canvas-atelier</code>
+                  <button class="copy-mini" data-copy="#cmd-atelier">Copy</button></div></td>
+              </tr>
+              <tr>
+                <td class="name">physics-2d</td>
+                <td><div class="mini-cmd"><code>npx degit GiladMeirson/useful-skills/skills/physics-2d .claude/skills/physics-2d</code>
+                  <button class="copy-mini" data-copy="#cmd-physics">Copy</button></div></td>
+              </tr>
+              <tr>
+                <td class="name">caveman</td>
+                <td><div class="mini-cmd"><code>npx degit GiladMeirson/useful-skills/skills/caveman .claude/skills/caveman</code>
+                  <button class="copy-mini" data-copy="#cmd-caveman">Copy</button></div></td>
+              </tr>
+              <tr>
+                <td class="name">matrix-agents-skill</td>
+                <td><div class="mini-cmd"><code>npx degit GiladMeirson/useful-skills/skills/matrix-agents-skill .claude/skills/matrix-agents-skill</code>
+                  <button class="copy-mini" data-copy="#cmd-matrix">Copy</button></div></td>
+              </tr>
+              <tr>
+                <td class="name">skill-report</td>
+                <td><div class="mini-cmd"><code>npx degit GiladMeirson/useful-skills/.claude/skills/skill-report .claude/skills/skill-report</code>
+                  <button class="copy-mini" data-copy="#cmd-report">Copy</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">
+          Prefer a menu? Clone the repository and run <code>./install.sh</code> (macOS, Linux, WSL, Git
+          Bash) or <code>./install.ps1</code> (Windows PowerShell) with no arguments for an interactive
+          picker that also handles project-versus-global placement.
+        </p>
+      </section>
+
+    </div>
+  </div>
+
+  <footer class="site-foot">
+    <div class="foot-grid">
+      <div>
+        <p>Built by Gilad Meirson · <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">source on GitHub</a></p>
+      </div>
+      <p style="color:var(--faint)">Skills are plain text. Read one before you trust it.</p>
+    </div>
+  </footer>
+</main>
+
+<script src="js/lib/gfx.js"></script>
+<script src="js/lib/render3d.js"></script>
+<script src="js/lib/engine2d.js"></script>
+<script src="js/main.js"></script>
+<script src="js/demos/hero.js"></script>
+<script src="js/demos/atelier.js"></script>
+<script src="js/demos/physics.js"></script>
+<script src="js/demos/caveman.js"></script>
+<script src="js/demos/matrix.js"></script>
+<script src="js/demos/report.js"></script>
+</body>
+</html>

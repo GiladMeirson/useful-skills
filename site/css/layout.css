@@ -1,0 +1,154 @@
+/* Asymmetric layout: a narrow index rail pinned left on wide screens, the
+   reading column offset from it, and demo panels allowed to bleed wider than
+   the text they belong to. */
+
+.shell { max-width: var(--page); margin: 0 auto; padding: 0 clamp(18px, 4vw, 40px); }
+
+.masthead {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px clamp(18px, 4vw, 40px);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--dim);
+  background: color-mix(in srgb, var(--ink-950) 72%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid transparent;
+  transition: border-color .3s ease, background .3s ease;
+}
+.masthead.stuck { border-bottom-color: var(--line-soft); }
+.masthead .mark { display: flex; align-items: center; gap: 10px; color: var(--text); letter-spacing: .06em; }
+.masthead .mark b { font-weight: 600; }
+.masthead .mark .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--brass); box-shadow: 0 0 12px var(--brass);
+}
+.masthead nav { display: flex; gap: 18px; align-items: center; }
+.masthead nav a { color: var(--dim); text-decoration: none; }
+.masthead nav a:hover { color: var(--brass); }
+@media (max-width: 720px) { .masthead nav .hide-sm { display: none; } }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative;
+  min-height: min(100svh, 860px);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line-soft);
+}
+#hero-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.hero-inner { position: relative; z-index: 2; width: 100%; padding: 120px 0 80px; }
+/* The headline sets its own line breaks; the copy block must stay wide enough
+   for the paragraph, or it wraps into a tall column and stretches the hero. */
+.hero-copy { max-width: 640px; }
+.hero h1 {
+  font-size: var(--fs-hero);
+  line-height: .92;
+  letter-spacing: -0.03em;
+  margin-bottom: 26px;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--brass);
+}
+.hero .lede {
+  font-size: var(--fs-lg);
+  color: var(--dim);
+  max-width: 44ch;
+  margin-bottom: 30px;
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(100deg,
+    var(--ink-950) 0%,
+    color-mix(in srgb, var(--ink-950) 88%, transparent) 30%,
+    transparent 62%);
+}
+@media (max-width: 860px) {
+  .hero-scrim {
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--ink-950) 70%, transparent) 0%,
+      color-mix(in srgb, var(--ink-950) 92%, transparent) 55%,
+      var(--ink-950) 100%);
+  }
+  .hero-copy { max-width: none; }
+}
+
+/* ---------- main grid ---------- */
+.body-grid {
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: clamp(24px, 5vw, 64px);
+  align-items: start;
+}
+@media (max-width: 1000px) { .body-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.rail { position: sticky; top: 84px; align-self: start; }
+@media (max-width: 1000px) { .rail { display: none; } }
+.rail-title {
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--faint);
+  margin-bottom: 14px;
+}
+.rail ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.rail a {
+  display: grid;
+  grid-template-columns: 2.1em 1fr;
+  align-items: baseline;
+  gap: 4px;
+  padding: 7px 10px 7px 0;
+  font-size: var(--fs-sm);
+  color: var(--faint);
+  text-decoration: none;
+  border-left: 2px solid var(--line-soft);
+  padding-left: 12px;
+  transition: color .2s ease, border-color .2s ease;
+}
+.rail a .num { font-family: var(--mono); font-size: var(--fs-xs); color: var(--faint); }
+.rail a:hover { color: var(--text); border-left-color: var(--brass-dim); }
+.rail a.active { color: var(--brass); border-left-color: var(--brass); }
+.rail a.active .num { color: var(--brass); }
+
+.column { min-width: 0; }
+
+section { padding: clamp(56px, 9vw, 110px) 0; border-bottom: 1px solid var(--line-soft); }
+section:last-child { border-bottom: 0; }
+.skill-section { scroll-margin-top: 70px; }
+
+/* Panels may bleed past the reading column, but only once the shell's own
+   centring margin leaves room for it — otherwise the bleed is what pushes the
+   page sideways. At 1400px the margin plus padding is ~150px, so 100 is safe. */
+.bleed { width: 100%; }
+@media (min-width: 1400px) {
+  .bleed { width: calc(100% + 100px); }
+}
+
+footer.site-foot {
+  padding: 60px 0 80px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--dim);
+  font-size: var(--fs-sm);
+}
+footer.site-foot .foot-grid {
+  display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: flex-end;
+}
