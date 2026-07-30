@@ -71,9 +71,19 @@ Demos.register('caveman', function (root) {
     });
   }
 
+  /* Backticked identifiers are the whole point of the ultra levels — `useMemo`
+   * is what survives when everything else is cut — so they have to read as code
+   * rather than as literal backticks. Typing runs on textContent (cheap, and
+   * safe), then the finished line is swapped for the marked-up version once. */
+  function codify(text) {
+    return String(text)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
+  }
+
   function type(text) {
     if (typer) { clearInterval(typer); typer = null; }
-    if (reduce) { out.textContent = text; return; }
+    if (reduce) { out.innerHTML = codify(text); return; }
     out.innerHTML = '';
     var span = document.createElement('span');
     var cursor = document.createElement('span');
@@ -86,7 +96,7 @@ Demos.register('caveman', function (root) {
       i += Math.ceil(text.length / 90);
       span.textContent = text.slice(0, i);
       if (i >= text.length) {
-        span.textContent = text;
+        span.innerHTML = codify(text);
         clearInterval(typer); typer = null;
         cursor.remove();
       }

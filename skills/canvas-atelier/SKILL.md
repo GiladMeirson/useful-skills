@@ -51,7 +51,7 @@ The above is for single-point motion. For anything made of *connected* points th
 Separate static and moving content onto different canvas layers, or redraw only the region that changed, instead of redrawing the entire scene every frame. Drive all animation with `requestAnimationFrame` using delta-time (time elapsed since the last frame) rather than a fixed per-frame increment, so motion speed stays consistent regardless of frame rate.
 
 ### 8. Critique — look before calling it done
-Everything above describes how to write code that *should* produce a good result. It doesn't confirm that it did — gradient math, compositing order, and clip regions are all easy to get subtly wrong in ways that only show up in rendered pixels, never in the source. Render the canvas to an actual image (a headless-browser screenshot, a `node-canvas` PNG export, or the artifact/browser preview) and look at it the way an art director critiques a painting, not the way a linter checks syntax.
+Everything above describes how to write code that *should* produce a good result. It doesn't confirm that it did — gradient math, compositing order, and clip regions are all easy to get subtly wrong in ways that only show up in rendered pixels, never in the source. Render the canvas to an actual image and look at it the way an art director critiques a painting, not the way a linter checks syntax. Use whatever your host gives you: a headless-browser screenshot (Playwright/Puppeteer via a shell tool), a `node-canvas` PNG export, an IDE live preview, or a rendered artifact. If the host genuinely cannot show you pixels, say so explicitly rather than silently skipping this stage — an unverified render is a draft, not a finished piece.
 
 Check the rendered image against this, not the code:
 

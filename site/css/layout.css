@@ -1,9 +1,159 @@
-/* Asymmetric layout: a narrow index rail pinned left on wide screens, the
-   reading column offset from it, and demo panels allowed to bleed wider than
-   the text they belong to. */
+/* ============================================================================
+ * Page architecture.
+ *
+ * The page is laid out like a plate book: a fixed apparatus (grid rules, crop
+ * marks, a vertical index down the left margin) that never scrolls, and inside
+ * it a single measured column of text with illustrations allowed to bleed past
+ * it. Nothing is centred except the shell itself; every other alignment is to
+ * the left rule, because a printed plate has one spine.
+ * ========================================================================= */
 
-.shell { max-width: var(--page); margin: 0 auto; padding: 0 clamp(18px, 4vw, 40px); }
+.shell {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
 
+/* ------------------------------------------------------- fixed apparatus --- */
+
+/* Four hairlines behind everything. They are the reason the layout reads as a
+   system rather than a stack of boxes — every rule and every plate edge lands
+   on one of them. */
+.apparatus {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.apparatus .cols {
+  max-width: var(--page);
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.apparatus .cols span {
+  border-left: 1px solid var(--rule-soft);
+  opacity: .55;
+}
+.apparatus .cols span:first-child { border-left: 0; }
+@media (max-width: 700px) { .apparatus { display: none; } }
+
+/* Crop marks. Print-craft signal, four corners, hairline only. */
+.crop {
+  position: fixed;
+  z-index: 61;
+  width: 13px; height: 13px;
+  pointer-events: none;
+  border: 0 solid var(--ink-4);
+}
+.crop.tl { top: 10px;    left: 10px;  border-top-width: 1px;    border-left-width: 1px; }
+.crop.tr { top: 10px;    right: 10px; border-top-width: 1px;    border-right-width: 1px; }
+.crop.bl { bottom: 10px; left: 10px;  border-bottom-width: 1px; border-left-width: 1px; }
+.crop.br { bottom: 10px; right: 10px; border-bottom-width: 1px; border-right-width: 1px; }
+@media (max-width: 700px) { .crop { display: none; } }
+
+/* Scroll progress — one hairline across the very top. */
+.progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0;
+  background: var(--signal);
+  z-index: 70;
+  pointer-events: none;
+  transition: width .08s linear;
+}
+
+/* ----------------------------------------------------------- reticle ---- */
+/* A crosshair that replaces the pointer on fine-pointer devices. Purely
+   additive: the native cursor stays as the fallback until JS confirms it can
+   track, and it is switched off entirely for coarse pointers. */
+.reticle {
+  position: fixed;
+  top: 0; left: 0;
+  width: 26px; height: 26px;
+  margin: -13px 0 0 -13px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s var(--ease-out), transform .12s var(--ease-out);
+  will-change: transform;
+}
+.reticle::before,
+.reticle::after {
+  content: "";
+  position: absolute;
+  background: var(--signal);
+}
+.reticle::before { left: 50%; top: 0; width: 1px; height: 100%; transform: translateX(-.5px); }
+.reticle::after  { top: 50%; left: 0; height: 1px; width: 100%; transform: translateY(-.5px); }
+.reticle .ring {
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--signal);
+  border-radius: 50%;
+  transition: inset .18s var(--ease-spring), opacity .18s var(--ease-out);
+}
+body.has-reticle .reticle { opacity: .85; }
+body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
+@media (pointer: coarse) { .reticle { display: none; } }
+
+/* --------------------------------------------------------- index rail ---- */
+/* Vertical, in the left margin, outside the reading column. Only appears where
+   the shell's own centring margin leaves room for it — below that the top
+   progress line and the ticker carry the same information. */
+.index-rail {
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  width: 52px;
+  z-index: 55;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  border-right: 1px solid var(--rule-soft);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+}
+@media (min-width: 1340px) { .index-rail { display: flex; } }
+
+.index-rail .rail-cap {
+  writing-mode: vertical-rl;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin-bottom: 6px;
+}
+.index-rail a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  writing-mode: vertical-rl;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .16em;
+  color: var(--ink-4);
+  text-decoration: none;
+  border: 0;
+  padding: 4px 0;
+  transition: color .22s var(--ease-out);
+}
+.index-rail a::before {
+  content: "";
+  width: 1px;
+  height: 14px;
+  background: currentColor;
+  transition: height .28s var(--ease-out);
+}
+.index-rail a:hover { color: var(--ink-2); }
+.index-rail a.active { color: var(--signal); }
+.index-rail a.active::before { height: 30px; }
+
+/* ------------------------------------------------------------ masthead --- */
 .masthead {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -11,36 +161,70 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px clamp(18px, 4vw, 40px);
+  gap: 14px;
+  padding: 13px var(--gutter);
   font-family: var(--mono);
   font-size: var(--fs-xs);
-  color: var(--dim);
-  background: color-mix(in srgb, var(--ink-950) 72%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
+  letter-spacing: .06em;
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(130%);
   border-bottom: 1px solid transparent;
-  transition: border-color .3s ease, background .3s ease;
+  transition: border-color .3s var(--ease-out), background .3s var(--ease-out);
 }
-.masthead.stuck { border-bottom-color: var(--line-soft); }
-.masthead .mark { display: flex; align-items: center; gap: 10px; color: var(--text); letter-spacing: .06em; }
-.masthead .mark b { font-weight: 600; }
-.masthead .mark .dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--brass); box-shadow: 0 0 12px var(--brass);
-}
-.masthead nav { display: flex; gap: 18px; align-items: center; }
-.masthead nav a { color: var(--dim); text-decoration: none; }
-.masthead nav a:hover { color: var(--brass); }
-@media (max-width: 720px) { .masthead nav .hide-sm { display: none; } }
+.masthead.stuck { border-bottom-color: var(--rule-soft); }
+@media (min-width: 1340px) { .masthead { padding-left: calc(52px + var(--gutter)); } }
 
-/* ---------- hero ---------- */
+.masthead .mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-weight: 600;
+}
+.masthead .mark .pip {
+  width: 6px; height: 6px;
+  background: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-glow);
+}
+.masthead nav { display: flex; gap: 4px; align-items: center; }
+.masthead nav a {
+  color: var(--ink-2);
+  text-decoration: none;
+  border: 0;
+  padding: 6px 10px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  transition: color .16s var(--ease-out), background .16s var(--ease-out);
+}
+.masthead nav a:hover { color: var(--signal); background: var(--signal-glow); }
+@media (max-width: 760px) { .masthead nav .hide-sm { display: none; } }
+
+.theme-toggle {
+  appearance: none;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink-2);
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 7px 10px;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: border-color .16s var(--ease-out), color .16s var(--ease-out);
+}
+.theme-toggle:hover { border-color: var(--signal); color: var(--signal); }
+
+/* ---------------------------------------------------------------- hero --- */
 .hero {
   position: relative;
-  min-height: min(100svh, 860px);
+  min-height: min(100svh, 900px);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   overflow: hidden;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--rule);
 }
 #hero-stage {
   position: absolute;
@@ -49,106 +233,255 @@
   height: 100%;
   z-index: 0;
 }
-.hero-inner { position: relative; z-index: 2; width: 100%; padding: 120px 0 80px; }
-/* The headline sets its own line breaks; the copy block must stay wide enough
-   for the paragraph, or it wraps into a tall column and stretches the hero. */
-.hero-copy { max-width: 640px; }
-.hero h1 {
-  font-size: var(--fs-hero);
-  line-height: .92;
-  letter-spacing: -0.03em;
-  margin-bottom: 26px;
-}
-.hero h1 em {
-  font-style: italic;
-  color: var(--brass);
-}
-.hero .lede {
-  font-size: var(--fs-lg);
-  color: var(--dim);
-  max-width: 44ch;
-  margin-bottom: 30px;
-}
-.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-
-.hero-scrim {
+.hero-veil {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(100deg,
-    var(--ink-950) 0%,
-    color-mix(in srgb, var(--ink-950) 88%, transparent) 30%,
-    transparent 62%);
+  background:
+    linear-gradient(94deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 84%, transparent) 34%, transparent 66%),
+    linear-gradient(0deg, var(--bg) 0%, transparent 38%);
 }
-@media (max-width: 860px) {
-  .hero-scrim {
+@media (max-width: 900px) {
+  .hero-veil {
     background: linear-gradient(180deg,
-      color-mix(in srgb, var(--ink-950) 70%, transparent) 0%,
-      color-mix(in srgb, var(--ink-950) 92%, transparent) 55%,
-      var(--ink-950) 100%);
+      color-mix(in srgb, var(--bg) 62%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 90%, transparent) 46%,
+      var(--bg) 88%);
   }
-  .hero-copy { max-width: none; }
 }
-
-/* ---------- main grid ---------- */
-.body-grid {
-  display: grid;
-  grid-template-columns: var(--rail) minmax(0, 1fr);
-  gap: clamp(24px, 5vw, 64px);
-  align-items: start;
+/* Longhand on purpose: .hero-inner is also a .shell, and a `padding` shorthand
+   here would silently reset the shell's horizontal gutter to zero, putting the
+   hero flush against the viewport edge on narrow screens. */
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding-top: 128px;
+  padding-bottom: clamp(36px, 6vw, 74px);
 }
-@media (max-width: 1000px) { .body-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 1340px) { .hero-inner { padding-left: calc(52px + var(--gutter)); } }
 
-.rail { position: sticky; top: 84px; align-self: start; }
-@media (max-width: 1000px) { .rail { display: none; } }
-.rail-title {
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  align-items: center;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .18em;
   text-transform: uppercase;
-  letter-spacing: .12em;
-  color: var(--faint);
+  color: var(--ink-3);
+  padding-bottom: 14px;
+  margin-bottom: clamp(20px, 4vw, 38px);
+  border-bottom: 1px solid var(--rule);
+}
+.hero-meta .now { color: var(--signal); }
+
+.hero-title {
+  font-size: var(--fs-hero);
+  line-height: .84;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+  margin-bottom: clamp(20px, 3vw, 34px);
+  text-wrap: initial;
+}
+.hero-title .line { display: block; }
+/* Outline only where the browser can actually stroke text — otherwise a
+   transparent fill would render the line invisible. */
+@supports (-webkit-text-stroke: 1px currentColor) {
+  .hero-title .line.hollow {
+    color: transparent;
+    -webkit-text-stroke: clamp(1px, .13vw, 2px) var(--ink);
+  }
+}
+.hero-title .stop { color: var(--signal); -webkit-text-stroke: 0; }
+
+.hero-lede {
+  font-size: var(--fs-lg);
+  color: var(--ink-2);
+  max-width: 46ch;
+  margin-bottom: clamp(22px, 3vw, 32px);
+}
+.hero-lede em { font-family: var(--serif); font-style: italic; color: var(--ink); }
+
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+.hero-spec {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: clamp(30px, 5vw, 56px);
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+  background: var(--rule);
+  max-width: 720px;
+}
+@media (max-width: 620px) { .hero-spec { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.hero-spec div {
+  background: var(--bg);
+  padding: 13px 14px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.hero-spec dt {
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 7px;
+}
+.hero-spec dd {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: var(--fs-xl);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.hero-spec dd .u { color: var(--signal); }
+
+/* --------------------------------------------------------------- ticker -- */
+.ticker {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg-2);
+  padding: 11px 0;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  z-index: 2;
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  gap: 0;
+  animation: ticker 46s linear infinite;
+}
+.ticker-track span { padding: 0 26px; white-space: nowrap; }
+.ticker-track span b { color: var(--signal); font-weight: 500; }
+.ticker:hover .ticker-track { animation-play-state: paused; }
+@keyframes ticker { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }
+
+/* ------------------------------------------------------------ main flow -- */
+main { position: relative; z-index: 2; }
+@media (min-width: 1340px) { main .shell { padding-left: calc(52px + var(--gutter)); } }
+
+.column { max-width: 900px; min-width: 0; }
+
+section.band {
+  padding: clamp(58px, 9vw, 118px) 0;
+  border-bottom: 1px solid var(--rule);
+}
+section.band:last-of-type { border-bottom: 0; }
+
+/* ---------------------------------------------------------------- plate -- */
+.plate {
+  position: relative;
+  padding: clamp(64px, 10vw, 130px) 0;
+  border-bottom: 1px solid var(--rule);
+  scroll-margin-top: 64px;
+}
+.plate-ord {
+  position: absolute;
+  top: clamp(30px, 5vw, 58px);
+  left: calc(-1 * clamp(6px, 1.6vw, 26px));
+  z-index: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: var(--fs-numeral);
+  line-height: .74;
+  letter-spacing: -0.06em;
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+  opacity: .5;
+}
+@supports (-webkit-text-stroke: 1px currentColor) {
+  .plate-ord { -webkit-text-stroke: 1px var(--rule); }
+}
+@supports not (-webkit-text-stroke: 1px currentColor) {
+  .plate-ord { color: var(--rule-soft); }
+}
+@media (max-width: 760px) { .plate-ord { opacity: .28; } }
+
+.plate-head { position: relative; z-index: 1; margin-bottom: clamp(26px, 4vw, 44px); }
+.plate-cat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 16px;
+}
+.plate-cat::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--rule);
+}
+.plate-cat .of { color: var(--ink-3); letter-spacing: .14em; }
+.plate-head h2 {
+  font-size: var(--fs-4xl);
+  letter-spacing: -0.045em;
   margin-bottom: 14px;
 }
-.rail ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.rail a {
-  display: grid;
-  grid-template-columns: 2.1em 1fr;
-  align-items: baseline;
-  gap: 4px;
-  padding: 7px 10px 7px 0;
-  font-size: var(--fs-sm);
-  color: var(--faint);
-  text-decoration: none;
-  border-left: 2px solid var(--line-soft);
-  padding-left: 12px;
-  transition: color .2s ease, border-color .2s ease;
+.plate-head .tagline {
+  color: var(--ink-2);
+  font-size: var(--fs-lg);
+  max-width: 54ch;
 }
-.rail a .num { font-family: var(--mono); font-size: var(--fs-xs); color: var(--faint); }
-.rail a:hover { color: var(--text); border-left-color: var(--brass-dim); }
-.rail a.active { color: var(--brass); border-left-color: var(--brass); }
-.rail a.active .num { color: var(--brass); }
+.plate-body { position: relative; z-index: 1; }
 
-.column { min-width: 0; }
-
-section { padding: clamp(56px, 9vw, 110px) 0; border-bottom: 1px solid var(--line-soft); }
-section:last-child { border-bottom: 0; }
-.skill-section { scroll-margin-top: 70px; }
-
-/* Panels may bleed past the reading column, but only once the shell's own
-   centring margin leaves room for it — otherwise the bleed is what pushes the
-   page sideways. At 1400px the margin plus padding is ~150px, so 100 is safe. */
+/* Illustrations may bleed past the reading column, but only once the shell's
+   own centring margin leaves room — otherwise the bleed is what pushes the page
+   sideways. */
 .bleed { width: 100%; }
-@media (min-width: 1400px) {
-  .bleed { width: calc(100% + 100px); }
-}
+@media (min-width: 1480px) { .bleed { width: calc(100% + 120px); } }
 
+/* --------------------------------------------------------------- footer -- */
 footer.site-foot {
-  padding: 60px 0 80px;
-  border-top: 1px solid var(--line-soft);
-  color: var(--dim);
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid var(--rule);
+  padding: clamp(48px, 7vw, 84px) 0 clamp(40px, 6vw, 70px);
+  color: var(--ink-2);
   font-size: var(--fs-sm);
 }
-footer.site-foot .foot-grid {
-  display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: flex-end;
+.foot-word {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 13vw, 11rem);
+  line-height: .8;
+  letter-spacing: -0.06em;
+  text-transform: uppercase;
+  color: transparent;
+  margin-bottom: clamp(26px, 4vw, 48px);
+  user-select: none;
 }
+@supports (-webkit-text-stroke: 1px currentColor) {
+  .foot-word { -webkit-text-stroke: 1px var(--rule); }
+}
+@supports not (-webkit-text-stroke: 1px currentColor) {
+  .foot-word { color: var(--rule-soft); }
+}
+.foot-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-top: 1px solid var(--rule);
+  padding-top: 22px;
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.foot-grid a { color: var(--ink-2); }
+.foot-grid a:hover { color: var(--signal); }

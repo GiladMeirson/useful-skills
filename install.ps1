@@ -59,6 +59,9 @@
 .PARAMETER Yes
   Skip the final confirmation prompt.
 
+.PARAMETER DryRun
+  Print the resolved destination paths and exit without writing anything.
+
 .PARAMETER ListSkills
   Print the available skills and exit.
 
@@ -91,6 +94,7 @@ param(
   [switch]$All,
   [switch]$Force,
   [switch]$Yes,
+  [switch]$DryRun,
   [switch]$ListSkills
 )
 
@@ -208,9 +212,9 @@ function Show-PostInstallNotes {
   }
   if ($ForAgent -eq 'copilot' -or $ForAgent -eq 'both') {
     Write-Host "Copilot" -ForegroundColor Yellow -NoNewline
-    Write-Host "        picked up by the coding agent, Copilot CLI, and agent mode in"
-    Write-Host "               VS Code / Visual Studio / JetBrains. Commit the folder so"
-    Write-Host "               your teammates and the cloud agent get it too."
+    Write-Host "         picked up by the coding agent, Copilot CLI, and agent mode in"
+    Write-Host "                VS Code / Visual Studio / JetBrains. Commit the folder"
+    Write-Host "                so teammates and the cloud agent get it too."
   }
 
   if ($Names -contains 'skill-report') {
@@ -253,8 +257,6 @@ function Show-PostInstallNotes {
 function Install-Skills {
   param([string[]]$Names, [string]$ForAgent, [bool]$IsGlobal, [bool]$SeparateCopies, [bool]$ForceCopy, [bool]$SkipConfirm)
 
-  Assert-Npx
-
   # ---- plan ----
   $plan = New-Object System.Collections.Generic.List[object]
   foreach ($n in $Names) {
@@ -281,6 +283,15 @@ function Install-Skills {
     Write-Host "  project skills directory. Use -Separate for a .github/skills copy too." -ForegroundColor DarkGray
   }
   Write-Rule
+
+  if ($DryRun) {
+    Write-Host ""
+    Write-Host "-DryRun: nothing written." -ForegroundColor DarkGray
+    Show-PostInstallNotes -Names $Names -ForAgent $ForAgent -IsGlobal $IsGlobal
+    return
+  }
+
+  Assert-Npx
 
   if (-not $SkipConfirm) {
     $ok = Read-Host "Proceed? [Y/n]"
@@ -335,7 +346,7 @@ function Invoke-InteractiveInstall {
   }
   Write-Host "   all) everything"
   $raw = Read-Host "   choice (e.g. 1  or  1,3  or  all)"
-  if (-not $raw) { Write-Error "nothing selected."; exit 1 }
+  if (-not $raw) { Fail "nothing selected." }
 
   $picked = New-Object System.Collections.Generic.List[string]
   if ($raw.Trim().ToLower() -eq 'all') {
@@ -349,7 +360,7 @@ function Invoke-InteractiveInstall {
       if (-not $picked.Contains($names[$idx - 1])) { $picked.Add($names[$idx - 1]) }
     }
   }
-  if ($picked.Count -eq 0) { Write-Error "nothing selected."; exit 1 }
+  if ($picked.Count -eq 0) { Fail "nothing selected." }
 
   # ---- agent ----
   $agentIdx = Read-Choice -Prompt "Which agent will use it?" -Options @(
@@ -391,14 +402,13 @@ function Invoke-InteractiveInstall {
 if ($ListSkills) { Show-Skills; exit 0 }
 
 if ($Global -and $Project) {
-  Write-Error "-Global and -Project are mutually exclusive."
-  exit 1
+  Fail "-Global and -Project are mutually exclusive."
 }
 
 # Explicit single destination wins over everything else.
 if ($Dest) {
-  if (-not $Skill) { Write-Error "-Dest needs a skill name."; exit 1 }
-  if (-not $Skills.Contains($Skill)) { Write-Error "unknown skill '$Skill'."; Show-Skills; exit 1 }
+  if (-not $Skill) { Fail "-Dest needs a skill name." }
+  if (-not $Skills.Contains($Skill)) { Show-Skills; Fail "unknown skill '$Skill'." }
   Assert-Npx
   Write-Host "Installing " -NoNewline
   Write-Host $Skill -ForegroundColor Yellow -NoNewline

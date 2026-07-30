@@ -7,6 +7,18 @@ description: Documents and formats the "Skill report" footer that gets appended 
 
 A one-line transparency footer, appended to the end of every response in this project, listing which Skills, subagents, and web tools were actually invoked to produce that response.
 
+## Host support
+
+| Host | Footer | Enforcement |
+|---|---|---|
+| Claude Code | guaranteed | `Stop` hook reads the transcript and forces a continuation if the marker is missing |
+| GitHub Copilot | best-effort | none available — Copilot has no post-turn hook; use a standing line in `.github/copilot-instructions.md` |
+
+Under Copilot the contents come from the model's own recollection rather than
+from the transcript, which is precisely what the hook exists to avoid — so the
+footer is a habit there, not an audit trail. Setup, the exact instruction block
+to paste, and why no Copilot equivalent can exist: `references/github-copilot.md`.
+
 ## Why this needs a hook, not just a skill
 
 Skills normally trigger at Claude's discretion, matched against their description - there's no way for a SKILL.md alone to guarantee it fires on literally every turn, especially simple ones. To make the report unconditional, this skill is paired with a Stop hook (`scripts/report_hook.py`, registered in `.claude/settings.json`) that runs after every response and checks the transcript for the exact marker text below. If it's missing, the hook forces one more continuation asking you to append it - so the report is guaranteed even if this skill never gets consulted on its own.

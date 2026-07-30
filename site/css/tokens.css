@@ -1,151 +1,196 @@
-/* Design tokens.
- * Direction: a dark instrument atelier — deep ink ground, working brass, aged
- * verdigris. Every component styles through these variables so the light theme
- * is a token swap, never a second set of rules.
- */
+/* ============================================================================
+ * Design tokens.
+ *
+ * Direction: a technical plate book. Carbon paper, bone ink, one signal colour
+ * doing all the pointing, hairline rules instead of boxes, and square corners
+ * everywhere — the page should read as a printed specification, not a product
+ * page. The demos are the illustrations; the typography is the apparatus around
+ * them.
+ *
+ * Rules of the system:
+ *   - radius is 0 (2px maximum, and only where a control must read as pressable)
+ *   - one accent. --signal points at things. --steel and --acid are data, never
+ *     decoration
+ *   - every component styles through these variables, so the light theme is a
+ *     token swap and never a second set of rules
+ * ========================================================================= */
+
 :root {
-  --ink-950: #06090f;
-  --ink-900: #0a0f1b;
-  --ink-850: #0e1526;
-  --ink-800: #131c31;
-  --ink-700: #1b263f;
-  --line: #253251;
-  --line-soft: #1a2439;
+  /* ---- ground ---- */
+  --bg:        #0a0a0c;
+  --bg-2:      #0f0f13;
+  --bg-3:      #16161c;
+  --bg-4:      #1e1e26;
+  --rule:      #2b2b36;
+  --rule-soft: #1c1c24;
 
-  --text: #e7edf8;
-  --dim: #94a3bd;
-  --faint: #64738f;
+  /* ---- ink ---- */
+  --ink:       #f0ece4;
+  --ink-2:     #a8a29a;
+  --ink-3:     #6f6a64;
+  --ink-4:     #4a4640;
 
-  --brass: #e0a54e;
-  --brass-hi: #f7d69e;
-  --brass-dim: #a97a2f;
-  --brass-glow: rgba(224, 165, 78, 0.16);
-  --brass-edge: rgba(224, 165, 78, 0.32);
+  /* ---- signal ---- */
+  --signal:      #ff5a1f;
+  --signal-hi:   #ff9166;
+  --signal-dim:  #b8410f;
+  --signal-glow: rgba(255, 90, 31, .13);
+  --signal-edge: rgba(255, 90, 31, .34);
+  --on-signal:   #140702;
 
-  --verdigris: #6fbfa6;
-  --verdigris-dim: #3d7c6a;
-  --ember: #e0725a;
+  /* ---- data colours ---- */
+  --steel: #7fa8ff;
+  --acid:  #b9f24a;
 
-  --code-bg: #05080e;
-  --code-text: #d8e2f2;
+  /* ---- code ---- */
+  --code-bg:   #07070a;
+  --code-ink:  #ded9d1;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-md: 0 10px 30px -14px rgba(0, 0, 0, .8), 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-lg: 0 30px 70px -30px rgba(0, 0, 0, .9), 0 2px 6px rgba(0, 0, 0, .5);
+  /* ---- elevation. Sparingly: a plate book has no drop shadows. ---- */
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, .5);
+  --shadow-md: 0 24px 60px -34px rgba(0, 0, 0, .95);
 
-  --display: "Bodoni MT", "Bodoni 72", Didot, "Playfair Display", "Iowan Old Style", Georgia, "Times New Roman", serif;
-  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  /* ---- type ---- */
+  --display: "Inter", "Segoe UI Variable Display", "Segoe UI", -apple-system,
+             BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --sans:    "Inter", "Segoe UI Variable Text", "Segoe UI", -apple-system,
+             BlinkMacSystemFont, ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
+  --serif:   "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+             Georgia, "Times New Roman", serif;
+  --mono:    ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Menlo,
+             Consolas, "Liberation Mono", monospace;
 
-  --fs-xs: .74rem;
-  --fs-sm: .84rem;
-  --fs-base: .96rem;
-  --fs-lg: 1.08rem;
-  --fs-xl: 1.3rem;
-  --fs-2xl: 1.7rem;
-  --fs-3xl: 2.3rem;
-  --fs-4xl: clamp(2.4rem, 5.5vw, 3.6rem);
-  --fs-hero: clamp(2.8rem, 8.5vw, 6.2rem);
+  --fs-xs:   .72rem;
+  --fs-sm:   .82rem;
+  --fs-base: .95rem;
+  --fs-lg:   1.06rem;
+  --fs-xl:   1.28rem;
+  --fs-2xl:  1.65rem;
+  --fs-3xl:  clamp(1.9rem, 3.6vw, 2.9rem);
+  --fs-4xl:  clamp(2.6rem, 6.4vw, 4.6rem);
+  --fs-hero: clamp(3rem, 11.5vw, 9.5rem);
+  --fs-numeral: clamp(6rem, 17vw, 15rem);
 
-  --measure: 66ch;
-  --page: 1180px;
-  --col: 760px;
-  --rail: 190px;
-  --radius: 12px;
-  --radius-lg: 18px;
+  /* ---- measure & rhythm ---- */
+  --measure: 62ch;
+  --page:    1200px;
+  --gutter:  clamp(18px, 4.2vw, 56px);
+  --radius:  0px;
+  --radius-sm: 2px;
+
+  --ease-out: cubic-bezier(.16, .84, .32, 1);
+  --ease-spring: cubic-bezier(.2, 1.3, .35, 1);
 }
 
+/* ---------------------------------------------------------------- light ---
+ * Bone paper, carbon ink, a darker signal so it still holds on a light field.
+ * Code blocks stay dark in both themes on purpose — a terminal is a terminal.
+ */
 @media (prefers-color-scheme: light) {
   :root {
-    --ink-950: #e9edf5;
-    --ink-900: #ffffff;
-    --ink-850: #f4f7fc;
-    --ink-800: #eef2f9;
-    --ink-700: #e3e9f3;
-    --line: #ccd6e6;
-    --line-soft: #dde4ef;
+    --bg:        #f1eee7;
+    --bg-2:      #ffffff;
+    --bg-3:      #f7f5f0;
+    --bg-4:      #e9e5dc;
+    --rule:      #d3cdc1;
+    --rule-soft: #e3ded4;
 
-    --text: #0d1728;
-    --dim: #55637d;
-    --faint: #7d8aa3;
+    --ink:       #131318;
+    --ink-2:     #55524c;
+    --ink-3:     #8b867e;
+    --ink-4:     #a9a49b;
 
-    --brass: #9a6a18;
-    --brass-hi: #7a520e;
-    --brass-dim: #b58a3c;
-    --brass-glow: rgba(154, 106, 24, 0.09);
-    --brass-edge: rgba(154, 106, 24, 0.26);
+    --signal:      #d13c06;
+    --signal-hi:   #a52d02;
+    --signal-dim:  #ef8055;
+    --signal-glow: rgba(209, 60, 6, .08);
+    --signal-edge: rgba(209, 60, 6, .28);
+    --on-signal:   #fff6f1;
 
-    --verdigris: #2c7a63;
-    --verdigris-dim: #4f9c86;
-    --ember: #b8452c;
+    --steel: #2a56cc;
+    --acid:  #4c7810;
 
-    --code-bg: #0a0f1b;
-    --code-text: #d8e2f2;
-
-    --shadow-sm: 0 1px 2px rgba(18, 28, 48, .06);
-    --shadow-md: 0 10px 30px -18px rgba(18, 28, 48, .3), 0 1px 2px rgba(18, 28, 48, .05);
-    --shadow-lg: 0 30px 60px -34px rgba(18, 28, 48, .35), 0 2px 6px rgba(18, 28, 48, .06);
+    --shadow-sm: 0 1px 0 rgba(20, 18, 14, .06);
+    --shadow-md: 0 24px 50px -36px rgba(20, 18, 14, .45);
   }
 }
 
 :root[data-theme="light"] {
-  --ink-950: #e9edf5;
-  --ink-900: #ffffff;
-  --ink-850: #f4f7fc;
-  --ink-800: #eef2f9;
-  --ink-700: #e3e9f3;
-  --line: #ccd6e6;
-  --line-soft: #dde4ef;
+  --bg:        #f1eee7;
+  --bg-2:      #ffffff;
+  --bg-3:      #f7f5f0;
+  --bg-4:      #e9e5dc;
+  --rule:      #d3cdc1;
+  --rule-soft: #e3ded4;
 
-  --text: #0d1728;
-  --dim: #55637d;
-  --faint: #7d8aa3;
+  --ink:       #131318;
+  --ink-2:     #55524c;
+  --ink-3:     #8b867e;
+  --ink-4:     #a9a49b;
 
-  --brass: #9a6a18;
-  --brass-hi: #7a520e;
-  --brass-dim: #b58a3c;
-  --brass-glow: rgba(154, 106, 24, 0.09);
-  --brass-edge: rgba(154, 106, 24, 0.26);
+  --signal:      #d13c06;
+  --signal-hi:   #a52d02;
+  --signal-dim:  #ef8055;
+  --signal-glow: rgba(209, 60, 6, .08);
+  --signal-edge: rgba(209, 60, 6, .28);
+  --on-signal:   #fff6f1;
 
-  --verdigris: #2c7a63;
-  --verdigris-dim: #4f9c86;
-  --ember: #b8452c;
+  --steel: #2a56cc;
+  --acid:  #4c7810;
 
-  --code-bg: #0a0f1b;
-  --code-text: #d8e2f2;
-
-  --shadow-sm: 0 1px 2px rgba(18, 28, 48, .06);
-  --shadow-md: 0 10px 30px -18px rgba(18, 28, 48, .3), 0 1px 2px rgba(18, 28, 48, .05);
-  --shadow-lg: 0 30px 60px -34px rgba(18, 28, 48, .35), 0 2px 6px rgba(18, 28, 48, .06);
+  --shadow-sm: 0 1px 0 rgba(20, 18, 14, .06);
+  --shadow-md: 0 24px 50px -36px rgba(20, 18, 14, .45);
 }
 
 :root[data-theme="dark"] {
-  --ink-950: #06090f;
-  --ink-900: #0a0f1b;
-  --ink-850: #0e1526;
-  --ink-800: #131c31;
-  --ink-700: #1b263f;
-  --line: #253251;
-  --line-soft: #1a2439;
+  --bg:        #0a0a0c;
+  --bg-2:      #0f0f13;
+  --bg-3:      #16161c;
+  --bg-4:      #1e1e26;
+  --rule:      #2b2b36;
+  --rule-soft: #1c1c24;
 
-  --text: #e7edf8;
-  --dim: #94a3bd;
-  --faint: #64738f;
+  --ink:       #f0ece4;
+  --ink-2:     #a8a29a;
+  --ink-3:     #6f6a64;
+  --ink-4:     #4a4640;
 
-  --brass: #e0a54e;
-  --brass-hi: #f7d69e;
-  --brass-dim: #a97a2f;
-  --brass-glow: rgba(224, 165, 78, 0.16);
-  --brass-edge: rgba(224, 165, 78, 0.32);
+  --signal:      #ff5a1f;
+  --signal-hi:   #ff9166;
+  --signal-dim:  #b8410f;
+  --signal-glow: rgba(255, 90, 31, .13);
+  --signal-edge: rgba(255, 90, 31, .34);
+  --on-signal:   #140702;
 
-  --verdigris: #6fbfa6;
-  --verdigris-dim: #3d7c6a;
-  --ember: #e0725a;
+  --steel: #7fa8ff;
+  --acid:  #b9f24a;
 
-  --code-bg: #05080e;
-  --code-text: #d8e2f2;
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, .5);
+  --shadow-md: 0 24px 60px -34px rgba(0, 0, 0, .95);
+}
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-md: 0 10px 30px -14px rgba(0, 0, 0, .8), 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-lg: 0 30px 70px -30px rgba(0, 0, 0, .9), 0 2px 6px rgba(0, 0, 0, .5);
+/* ------------------------------------------------------- legacy aliases ---
+ * A few demo scripts inject inline styles referencing the previous token names.
+ * Mapping them here keeps those demos correct without editing string literals
+ * inside animation code.
+ */
+:root {
+  --text:   var(--ink);
+  --dim:    var(--ink-2);
+  --faint:  var(--ink-3);
+  --line:   var(--rule);
+  --line-soft: var(--rule-soft);
+  --brass:  var(--signal);
+  --brass-hi: var(--signal-hi);
+  --brass-dim: var(--signal-dim);
+  --brass-glow: var(--signal-glow);
+  --brass-edge: var(--signal-edge);
+  --verdigris: var(--steel);
+  --ember:  var(--signal);
+  --ink-950: var(--bg);
+  --ink-900: var(--bg-2);
+  --ink-850: var(--bg-3);
+  --ink-800: var(--bg-4);
+  --ink-700: var(--rule);
+  --code-text: var(--code-ink);
 }

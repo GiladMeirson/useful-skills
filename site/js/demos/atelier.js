@@ -166,9 +166,9 @@ Demos.register('atelier-cloth', function (root) {
     }
 
     // Pole
-    ctx.fillStyle = '#2b3550';
+    ctx.fillStyle = '#2b2620';
     ctx.fillRect(ORIGIN_X - 7, ORIGIN_Y - 22, 7, (ROWS - 1) * SPACING + 44);
-    ctx.fillStyle = 'rgba(247,214,158,.5)';
+    ctx.fillStyle = 'rgba(255,210,170,.5)';
     ctx.fillRect(ORIGIN_X - 7, ORIGIN_Y - 22, 2, (ROWS - 1) * SPACING + 44);
   }
 
@@ -272,8 +272,8 @@ Demos.register('atelier-stages', function (root) {
 
     // ground
     var gg = ctx.createLinearGradient(0, S * 0.72, 0, S);
-    gg.addColorStop(0, '#0d1526');
-    gg.addColorStop(1, '#070b14');
+    gg.addColorStop(0, '#191510');
+    gg.addColorStop(1, '#0b0908');
     ctx.fillStyle = gg;
     ctx.fillRect(0, S * 0.72, S, S * 0.28);
 
@@ -282,7 +282,7 @@ Demos.register('atelier-stages', function (root) {
       ctx.globalAlpha = .5;
       ctx.beginPath();
       ctx.ellipse(cx + 14, cy + 92, 54, 11, 0, 0, Math.PI * 2);
-      ctx.fillStyle = '#03060d';
+      ctx.fillStyle = '#050403';
       ctx.filter = 'blur(7px)';
       ctx.fill();
       ctx.restore();
@@ -292,10 +292,10 @@ Demos.register('atelier-stages', function (root) {
       ctx.save();
       ctx.globalAlpha = .55;
       pearPath(ctx, cx, cy, false);
-      ctx.fillStyle = '#5a6a8c';
+      ctx.fillStyle = '#6a6156';
       ctx.fill();
       ctx.restore();
-      ctx.strokeStyle = 'rgba(224,165,78,.5)';
+      ctx.strokeStyle = 'rgba(255,90,31,.55)';
       ctx.setLineDash([3, 4]);
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(cx, 18); ctx.lineTo(cx, S - 18); ctx.stroke();
@@ -306,9 +306,9 @@ Demos.register('atelier-stages', function (root) {
 
     if (stage === 'contour') {
       pearPath(ctx, cx, cy, true);
-      ctx.fillStyle = '#4a5570';
+      ctx.fillStyle = '#57503f';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(247,214,158,.75)';
+      ctx.strokeStyle = 'rgba(255,208,172,.78)';
       ctx.lineWidth = 1.4;
       ctx.stroke();
       return;
@@ -324,7 +324,7 @@ Demos.register('atelier-stages', function (root) {
     grad.addColorStop(.32, '#cfa845');
     grad.addColorStop(.62, '#8f7526');
     grad.addColorStop(.85, '#4c4326');
-    grad.addColorStop(1, '#25243a');
+    grad.addColorStop(1, '#2a2018');
     ctx.fillStyle = grad;
     ctx.fillRect(cx - 70, cy - 80, 150, 190);
 

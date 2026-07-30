@@ -131,7 +131,7 @@ Demos.register('hero', function (root) {
       ctx.globalAlpha = 0.3 * fade;
       ctx.beginPath();
       ctx.ellipse(g.pos.x + 8, g.pos.y + g.r * 1.15, g.r * 0.7, g.r * 0.16, 0, 0, Math.PI * 2);
-      ctx.fillStyle = '#02040a';
+      ctx.fillStyle = '#050406';
       ctx.filter = 'blur(10px)';
       ctx.fill();
       ctx.restore();
@@ -142,10 +142,13 @@ Demos.register('hero', function (root) {
         rx: g.rx, ry: g.ry, rz: g.rz,
         depth: g.depth,
         light: light,
-        base: '#c98f3d',
-        highlight: '#ffeccb',
-        shadow: '#1d2b45',
-        edge: 'rgba(255,231,190,0.13)',
+        // Bone facets with a signal-orange edge: the solids read as paper
+        // models under a warm key light, and the accent stays where the eye
+        // already goes — the silhouette.
+        base: '#c9c0b2',
+        highlight: '#fff6ea',
+        shadow: '#2a2620',
+        edge: 'rgba(255,110,50,0.30)',
         alpha: fade
       });
     }

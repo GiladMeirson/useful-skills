@@ -76,3 +76,9 @@ Example — destructive op:
 ## Boundaries
 
 Code/commits/PRs: write normal. "stop caveman" or "normal mode": revert. Level persist until changed or session end.
+
+## Hosts
+
+Portable. No tools, no scripts, no host APIs — pure response style. Works same on Claude Code, GitHub Copilot (`.github/skills/`, `~/.copilot/skills/`), any agent reading `SKILL.md`.
+
+`/caveman` = Claude Code native slash invocation for skills. Copilot has no slash for skills — plain words work ("caveman mode", "use caveman", "caveman ultra"). Want real `/caveman` in Copilot Chat: add `.github/prompts/caveman.prompt.md`, body "Adopt the caveman skill's <level> intensity for the rest of this session."

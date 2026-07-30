@@ -18,7 +18,9 @@ Demos.register('physics', function (root) {
   var readout = root.querySelector('[data-readout]');
   var drag = null, aim = null;
 
-  var PALETTE = ['#e0a54e', '#c98f3d', '#a97a2f', '#f0c076', '#8a6428', '#d9a45f'];
+  // Crates alternate bone and signal so a settled pile still has rhythm in it —
+  // an all-one-hue stack reads as a texture rather than as separate bodies.
+  var PALETTE = ['#cdc3b3', '#e0561f', '#b4aa9a', '#e8815a', '#9a9184', '#d4482a'];
 
   function addStatics() {
     world.add(new P.Body({ shape: P.makeBox(VW + 200, 46), x: VW / 2, y: VH - 12, isStatic: true, friction: .85, tag: 'ground' }));
@@ -48,7 +50,7 @@ Demos.register('physics', function (root) {
     for (var i = 0; i < 8; i++) {
       var link = world.add(new P.Body({
         shape: P.makeBox(9, seg - 2), x: ax, y: ay + 12 + i * seg,
-        friction: .4, restitution: .02, color: '#6fbfa6', allowSleep: false
+        friction: .4, restitution: .02, color: '#6f8fd8', allowSleep: false
       }));
       world.addJoint(new P.RevoluteJoint(prev, link,
         { x: 0, y: prev === anchor ? 7 : (seg - 2) / 2 }, { x: 0, y: -(seg - 2) / 2 }));
@@ -56,7 +58,7 @@ Demos.register('physics', function (root) {
     }
     var ball = world.add(new P.Body({
       shape: P.makeCircle(22), x: ax, y: ay + 12 + 8 * seg + 12,
-      friction: .5, restitution: .15, density: .009, color: '#e0725a', allowSleep: false
+      friction: .5, restitution: .15, density: .009, color: '#ff5a1f', allowSleep: false
     }));
     world.addJoint(new P.RevoluteJoint(prev, ball, { x: 0, y: (seg - 2) / 2 }, { x: 0, y: -22 }));
     // A nudge, so it is already swinging rather than hanging dead still.
@@ -89,7 +91,7 @@ Demos.register('physics', function (root) {
     for (var j = 0; j < 5; j++) {
       world.add(new P.Body({
         shape: P.makeCircle(15), x: 140 + j * 44, y: VH - 70,
-        friction: .3, restitution: .5, color: '#6fbfa6'
+        friction: .3, restitution: .5, color: '#6f8fd8'
       }));
     }
   }
@@ -112,7 +114,7 @@ Demos.register('physics', function (root) {
   // ------------------------------------------------------------- rendering
   function drawBody(b) {
     var asleep = !b.awake && !b.isStatic;
-    var base = b.color || (b.isStatic ? '#243250' : '#c98f3d');
+    var base = b.color || (b.isStatic ? '#3a352d' : '#c2b6a4');
 
     ctx.save();
     ctx.translate(b.position.x, b.position.y);
@@ -121,14 +123,14 @@ Demos.register('physics', function (root) {
     if (b.shape.type === 'circle') {
       var r = b.shape.r;
       var grad = ctx.createRadialGradient(-r * .35, -r * .4, r * .05, 0, 0, r * 1.15);
-      grad.addColorStop(0, G.mixHex(base, '#fff3d6', .55));
+      grad.addColorStop(0, G.mixHex(base, '#fff2e4', .55));
       grad.addColorStop(.55, base);
-      grad.addColorStop(1, G.mixHex(base, '#16203a', .6));
+      grad.addColorStop(1, G.mixHex(base, '#191510', .6));
       ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
       ctx.fillStyle = grad; ctx.fill();
       // a spoke, so rotation is actually visible on a circle
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r * .82, 0);
-      ctx.strokeStyle = 'rgba(10,15,25,.35)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = 'rgba(12,10,8,.4)'; ctx.lineWidth = 2; ctx.stroke();
     } else {
       var v = b.shape.verts;
       ctx.beginPath();
@@ -138,18 +140,23 @@ Demos.register('physics', function (root) {
       var minY = Infinity, maxY = -Infinity;
       for (var k = 0; k < v.length; k++) { if (v[k].y < minY) minY = v[k].y; if (v[k].y > maxY) maxY = v[k].y; }
       var lg = ctx.createLinearGradient(0, minY, 0, maxY);
-      lg.addColorStop(0, G.mixHex(base, '#fff3d6', b.isStatic ? .12 : .42));
-      lg.addColorStop(1, G.mixHex(base, '#101a2e', b.isStatic ? .35 : .5));
+      // The ground is dark on purpose; the crates are not. Mixing them toward
+      // near-black as hard as the backdrop would flatten the whole pile into one
+      // silhouette, so dynamic bodies keep most of their local value.
+      lg.addColorStop(0, G.mixHex(base, '#fff2e4', b.isStatic ? .10 : .50));
+      lg.addColorStop(1, G.mixHex(base, '#15110d', b.isStatic ? .30 : .34));
       ctx.fillStyle = lg;
       ctx.fill();
-      ctx.strokeStyle = b.isStatic ? 'rgba(120,150,200,.16)' : 'rgba(255,236,203,.16)';
+      ctx.strokeStyle = b.isStatic ? 'rgba(200,190,175,.14)' : 'rgba(255,224,196,.18)';
       ctx.lineWidth = 1;
       ctx.stroke();
     }
 
     if (asleep) {
-      ctx.globalAlpha = .45;
-      ctx.fillStyle = '#0a0f1b';
+      // Dim, not erase — the point is to see the pile go quiet, which needs the
+      // bodies to still read as bodies against the near-black ground.
+      ctx.globalAlpha = .34;
+      ctx.fillStyle = '#0f0f13';
       if (b.shape.type === 'circle') { ctx.beginPath(); ctx.arc(0, 0, b.shape.r, 0, Math.PI * 2); ctx.fill(); }
       else ctx.fill();
     }
@@ -161,7 +168,7 @@ Demos.register('physics', function (root) {
 
     // faint workshop grid
     ctx.save();
-    ctx.strokeStyle = 'rgba(120,150,200,.055)';
+    ctx.strokeStyle = 'rgba(200,190,175,.05)';
     ctx.lineWidth = 1;
     for (var gx = 0; gx <= VW; gx += 45) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, VH); ctx.stroke(); }
     for (var gy = 0; gy <= VH; gy += 45) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(VW, gy); ctx.stroke(); }
@@ -174,7 +181,7 @@ Demos.register('physics', function (root) {
       var pA = { x: j.a.position.x + j.localA.x * ca - j.localA.y * sa, y: j.a.position.y + j.localA.x * sa + j.localA.y * ca };
       var pB = { x: j.b.position.x + j.localB.x * cb - j.localB.y * sb, y: j.b.position.y + j.localB.x * sb + j.localB.y * cb };
       ctx.beginPath(); ctx.moveTo(pA.x, pA.y); ctx.lineTo(pB.x, pB.y);
-      ctx.strokeStyle = 'rgba(111,191,166,.5)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = 'rgba(127,168,255,.55)'; ctx.lineWidth = 2; ctx.stroke();
     }
 
     for (var b = 0; b < world.bodies.length; b++) drawBody(world.bodies[b]);
@@ -186,16 +193,16 @@ Demos.register('physics', function (root) {
       var end = hit ? hit.point : { x: 40 + dir.x * 4, y: (VH - 90) + dir.y * 4 };
       ctx.save();
       ctx.setLineDash([7, 7]);
-      ctx.strokeStyle = 'rgba(224,114,90,.75)';
+      ctx.strokeStyle = 'rgba(255,90,31,.8)';
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(40, VH - 90); ctx.lineTo(end.x, end.y); ctx.stroke();
       ctx.restore();
       if (hit) {
         ctx.beginPath(); ctx.arc(hit.point.x, hit.point.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#e0725a'; ctx.fill();
+        ctx.fillStyle = '#ff5a1f'; ctx.fill();
       }
       ctx.beginPath(); ctx.arc(40, VH - 90, 12, 0, Math.PI * 2);
-      ctx.fillStyle = '#e0725a'; ctx.fill();
+      ctx.fillStyle = '#ff5a1f'; ctx.fill();
     }
 
     if (drag && drag.body) {
@@ -258,7 +265,7 @@ Demos.register('physics', function (root) {
       var shot = world.add(new P.Body({
         shape: P.makeCircle(11), x: 40, y: VH - 90,
         vx: dir.x / len * 1500, vy: dir.y / len * 1500,
-        density: .02, restitution: .3, friction: .4, color: '#e0725a'
+        density: .02, restitution: .3, friction: .4, color: '#ff5a1f'
       }));
       shot.tag = 'shot';
       aim = null;

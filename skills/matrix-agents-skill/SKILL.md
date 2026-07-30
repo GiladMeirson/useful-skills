@@ -1,6 +1,6 @@
 ---
 name: matrix-agents-skill
-description: A meta-skill that turns every coding session into an opportunity to create new skills. Load this in EVERY session, regardless of language or stack (React, Angular, .NET, Java, HTML/CSS, games, scripts, SQL). It silently monitors the session for learning patterns — repeated fixes, regressions, costly exploration, architectural decisions, environment quirks — recording them in a session tally file after every completed task. When a threshold is crossed it emits a single one-line alert and keeps working. At the end of the session — or whenever the developer types any trigger word (/matrix-agents-skill, /forge, /matrix, forge, matrix, פורג', מטריקס, בדוק סקילים) — it proposes, runs a quick-or-deep interview via AskUserQuestion, and generates (or updates) a project skill via the skill-creator skill, then registers it in a skill routing map inside CLAUDE.md. ALWAYS activate on any trigger word. The machine that builds machines.
+description: A meta-skill that turns every coding session into an opportunity to create new skills. Works on Claude Code and GitHub Copilot alike. Load this in EVERY session, regardless of language or stack (React, Angular, .NET, Java, HTML/CSS, games, scripts, SQL). It silently monitors the session for learning patterns — repeated fixes, regressions, costly exploration, architectural decisions, environment quirks — recording them in a session tally file after every completed task. When a threshold is crossed it emits a single one-line alert and keeps working. At the end of the session — or whenever the developer types any trigger word (/matrix-agents-skill, /forge, /matrix, forge, matrix, פורג', מטריקס, בדוק סקילים) — it proposes, runs a quick-or-deep interview, and generates (or updates) a project skill, then registers it in a skill routing map inside the host agent's always-loaded memory file (CLAUDE.md, .github/copilot-instructions.md, or AGENTS.md). ALWAYS activate on any trigger word. The machine that builds machines.
 ---
 
 # Matrix Agents Skill
@@ -9,9 +9,19 @@ You are not just completing tasks in this session — you are also quietly watch
 
 This works in two phases: **silent tracking during the session** and **a single proposal at the end**. Never interrupt work mid-session to propose a skill.
 
+## Phase 0: Resolve the host (do this once, silently, before anything else)
+
+This skill writes files and edits a memory file, and both live in different places depending on which agent is running it. Determine three values before Phase 1, and use them everywhere below:
+
+- **`<skills-dir>`** — the directory this skill was loaded from. `.claude/skills/` on Claude Code, `.github/skills/` on GitHub Copilot, `.agents/skills/` neutral.
+- **`<memory-file>`** — the file the host loads into *every* session: `CLAUDE.md` (Claude Code), `.github/copilot-instructions.md` (Copilot), `AGENTS.md` (neutral). If more than one exists, maintain the routing map in each — teams routinely run both agents against one repository.
+- **`<question-ui>`** — `AskUserQuestion` if the host provides it, otherwise one numbered multiple-choice question per message.
+
+Full detection order, the complete mapping table, and what degrades on Copilot (no hooks, no `AskUserQuestion`) are in `references/host-agents.md`. Read it the first time you need any of the three, not before.
+
 ## Phase 1: Silent pattern tracking (written, not mental)
 
-Do not rely on memory — over a long session, attention decays and counts get lost. Instead, after **every completed task** in the session, silently append one line to a temporary tally file at `.claude/skills/matrix-agents-skill/session-tally.md` in the project root, matching against the pattern table below. Format:
+Do not rely on memory — over a long session, attention decays and counts get lost. Instead, after **every completed task** in the session, silently append one line to a temporary tally file at `<skills-dir>/matrix-agents-skill/session-tally.md`, matching against the pattern table below. Format:
 
 ```
 - [task summary] → pattern #N (+1, total: X)
@@ -45,9 +55,9 @@ Never expand on it, never ask anything at this point, never emit it more than on
 
 ## Phase 2: Proposal
 
-**Trigger words** (all equivalent, case-insensitive): `/matrix-agents-skill` (Claude Code's native slash invocation), `/forge`, `/matrix`, `forge`, `matrix`, `פורג'`, `מטריקס`, `בדוק סקילים`. Any of these is a hard command: immediately read `.claude/skills/matrix-agents-skill/session-tally.md`, evaluate all candidates against the table, and either make a proposal or reply "no candidate crossed a threshold this session" with a one-line summary of the tally. Never ignore a trigger word.
+**Trigger words** (all equivalent, case-insensitive): `/matrix-agents-skill` (Claude Code's native slash invocation for skills), `/forge`, `/matrix`, `forge`, `matrix`, `פורג'`, `מטריקס`, `בדוק סקילים`. Any of these is a hard command: immediately read `<skills-dir>/matrix-agents-skill/session-tally.md`, evaluate all candidates against the table, and either make a proposal or reply "no candidate crossed a threshold this session" with a one-line summary of the tally. Never ignore a trigger word.
 
-The phase also activates **automatically** when the session's main work is complete (the developer signals wrap-up, thanks you, or the last task succeeded and nothing is pending). Recommend the developer make a trigger word a habit at the end of every session — automatic end-of-session detection is unreliable, and the manual trigger guarantees nothing valuable is lost.
+The phase also activates **automatically** when the session's main work is complete (the developer signals wrap-up, thanks you, or the last task succeeded and nothing is pending). Recommend the developer make a trigger word a habit at the end of every session — automatic end-of-session detection is unreliable, and the manual trigger guarantees nothing valuable is lost. On GitHub Copilot this is not a nicety but the only reliable path, because there is no hook that can fire at end of turn; say so once, plainly, the first time you propose anything there. Copilot users who want a real slash command can add a one-file prompt — see `references/host-agents.md`.
 
 When triggered, read the tally file and check your candidates.
 
@@ -55,7 +65,7 @@ When triggered, read the tally file and check your candidates.
 
 - Propose **at most ONE candidate per session** — the strongest one. Strength order: Pain > Exploration > Decision > Repetition > Environment (pain-derived knowledge saves the most future time).
 - Only propose if the resulting skill would save at least one full exploration or one regression next time. If in doubt, stay silent.
-- Never propose a candidate whose topic appears in `.claude/skills/matrix-agents-skill/declined.md` (see below).
+- Never propose a candidate whose topic appears in `<skills-dir>/matrix-agents-skill/declined.md` (see below).
 - If the developer says anything like "no suggestions today" / "quiet mode", stay silent for the entire session.
 - If the session's work failed or was abandoned, propose nothing — unproven knowledge must not be preserved.
 
@@ -63,7 +73,7 @@ When triggered, read the tally file and check your candidates.
 
 > "Before we wrap up: I noticed [pattern, with concrete numbers — e.g. 'we made 6 separate styling fixes' / 'fixing the sort broke the pagination, then the filter']. This suggests knowledge worth preserving as a skill so future sessions start with it. Want me to create one? (yes / update existing skill X instead / no)"
 
-If the answer is no, append one line to `.claude/skills/matrix-agents-skill/declined.md` in the project root: `- [date] [topic] — declined`. Never propose that topic again unless the developer raises it.
+If the answer is no, append one line to `<skills-dir>/matrix-agents-skill/declined.md` in the project root: `- [date] [topic] — declined`. Never propose that topic again unless the developer raises it.
 
 ## Phase 3: Interview before writing (consent gate)
 
@@ -71,7 +81,7 @@ The consent gate: **before** the developer says yes, you are limited to the one-
 
 First, let the developer choose the depth: **Quick (4 questions)** or **Deep (full grill)**.
 
-**Question UI**: use the `AskUserQuestion` tool for every interview question — present 2-4 predefined answer options plus the built-in free-text option. Never ask as a wall of open-ended text questions in plain chat.
+**Question UI**: use `<question-ui>` from Phase 0 for every interview question — on Claude Code that is the `AskUserQuestion` tool with 2-4 predefined options plus the built-in free-text option. Where the host has no such tool (GitHub Copilot), ask **one** question per message with the options inline as `[a] … [b] … [c] something else`. Either way: never a wall of open-ended text questions.
 
 **Quick interview (always asked, both modes):**
 
@@ -94,12 +104,12 @@ Ask deep questions in batches of 2-3, not all at once. Skip anything already ans
 
 ## Phase 4: Generate the skill (delegate creation)
 
-**If the `skill-creator` skill is installed** (Anthropic's reference skill from github.com/anthropics/skills), USE IT — do not hand-roll the file format. Your job is to feed it a complete, precise brief assembled from the session knowledge + interview answers: the skill's purpose, trigger conditions, the concrete knowledge (with real file/function names from this session), anti-patterns to exclude, and the metadata below. skill-creator owns the format; you own the content.
+**If the `skill-creator` skill is installed** (Anthropic's reference skill from github.com/anthropics/skills — it is a plain `SKILL.md`, so it loads under Copilot too), USE IT — do not hand-roll the file format. Your job is to feed it a complete, precise brief assembled from the session knowledge + interview answers: the skill's purpose, trigger conditions, the concrete knowledge (with real file/function names from this session), anti-patterns to exclude, and the metadata below. skill-creator owns the format; you own the content.
 
 **Only if it is not installed**, write the file yourself using this structure:
 
 ```
-<project>/.claude/skills/<skill-name>/SKILL.md
+<skills-dir>/<skill-name>/SKILL.md
 ```
 
 ```markdown
@@ -133,7 +143,7 @@ After writing, show the developer the full skill for approval before considering
 
 A skill nobody routes to is a skill that doesn't exist. After **every** skill created or updated (including by other means), update the routing map — from the very first skill; never wait for some threshold.
 
-The map lives inside the project's `CLAUDE.md` (the always-loaded memory file at the repository root; create it if missing). Maintain a clearly delimited block, one line per skill:
+The map lives inside `<memory-file>` from Phase 0 — the file the host loads into every session (`CLAUDE.md`, `.github/copilot-instructions.md`, or `AGENTS.md`). Create it if missing; write to **every** one that exists, since a repo worked on by both agents needs the map visible to both. Maintain a clearly delimited block, one line per skill:
 
 ```markdown
 <!-- SKILL ROUTING MAP — maintained by matrix-agents-skill, do not edit manually -->
@@ -145,15 +155,19 @@ Before starting any task, check this map. If the task matches a trigger, load th
 <!-- END SKILL ROUTING MAP -->
 ```
 
-Rules: one line per skill, format "trigger condition → path", touch only the delimited block, remove lines for deleted skills. The trigger condition comes from the interview's **Trigger definition** answer. This block is the router — it guarantees every future session knows what skills exist without loading any of them.
+Rules: one line per skill, format "trigger condition → path", paths written relative to the repository root under whichever `<skills-dir>` the skills actually live in, touch only the delimited block, remove lines for deleted skills. The trigger condition comes from the interview's **Trigger definition** answer. This block is the router — it guarantees every future session knows what skills exist without loading any of them.
 
 ## Updating existing skills
 
 When the interview points to updating an existing skill instead of creating one: read it fully first, merge the new knowledge into the right section, refresh `verified`, and show the developer a summary of what changed. Prefer updating over creating — a few deep skills beat many shallow ones.
 
-## Recommended: deterministic enforcement via hooks (Claude Code advantage)
+## Enforcement, per host
 
-Skills are probabilistic — Claude may skip the tally or end-of-session check when deep in a task. Hooks are deterministic — they fire every time. Recommend the developer add this to `.claude/settings.json` (project) during installation; it makes Phases 1-2 guaranteed instead of best-effort:
+Skills are probabilistic — any agent may skip the tally or the end-of-session check when deep in a task. What you can do about that differs by host.
+
+### Claude Code: a Stop hook (deterministic)
+
+Hooks fire every time. Recommend the developer add this to `.claude/settings.json` (project) during installation; it makes Phases 1-2 guaranteed instead of best-effort:
 
 ```json
 {
@@ -172,7 +186,19 @@ Skills are probabilistic — Claude may skip the tally or end-of-session check w
 }
 ```
 
-With this hook installed, the trigger words become a convenience rather than a necessity — the Stop hook fires after every response, so the tally stays current and the end-of-session proposal cannot be forgotten. Without hooks, the skill still works via trigger words, exactly like the Copilot version.
+With this hook installed, the trigger words become a convenience rather than a necessity — the Stop hook fires after every response, so the tally stays current and the end-of-session proposal cannot be forgotten.
+
+### GitHub Copilot: a standing instruction (best-effort)
+
+Copilot has no hook system, so nothing can force the check. The closest equivalent is a line in `.github/copilot-instructions.md`, which is loaded into every request:
+
+```markdown
+After completing any task, append its pattern match (if any) to
+.github/skills/matrix-agents-skill/session-tally.md per that skill's pattern
+table. When the developer signals wrap-up, run the skill's Phase 2 proposal.
+```
+
+Be honest with the developer about the difference: this raises the odds, it does not guarantee. Tell them once that `/forge` at the end of a session is what actually guarantees nothing is lost, and let it go — nagging every session is exactly the behaviour the restraint rules exist to prevent.
 
 ## What this skill is NOT
 

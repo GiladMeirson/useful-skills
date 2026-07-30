@@ -8,230 +8,299 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>useful-skills — a workshop of Claude Code skills</title>
-<meta name="description" content="Five install-ready Claude Code skills: gallery-quality canvas rendering, a tested 2D physics engine, ultra-compressed replies, self-improving sessions, and a transparency footer. One command each." />
+<title>useful-skills — a plate book of agent skills</title>
+<meta name="description" content="Five install-ready agent skills for Claude Code and GitHub Copilot: gallery-quality canvas rendering, a tested 2D physics engine, ultra-compressed replies, self-improving sessions, and a transparency footer. One command each." />
+<meta name="color-scheme" content="dark light" />
 <style>
 /* ---- css/tokens.css ---- */
-/* Design tokens.
- * Direction: a dark instrument atelier — deep ink ground, working brass, aged
- * verdigris. Every component styles through these variables so the light theme
- * is a token swap, never a second set of rules.
- */
+/* ============================================================================
+ * Design tokens.
+ *
+ * Direction: a technical plate book. Carbon paper, bone ink, one signal colour
+ * doing all the pointing, hairline rules instead of boxes, and square corners
+ * everywhere — the page should read as a printed specification, not a product
+ * page. The demos are the illustrations; the typography is the apparatus around
+ * them.
+ *
+ * Rules of the system:
+ *   - radius is 0 (2px maximum, and only where a control must read as pressable)
+ *   - one accent. --signal points at things. --steel and --acid are data, never
+ *     decoration
+ *   - every component styles through these variables, so the light theme is a
+ *     token swap and never a second set of rules
+ * ========================================================================= */
+
 :root {
-  --ink-950: #06090f;
-  --ink-900: #0a0f1b;
-  --ink-850: #0e1526;
-  --ink-800: #131c31;
-  --ink-700: #1b263f;
-  --line: #253251;
-  --line-soft: #1a2439;
+  /* ---- ground ---- */
+  --bg:        #0a0a0c;
+  --bg-2:      #0f0f13;
+  --bg-3:      #16161c;
+  --bg-4:      #1e1e26;
+  --rule:      #2b2b36;
+  --rule-soft: #1c1c24;
 
-  --text: #e7edf8;
-  --dim: #94a3bd;
-  --faint: #64738f;
+  /* ---- ink ---- */
+  --ink:       #f0ece4;
+  --ink-2:     #a8a29a;
+  --ink-3:     #6f6a64;
+  --ink-4:     #4a4640;
 
-  --brass: #e0a54e;
-  --brass-hi: #f7d69e;
-  --brass-dim: #a97a2f;
-  --brass-glow: rgba(224, 165, 78, 0.16);
-  --brass-edge: rgba(224, 165, 78, 0.32);
+  /* ---- signal ---- */
+  --signal:      #ff5a1f;
+  --signal-hi:   #ff9166;
+  --signal-dim:  #b8410f;
+  --signal-glow: rgba(255, 90, 31, .13);
+  --signal-edge: rgba(255, 90, 31, .34);
+  --on-signal:   #140702;
 
-  --verdigris: #6fbfa6;
-  --verdigris-dim: #3d7c6a;
-  --ember: #e0725a;
+  /* ---- data colours ---- */
+  --steel: #7fa8ff;
+  --acid:  #b9f24a;
 
-  --code-bg: #05080e;
-  --code-text: #d8e2f2;
+  /* ---- code ---- */
+  --code-bg:   #07070a;
+  --code-ink:  #ded9d1;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-md: 0 10px 30px -14px rgba(0, 0, 0, .8), 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-lg: 0 30px 70px -30px rgba(0, 0, 0, .9), 0 2px 6px rgba(0, 0, 0, .5);
+  /* ---- elevation. Sparingly: a plate book has no drop shadows. ---- */
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, .5);
+  --shadow-md: 0 24px 60px -34px rgba(0, 0, 0, .95);
 
-  --display: "Bodoni MT", "Bodoni 72", Didot, "Playfair Display", "Iowan Old Style", Georgia, "Times New Roman", serif;
-  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  /* ---- type ---- */
+  --display: "Inter", "Segoe UI Variable Display", "Segoe UI", -apple-system,
+             BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --sans:    "Inter", "Segoe UI Variable Text", "Segoe UI", -apple-system,
+             BlinkMacSystemFont, ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
+  --serif:   "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+             Georgia, "Times New Roman", serif;
+  --mono:    ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Menlo,
+             Consolas, "Liberation Mono", monospace;
 
-  --fs-xs: .74rem;
-  --fs-sm: .84rem;
-  --fs-base: .96rem;
-  --fs-lg: 1.08rem;
-  --fs-xl: 1.3rem;
-  --fs-2xl: 1.7rem;
-  --fs-3xl: 2.3rem;
-  --fs-4xl: clamp(2.4rem, 5.5vw, 3.6rem);
-  --fs-hero: clamp(2.8rem, 8.5vw, 6.2rem);
+  --fs-xs:   .72rem;
+  --fs-sm:   .82rem;
+  --fs-base: .95rem;
+  --fs-lg:   1.06rem;
+  --fs-xl:   1.28rem;
+  --fs-2xl:  1.65rem;
+  --fs-3xl:  clamp(1.9rem, 3.6vw, 2.9rem);
+  --fs-4xl:  clamp(2.6rem, 6.4vw, 4.6rem);
+  --fs-hero: clamp(3rem, 11.5vw, 9.5rem);
+  --fs-numeral: clamp(6rem, 17vw, 15rem);
 
-  --measure: 66ch;
-  --page: 1180px;
-  --col: 760px;
-  --rail: 190px;
-  --radius: 12px;
-  --radius-lg: 18px;
+  /* ---- measure & rhythm ---- */
+  --measure: 62ch;
+  --page:    1200px;
+  --gutter:  clamp(18px, 4.2vw, 56px);
+  --radius:  0px;
+  --radius-sm: 2px;
+
+  --ease-out: cubic-bezier(.16, .84, .32, 1);
+  --ease-spring: cubic-bezier(.2, 1.3, .35, 1);
 }
 
+/* ---------------------------------------------------------------- light ---
+ * Bone paper, carbon ink, a darker signal so it still holds on a light field.
+ * Code blocks stay dark in both themes on purpose — a terminal is a terminal.
+ */
 @media (prefers-color-scheme: light) {
   :root {
-    --ink-950: #e9edf5;
-    --ink-900: #ffffff;
-    --ink-850: #f4f7fc;
-    --ink-800: #eef2f9;
-    --ink-700: #e3e9f3;
-    --line: #ccd6e6;
-    --line-soft: #dde4ef;
+    --bg:        #f1eee7;
+    --bg-2:      #ffffff;
+    --bg-3:      #f7f5f0;
+    --bg-4:      #e9e5dc;
+    --rule:      #d3cdc1;
+    --rule-soft: #e3ded4;
 
-    --text: #0d1728;
-    --dim: #55637d;
-    --faint: #7d8aa3;
+    --ink:       #131318;
+    --ink-2:     #55524c;
+    --ink-3:     #8b867e;
+    --ink-4:     #a9a49b;
 
-    --brass: #9a6a18;
-    --brass-hi: #7a520e;
-    --brass-dim: #b58a3c;
-    --brass-glow: rgba(154, 106, 24, 0.09);
-    --brass-edge: rgba(154, 106, 24, 0.26);
+    --signal:      #d13c06;
+    --signal-hi:   #a52d02;
+    --signal-dim:  #ef8055;
+    --signal-glow: rgba(209, 60, 6, .08);
+    --signal-edge: rgba(209, 60, 6, .28);
+    --on-signal:   #fff6f1;
 
-    --verdigris: #2c7a63;
-    --verdigris-dim: #4f9c86;
-    --ember: #b8452c;
+    --steel: #2a56cc;
+    --acid:  #4c7810;
 
-    --code-bg: #0a0f1b;
-    --code-text: #d8e2f2;
-
-    --shadow-sm: 0 1px 2px rgba(18, 28, 48, .06);
-    --shadow-md: 0 10px 30px -18px rgba(18, 28, 48, .3), 0 1px 2px rgba(18, 28, 48, .05);
-    --shadow-lg: 0 30px 60px -34px rgba(18, 28, 48, .35), 0 2px 6px rgba(18, 28, 48, .06);
+    --shadow-sm: 0 1px 0 rgba(20, 18, 14, .06);
+    --shadow-md: 0 24px 50px -36px rgba(20, 18, 14, .45);
   }
 }
 
 :root[data-theme="light"] {
-  --ink-950: #e9edf5;
-  --ink-900: #ffffff;
-  --ink-850: #f4f7fc;
-  --ink-800: #eef2f9;
-  --ink-700: #e3e9f3;
-  --line: #ccd6e6;
-  --line-soft: #dde4ef;
+  --bg:        #f1eee7;
+  --bg-2:      #ffffff;
+  --bg-3:      #f7f5f0;
+  --bg-4:      #e9e5dc;
+  --rule:      #d3cdc1;
+  --rule-soft: #e3ded4;
 
-  --text: #0d1728;
-  --dim: #55637d;
-  --faint: #7d8aa3;
+  --ink:       #131318;
+  --ink-2:     #55524c;
+  --ink-3:     #8b867e;
+  --ink-4:     #a9a49b;
 
-  --brass: #9a6a18;
-  --brass-hi: #7a520e;
-  --brass-dim: #b58a3c;
-  --brass-glow: rgba(154, 106, 24, 0.09);
-  --brass-edge: rgba(154, 106, 24, 0.26);
+  --signal:      #d13c06;
+  --signal-hi:   #a52d02;
+  --signal-dim:  #ef8055;
+  --signal-glow: rgba(209, 60, 6, .08);
+  --signal-edge: rgba(209, 60, 6, .28);
+  --on-signal:   #fff6f1;
 
-  --verdigris: #2c7a63;
-  --verdigris-dim: #4f9c86;
-  --ember: #b8452c;
+  --steel: #2a56cc;
+  --acid:  #4c7810;
 
-  --code-bg: #0a0f1b;
-  --code-text: #d8e2f2;
-
-  --shadow-sm: 0 1px 2px rgba(18, 28, 48, .06);
-  --shadow-md: 0 10px 30px -18px rgba(18, 28, 48, .3), 0 1px 2px rgba(18, 28, 48, .05);
-  --shadow-lg: 0 30px 60px -34px rgba(18, 28, 48, .35), 0 2px 6px rgba(18, 28, 48, .06);
+  --shadow-sm: 0 1px 0 rgba(20, 18, 14, .06);
+  --shadow-md: 0 24px 50px -36px rgba(20, 18, 14, .45);
 }
 
 :root[data-theme="dark"] {
-  --ink-950: #06090f;
-  --ink-900: #0a0f1b;
-  --ink-850: #0e1526;
-  --ink-800: #131c31;
-  --ink-700: #1b263f;
-  --line: #253251;
-  --line-soft: #1a2439;
+  --bg:        #0a0a0c;
+  --bg-2:      #0f0f13;
+  --bg-3:      #16161c;
+  --bg-4:      #1e1e26;
+  --rule:      #2b2b36;
+  --rule-soft: #1c1c24;
 
-  --text: #e7edf8;
-  --dim: #94a3bd;
-  --faint: #64738f;
+  --ink:       #f0ece4;
+  --ink-2:     #a8a29a;
+  --ink-3:     #6f6a64;
+  --ink-4:     #4a4640;
 
-  --brass: #e0a54e;
-  --brass-hi: #f7d69e;
-  --brass-dim: #a97a2f;
-  --brass-glow: rgba(224, 165, 78, 0.16);
-  --brass-edge: rgba(224, 165, 78, 0.32);
+  --signal:      #ff5a1f;
+  --signal-hi:   #ff9166;
+  --signal-dim:  #b8410f;
+  --signal-glow: rgba(255, 90, 31, .13);
+  --signal-edge: rgba(255, 90, 31, .34);
+  --on-signal:   #140702;
 
-  --verdigris: #6fbfa6;
-  --verdigris-dim: #3d7c6a;
-  --ember: #e0725a;
+  --steel: #7fa8ff;
+  --acid:  #b9f24a;
 
-  --code-bg: #05080e;
-  --code-text: #d8e2f2;
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, .5);
+  --shadow-md: 0 24px 60px -34px rgba(0, 0, 0, .95);
+}
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-md: 0 10px 30px -14px rgba(0, 0, 0, .8), 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-lg: 0 30px 70px -30px rgba(0, 0, 0, .9), 0 2px 6px rgba(0, 0, 0, .5);
+/* ------------------------------------------------------- legacy aliases ---
+ * A few demo scripts inject inline styles referencing the previous token names.
+ * Mapping them here keeps those demos correct without editing string literals
+ * inside animation code.
+ */
+:root {
+  --text:   var(--ink);
+  --dim:    var(--ink-2);
+  --faint:  var(--ink-3);
+  --line:   var(--rule);
+  --line-soft: var(--rule-soft);
+  --brass:  var(--signal);
+  --brass-hi: var(--signal-hi);
+  --brass-dim: var(--signal-dim);
+  --brass-glow: var(--signal-glow);
+  --brass-edge: var(--signal-edge);
+  --verdigris: var(--steel);
+  --ember:  var(--signal);
+  --ink-950: var(--bg);
+  --ink-900: var(--bg-2);
+  --ink-850: var(--bg-3);
+  --ink-800: var(--bg-4);
+  --ink-700: var(--rule);
+  --code-text: var(--code-ink);
 }
 </style>
 <style>
 /* ---- css/base.css ---- */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  background: var(--bg);
+}
 
 body {
   margin: 0;
-  background: var(--ink-950);
-  color: var(--text);
+  background: var(--bg);
+  color: var(--ink);
   font-family: var(--sans);
   font-size: var(--fs-base);
-  line-height: 1.65;
+  line-height: 1.62;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  font-feature-settings: "kern" 1, "liga" 1, "cv11" 1;
 }
 
-/* Film grain over the whole page — a workshop surface, not a screen. */
+/* Paper tooth. Fine enough to be felt rather than seen; without it every
+   gradient on the page reads as vector-flat. */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9999;
-  opacity: .35;
+  z-index: 9998;
+  opacity: .3;
   mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
 }
-@media (prefers-color-scheme: light) { body::after { opacity: .16; } }
-:root[data-theme="light"] body::after { opacity: .16; }
-:root[data-theme="dark"] body::after { opacity: .35; }
+@media (prefers-color-scheme: light) { body::after { opacity: .13; } }
+:root[data-theme="light"] body::after { opacity: .13; }
+:root[data-theme="dark"]  body::after { opacity: .3; }
 
+/* ---------------------------------------------------------- typography --- */
 h1, h2, h3, h4 {
   margin: 0;
-  font-weight: 600;
-  line-height: 1.1;
+  font-family: var(--display);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
   text-wrap: balance;
-  letter-spacing: -0.015em;
 }
-h1, h2 { font-family: var(--display); font-weight: 400; }
-h3, h4 { font-family: var(--sans); font-weight: 650; letter-spacing: -0.01em; }
+h3, h4 { font-weight: 700; letter-spacing: -0.018em; line-height: 1.2; }
 p { margin: 0; }
 
-a { color: var(--brass); text-decoration-color: var(--brass-edge); text-underline-offset: 3px; }
-a:hover { color: var(--brass-hi); }
+a {
+  color: var(--signal);
+  text-decoration: none;
+  border-bottom: 1px solid var(--signal-edge);
+  transition: color .16s var(--ease-out), border-color .16s var(--ease-out);
+}
+a:hover { color: var(--signal-hi); border-bottom-color: currentColor; }
 
-code, kbd, samp, pre { font-family: var(--mono); font-size: .9em; }
+code, kbd, samp, pre {
+  font-family: var(--mono);
+  font-size: .89em;
+  font-variant-ligatures: none;
+}
+
+strong, b { font-weight: 650; }
 
 :focus-visible {
-  outline: 2px solid var(--brass);
-  outline-offset: 3px;
-  border-radius: 4px;
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+  border-radius: 0;
 }
 
 canvas { display: block; }
 
-::selection { background: var(--brass); color: var(--ink-950); }
+::selection { background: var(--signal); color: var(--on-signal); }
+
+/* Scrollbar, dark-mode only — a light-theme override would fight the OS. */
+:root[data-theme="dark"] * { scrollbar-color: var(--rule) transparent; }
 
 .skip-link {
   position: absolute;
   left: -9999px;
   z-index: 10000;
-  background: var(--brass);
-  color: #10151f;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-weight: 700;
-  text-decoration: none;
+  background: var(--signal);
+  color: var(--on-signal);
+  padding: 12px 20px;
+  font: 700 var(--fs-sm)/1 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  border: 0;
 }
 .skip-link:focus { left: 16px; top: 16px; }
 
@@ -252,12 +321,162 @@ canvas { display: block; }
 </style>
 <style>
 /* ---- css/layout.css ---- */
-/* Asymmetric layout: a narrow index rail pinned left on wide screens, the
-   reading column offset from it, and demo panels allowed to bleed wider than
-   the text they belong to. */
+/* ============================================================================
+ * Page architecture.
+ *
+ * The page is laid out like a plate book: a fixed apparatus (grid rules, crop
+ * marks, a vertical index down the left margin) that never scrolls, and inside
+ * it a single measured column of text with illustrations allowed to bleed past
+ * it. Nothing is centred except the shell itself; every other alignment is to
+ * the left rule, because a printed plate has one spine.
+ * ========================================================================= */
 
-.shell { max-width: var(--page); margin: 0 auto; padding: 0 clamp(18px, 4vw, 40px); }
+.shell {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
 
+/* ------------------------------------------------------- fixed apparatus --- */
+
+/* Four hairlines behind everything. They are the reason the layout reads as a
+   system rather than a stack of boxes — every rule and every plate edge lands
+   on one of them. */
+.apparatus {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.apparatus .cols {
+  max-width: var(--page);
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.apparatus .cols span {
+  border-left: 1px solid var(--rule-soft);
+  opacity: .55;
+}
+.apparatus .cols span:first-child { border-left: 0; }
+@media (max-width: 700px) { .apparatus { display: none; } }
+
+/* Crop marks. Print-craft signal, four corners, hairline only. */
+.crop {
+  position: fixed;
+  z-index: 61;
+  width: 13px; height: 13px;
+  pointer-events: none;
+  border: 0 solid var(--ink-4);
+}
+.crop.tl { top: 10px;    left: 10px;  border-top-width: 1px;    border-left-width: 1px; }
+.crop.tr { top: 10px;    right: 10px; border-top-width: 1px;    border-right-width: 1px; }
+.crop.bl { bottom: 10px; left: 10px;  border-bottom-width: 1px; border-left-width: 1px; }
+.crop.br { bottom: 10px; right: 10px; border-bottom-width: 1px; border-right-width: 1px; }
+@media (max-width: 700px) { .crop { display: none; } }
+
+/* Scroll progress — one hairline across the very top. */
+.progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0;
+  background: var(--signal);
+  z-index: 70;
+  pointer-events: none;
+  transition: width .08s linear;
+}
+
+/* ----------------------------------------------------------- reticle ---- */
+/* A crosshair that replaces the pointer on fine-pointer devices. Purely
+   additive: the native cursor stays as the fallback until JS confirms it can
+   track, and it is switched off entirely for coarse pointers. */
+.reticle {
+  position: fixed;
+  top: 0; left: 0;
+  width: 26px; height: 26px;
+  margin: -13px 0 0 -13px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s var(--ease-out), transform .12s var(--ease-out);
+  will-change: transform;
+}
+.reticle::before,
+.reticle::after {
+  content: "";
+  position: absolute;
+  background: var(--signal);
+}
+.reticle::before { left: 50%; top: 0; width: 1px; height: 100%; transform: translateX(-.5px); }
+.reticle::after  { top: 50%; left: 0; height: 1px; width: 100%; transform: translateY(-.5px); }
+.reticle .ring {
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--signal);
+  border-radius: 50%;
+  transition: inset .18s var(--ease-spring), opacity .18s var(--ease-out);
+}
+body.has-reticle .reticle { opacity: .85; }
+body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
+@media (pointer: coarse) { .reticle { display: none; } }
+
+/* --------------------------------------------------------- index rail ---- */
+/* Vertical, in the left margin, outside the reading column. Only appears where
+   the shell's own centring margin leaves room for it — below that the top
+   progress line and the ticker carry the same information. */
+.index-rail {
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  width: 52px;
+  z-index: 55;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  border-right: 1px solid var(--rule-soft);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+}
+@media (min-width: 1340px) { .index-rail { display: flex; } }
+
+.index-rail .rail-cap {
+  writing-mode: vertical-rl;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin-bottom: 6px;
+}
+.index-rail a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  writing-mode: vertical-rl;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .16em;
+  color: var(--ink-4);
+  text-decoration: none;
+  border: 0;
+  padding: 4px 0;
+  transition: color .22s var(--ease-out);
+}
+.index-rail a::before {
+  content: "";
+  width: 1px;
+  height: 14px;
+  background: currentColor;
+  transition: height .28s var(--ease-out);
+}
+.index-rail a:hover { color: var(--ink-2); }
+.index-rail a.active { color: var(--signal); }
+.index-rail a.active::before { height: 30px; }
+
+/* ------------------------------------------------------------ masthead --- */
 .masthead {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -265,36 +484,70 @@ canvas { display: block; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px clamp(18px, 4vw, 40px);
+  gap: 14px;
+  padding: 13px var(--gutter);
   font-family: var(--mono);
   font-size: var(--fs-xs);
-  color: var(--dim);
-  background: color-mix(in srgb, var(--ink-950) 72%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
+  letter-spacing: .06em;
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(130%);
   border-bottom: 1px solid transparent;
-  transition: border-color .3s ease, background .3s ease;
+  transition: border-color .3s var(--ease-out), background .3s var(--ease-out);
 }
-.masthead.stuck { border-bottom-color: var(--line-soft); }
-.masthead .mark { display: flex; align-items: center; gap: 10px; color: var(--text); letter-spacing: .06em; }
-.masthead .mark b { font-weight: 600; }
-.masthead .mark .dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--brass); box-shadow: 0 0 12px var(--brass);
-}
-.masthead nav { display: flex; gap: 18px; align-items: center; }
-.masthead nav a { color: var(--dim); text-decoration: none; }
-.masthead nav a:hover { color: var(--brass); }
-@media (max-width: 720px) { .masthead nav .hide-sm { display: none; } }
+.masthead.stuck { border-bottom-color: var(--rule-soft); }
+@media (min-width: 1340px) { .masthead { padding-left: calc(52px + var(--gutter)); } }
 
-/* ---------- hero ---------- */
+.masthead .mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-weight: 600;
+}
+.masthead .mark .pip {
+  width: 6px; height: 6px;
+  background: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-glow);
+}
+.masthead nav { display: flex; gap: 4px; align-items: center; }
+.masthead nav a {
+  color: var(--ink-2);
+  text-decoration: none;
+  border: 0;
+  padding: 6px 10px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  transition: color .16s var(--ease-out), background .16s var(--ease-out);
+}
+.masthead nav a:hover { color: var(--signal); background: var(--signal-glow); }
+@media (max-width: 760px) { .masthead nav .hide-sm { display: none; } }
+
+.theme-toggle {
+  appearance: none;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink-2);
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 7px 10px;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: border-color .16s var(--ease-out), color .16s var(--ease-out);
+}
+.theme-toggle:hover { border-color: var(--signal); color: var(--signal); }
+
+/* ---------------------------------------------------------------- hero --- */
 .hero {
   position: relative;
-  min-height: min(100svh, 860px);
+  min-height: min(100svh, 900px);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   overflow: hidden;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--rule);
 }
 #hero-stage {
   position: absolute;
@@ -303,484 +556,747 @@ canvas { display: block; }
   height: 100%;
   z-index: 0;
 }
-.hero-inner { position: relative; z-index: 2; width: 100%; padding: 120px 0 80px; }
-/* The headline sets its own line breaks; the copy block must stay wide enough
-   for the paragraph, or it wraps into a tall column and stretches the hero. */
-.hero-copy { max-width: 640px; }
-.hero h1 {
-  font-size: var(--fs-hero);
-  line-height: .92;
-  letter-spacing: -0.03em;
-  margin-bottom: 26px;
-}
-.hero h1 em {
-  font-style: italic;
-  color: var(--brass);
-}
-.hero .lede {
-  font-size: var(--fs-lg);
-  color: var(--dim);
-  max-width: 44ch;
-  margin-bottom: 30px;
-}
-.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-
-.hero-scrim {
+.hero-veil {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(100deg,
-    var(--ink-950) 0%,
-    color-mix(in srgb, var(--ink-950) 88%, transparent) 30%,
-    transparent 62%);
+  background:
+    linear-gradient(94deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 84%, transparent) 34%, transparent 66%),
+    linear-gradient(0deg, var(--bg) 0%, transparent 38%);
 }
-@media (max-width: 860px) {
-  .hero-scrim {
+@media (max-width: 900px) {
+  .hero-veil {
     background: linear-gradient(180deg,
-      color-mix(in srgb, var(--ink-950) 70%, transparent) 0%,
-      color-mix(in srgb, var(--ink-950) 92%, transparent) 55%,
-      var(--ink-950) 100%);
+      color-mix(in srgb, var(--bg) 62%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 90%, transparent) 46%,
+      var(--bg) 88%);
   }
-  .hero-copy { max-width: none; }
 }
-
-/* ---------- main grid ---------- */
-.body-grid {
-  display: grid;
-  grid-template-columns: var(--rail) minmax(0, 1fr);
-  gap: clamp(24px, 5vw, 64px);
-  align-items: start;
+/* Longhand on purpose: .hero-inner is also a .shell, and a `padding` shorthand
+   here would silently reset the shell's horizontal gutter to zero, putting the
+   hero flush against the viewport edge on narrow screens. */
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding-top: 128px;
+  padding-bottom: clamp(36px, 6vw, 74px);
 }
-@media (max-width: 1000px) { .body-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 1340px) { .hero-inner { padding-left: calc(52px + var(--gutter)); } }
 
-.rail { position: sticky; top: 84px; align-self: start; }
-@media (max-width: 1000px) { .rail { display: none; } }
-.rail-title {
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  align-items: center;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .18em;
   text-transform: uppercase;
-  letter-spacing: .12em;
-  color: var(--faint);
+  color: var(--ink-3);
+  padding-bottom: 14px;
+  margin-bottom: clamp(20px, 4vw, 38px);
+  border-bottom: 1px solid var(--rule);
+}
+.hero-meta .now { color: var(--signal); }
+
+.hero-title {
+  font-size: var(--fs-hero);
+  line-height: .84;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+  margin-bottom: clamp(20px, 3vw, 34px);
+  text-wrap: initial;
+}
+.hero-title .line { display: block; }
+/* Outline only where the browser can actually stroke text — otherwise a
+   transparent fill would render the line invisible. */
+@supports (-webkit-text-stroke: 1px currentColor) {
+  .hero-title .line.hollow {
+    color: transparent;
+    -webkit-text-stroke: clamp(1px, .13vw, 2px) var(--ink);
+  }
+}
+.hero-title .stop { color: var(--signal); -webkit-text-stroke: 0; }
+
+.hero-lede {
+  font-size: var(--fs-lg);
+  color: var(--ink-2);
+  max-width: 46ch;
+  margin-bottom: clamp(22px, 3vw, 32px);
+}
+.hero-lede em { font-family: var(--serif); font-style: italic; color: var(--ink); }
+
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+.hero-spec {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: clamp(30px, 5vw, 56px);
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+  background: var(--rule);
+  max-width: 720px;
+}
+@media (max-width: 620px) { .hero-spec { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.hero-spec div {
+  background: var(--bg);
+  padding: 13px 14px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.hero-spec dt {
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 7px;
+}
+.hero-spec dd {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: var(--fs-xl);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.hero-spec dd .u { color: var(--signal); }
+
+/* --------------------------------------------------------------- ticker -- */
+.ticker {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg-2);
+  padding: 11px 0;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  z-index: 2;
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  gap: 0;
+  animation: ticker 46s linear infinite;
+}
+.ticker-track span { padding: 0 26px; white-space: nowrap; }
+.ticker-track span b { color: var(--signal); font-weight: 500; }
+.ticker:hover .ticker-track { animation-play-state: paused; }
+@keyframes ticker { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }
+
+/* ------------------------------------------------------------ main flow -- */
+main { position: relative; z-index: 2; }
+@media (min-width: 1340px) { main .shell { padding-left: calc(52px + var(--gutter)); } }
+
+.column { max-width: 900px; min-width: 0; }
+
+section.band {
+  padding: clamp(58px, 9vw, 118px) 0;
+  border-bottom: 1px solid var(--rule);
+}
+section.band:last-of-type { border-bottom: 0; }
+
+/* ---------------------------------------------------------------- plate -- */
+.plate {
+  position: relative;
+  padding: clamp(64px, 10vw, 130px) 0;
+  border-bottom: 1px solid var(--rule);
+  scroll-margin-top: 64px;
+}
+.plate-ord {
+  position: absolute;
+  top: clamp(30px, 5vw, 58px);
+  left: calc(-1 * clamp(6px, 1.6vw, 26px));
+  z-index: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: var(--fs-numeral);
+  line-height: .74;
+  letter-spacing: -0.06em;
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+  opacity: .5;
+}
+@supports (-webkit-text-stroke: 1px currentColor) {
+  .plate-ord { -webkit-text-stroke: 1px var(--rule); }
+}
+@supports not (-webkit-text-stroke: 1px currentColor) {
+  .plate-ord { color: var(--rule-soft); }
+}
+@media (max-width: 760px) { .plate-ord { opacity: .28; } }
+
+.plate-head { position: relative; z-index: 1; margin-bottom: clamp(26px, 4vw, 44px); }
+.plate-cat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 16px;
+}
+.plate-cat::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--rule);
+}
+.plate-cat .of { color: var(--ink-3); letter-spacing: .14em; }
+.plate-head h2 {
+  font-size: var(--fs-4xl);
+  letter-spacing: -0.045em;
   margin-bottom: 14px;
 }
-.rail ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.rail a {
-  display: grid;
-  grid-template-columns: 2.1em 1fr;
-  align-items: baseline;
-  gap: 4px;
-  padding: 7px 10px 7px 0;
-  font-size: var(--fs-sm);
-  color: var(--faint);
-  text-decoration: none;
-  border-left: 2px solid var(--line-soft);
-  padding-left: 12px;
-  transition: color .2s ease, border-color .2s ease;
+.plate-head .tagline {
+  color: var(--ink-2);
+  font-size: var(--fs-lg);
+  max-width: 54ch;
 }
-.rail a .num { font-family: var(--mono); font-size: var(--fs-xs); color: var(--faint); }
-.rail a:hover { color: var(--text); border-left-color: var(--brass-dim); }
-.rail a.active { color: var(--brass); border-left-color: var(--brass); }
-.rail a.active .num { color: var(--brass); }
+.plate-body { position: relative; z-index: 1; }
 
-.column { min-width: 0; }
-
-section { padding: clamp(56px, 9vw, 110px) 0; border-bottom: 1px solid var(--line-soft); }
-section:last-child { border-bottom: 0; }
-.skill-section { scroll-margin-top: 70px; }
-
-/* Panels may bleed past the reading column, but only once the shell's own
-   centring margin leaves room for it — otherwise the bleed is what pushes the
-   page sideways. At 1400px the margin plus padding is ~150px, so 100 is safe. */
+/* Illustrations may bleed past the reading column, but only once the shell's
+   own centring margin leaves room — otherwise the bleed is what pushes the page
+   sideways. */
 .bleed { width: 100%; }
-@media (min-width: 1400px) {
-  .bleed { width: calc(100% + 100px); }
-}
+@media (min-width: 1480px) { .bleed { width: calc(100% + 120px); } }
 
+/* --------------------------------------------------------------- footer -- */
 footer.site-foot {
-  padding: 60px 0 80px;
-  border-top: 1px solid var(--line-soft);
-  color: var(--dim);
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid var(--rule);
+  padding: clamp(48px, 7vw, 84px) 0 clamp(40px, 6vw, 70px);
+  color: var(--ink-2);
   font-size: var(--fs-sm);
 }
-footer.site-foot .foot-grid {
-  display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: flex-end;
+.foot-word {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 13vw, 11rem);
+  line-height: .8;
+  letter-spacing: -0.06em;
+  text-transform: uppercase;
+  color: transparent;
+  margin-bottom: clamp(26px, 4vw, 48px);
+  user-select: none;
 }
+@supports (-webkit-text-stroke: 1px currentColor) {
+  .foot-word { -webkit-text-stroke: 1px var(--rule); }
+}
+@supports not (-webkit-text-stroke: 1px currentColor) {
+  .foot-word { color: var(--rule-soft); }
+}
+.foot-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-top: 1px solid var(--rule);
+  padding-top: 22px;
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.foot-grid a { color: var(--ink-2); }
+.foot-grid a:hover { color: var(--signal); }
 </style>
 <style>
 /* ---- css/components.css ---- */
-/* ---------- buttons ---------- */
+/* ============================================================================
+ * Components.
+ *
+ * House rules: square corners, hairline borders, one accent. Anything that
+ * frames content gets corner brackets rather than a radius — the frame should
+ * read as registration marks on a plate, not as a card in a dashboard.
+ * ========================================================================= */
+
+/* ------------------------------------------------------------- buttons --- */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 12px 20px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  font: 600 var(--fs-sm)/1 var(--sans);
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform .14s cubic-bezier(.3, 1.4, .5, 1), background .18s ease, border-color .18s ease, color .18s ease;
-}
-.btn:active { transform: translateY(1px) scale(.99); }
-.btn-primary {
-  background: linear-gradient(180deg, var(--brass-hi), var(--brass));
-  color: #1a1206;
-  box-shadow: 0 6px 22px -10px var(--brass);
-}
-.btn-primary:hover { color: #1a1206; filter: brightness(1.06); transform: translateY(-1px); }
-.btn-ghost { border-color: var(--line); color: var(--text); background: transparent; }
-.btn-ghost:hover { border-color: var(--brass); color: var(--brass); transform: translateY(-1px); }
-
-/* ---------- eyebrows, labels, rules ---------- */
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
   gap: 10px;
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--brass);
-  margin-bottom: 16px;
-}
-.eyebrow::before {
-  content: "";
-  width: 26px; height: 1px;
-  background: var(--brass);
-  opacity: .6;
-}
-.label {
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
+  padding: 14px 22px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font: 600 var(--fs-sm)/1 var(--mono);
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--faint);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .14s var(--ease-spring), background .18s var(--ease-out),
+              border-color .18s var(--ease-out), color .18s var(--ease-out);
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--signal);
+  color: var(--on-signal);
+  border-color: var(--signal);
+}
+.btn-primary:hover { background: var(--signal-hi); border-color: var(--signal-hi); color: var(--on-signal); transform: translateY(-2px); }
+.btn-ghost { border-color: var(--rule); color: var(--ink); background: transparent; }
+.btn-ghost:hover { border-color: var(--signal); color: var(--signal); transform: translateY(-2px); }
+.btn .arrow { transition: transform .18s var(--ease-out); }
+.btn:hover .arrow { transform: translateX(3px); }
+
+/* --------------------------------------------------- eyebrows & labels --- */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 18px;
+}
+.eyebrow::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--rule);
+}
+.label {
   display: block;
-  margin-bottom: 12px;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 14px;
 }
-.section-head { margin-bottom: 34px; }
-.section-head h2 { font-size: var(--fs-3xl); margin-bottom: 14px; }
-.section-head p { color: var(--dim); max-width: var(--measure); }
-.prose { color: var(--dim); max-width: var(--measure); }
+.section-head { margin-bottom: 38px; }
+.section-head h2 { font-size: var(--fs-3xl); margin-bottom: 16px; letter-spacing: -0.04em; }
+.section-head p { color: var(--ink-2); max-width: var(--measure); }
+
+.prose { color: var(--ink-2); max-width: var(--measure); }
 .prose + .prose { margin-top: 16px; }
-.prose strong { color: var(--text); font-weight: 600; }
+.prose strong { color: var(--ink); font-weight: 650; }
+.prose code { color: var(--signal); }
 
-/* ---------- skill header ---------- */
-.skill-head { display: grid; gap: 6px; margin-bottom: 26px; }
-.skill-index {
-  font-family: var(--mono);
-  font-size: var(--fs-sm);
-  color: var(--brass);
-  letter-spacing: .08em;
+/* A single dropped-cap-ish lead paragraph per plate, in the serif — the one
+   place the page changes voice. */
+.lead {
+  font-family: var(--serif);
+  font-size: var(--fs-xl);
+  line-height: 1.5;
+  color: var(--ink);
+  max-width: 46ch;
 }
-.skill-head h2 { font-size: var(--fs-4xl); letter-spacing: -0.025em; }
-.skill-head .tagline {
-  color: var(--dim);
-  font-size: var(--fs-lg);
-  max-width: 56ch;
-  margin-top: 8px;
-}
+.lead em { color: var(--signal); font-style: italic; }
 
-.triggers { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.triggers li {
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
-  padding: 6px 12px;
-  border-radius: 999px;
-  color: var(--text);
-  background: var(--brass-glow);
-  border: 1px solid var(--brass-edge);
-}
-
-/* ---------- cards / panels ---------- */
+/* -------------------------------------------------------------- panels --- */
 .panel {
-  background: var(--ink-900);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
+  position: relative;
+  background: var(--bg-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
 }
+/* Corner brackets: two pseudo-elements, each drawing an L at opposite corners. */
+.panel::before,
+.panel::after {
+  content: "";
+  position: absolute;
+  width: 9px; height: 9px;
+  border: 0 solid var(--signal);
+  pointer-events: none;
+}
+.panel::before { top: -1px; left: -1px;   border-top-width: 1px; border-left-width: 1px; }
+.panel::after  { bottom: -1px; right: -1px; border-bottom-width: 1px; border-right-width: 1px; }
+
 .panel-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
   flex-wrap: wrap;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--line-soft);
-  background: var(--ink-850);
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg-3);
 }
 .panel-head .label { margin: 0; }
 .panel-body { padding: 18px; }
 .panel-note {
   font-size: var(--fs-sm);
-  color: var(--faint);
-  padding: 0 18px 16px;
-  max-width: 70ch;
+  color: var(--ink-3);
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--rule-soft);
+  max-width: 78ch;
 }
+.panel-note code { color: var(--ink-2); }
 
-/* minmax(0,1fr) rather than 1fr, and min-width:0 on the children: grid tracks
-   also default to min-width:auto, so one wide <pre> inside a column would
-   otherwise widen the whole grid instead of scrolling inside its own box. */
+/* A live indicator for panels that are actually running something. */
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--acid);
+}
+.live::before {
+  content: "";
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--acid);
+  animation: pulse 1.9s var(--ease-out) infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+/* Grid tracks default to min-width:auto, so one wide <pre> in a column would
+   widen the whole grid instead of scrolling inside its own box. */
 .two-col {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 28px;
+  gap: 30px;
   align-items: start;
 }
 .two-col > * { min-width: 0; }
-@media (max-width: 820px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 860px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
 
-/* ---------- file list ---------- */
-.files { list-style: none; margin: 0; padding: 0; }
+/* ----------------------------------------------------------- file list --- */
+.files { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule-soft); }
 .files li {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  padding: 9px 0;
-  border-bottom: 1px dashed var(--line-soft);
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule-soft);
   font-size: var(--fs-sm);
-  color: var(--dim);
+  color: var(--ink-2);
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.files li:last-child { border-bottom: 0; }
 .files code {
-  color: var(--brass);
-  background: var(--brass-glow);
-  padding: 1px 7px;
-  border-radius: 5px;
+  color: var(--signal);
   white-space: nowrap;
   align-self: start;
+  font-size: var(--fs-xs);
 }
 
-/* ---------- command box ---------- */
+/* ------------------------------------------------------- command block --- */
 .cmd {
   display: flex;
   align-items: stretch;
-  gap: 0;
   background: var(--code-bg);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  position: relative;
 }
+.cmd::before {
+  content: "$";
+  flex: 0 0 auto;
+  padding: 14px 0 14px 15px;
+  color: var(--ink-4);
+  font: var(--fs-sm)/1.5 var(--mono);
+  user-select: none;
+}
+.cmd.nodollar::before { content: none; }
 .cmd pre {
   margin: 0;
-  padding: 14px 16px;
+  padding: 14px 14px 14px 10px;
   overflow-x: auto;
   flex: 1 1 auto;
   /* Flex items default to min-width:auto and refuse to shrink below their
-     content — a long, unwrappable command line would otherwise push the whole
-     page sideways instead of scrolling inside its own box. */
+     content — a long unwrappable command would push the page sideways instead
+     of scrolling inside its own box. */
   min-width: 0;
-  color: var(--code-text);
+  color: var(--code-ink);
   font-size: var(--fs-sm);
-  line-height: 1.5;
+  line-height: 1.55;
 }
-.cmd pre .tok-cmd { color: var(--verdigris); }
-.cmd pre .tok-path { color: var(--brass); }
-.cmd pre .tok-dim { color: #64738f; }
+.cmd.nodollar pre { padding-left: 15px; }
+.cmd pre .tok-cmd  { color: var(--acid); }
+.cmd pre .tok-path { color: var(--signal); }
+.cmd pre .tok-dim  { color: #5c5850; }
 .copy {
   flex: 0 0 auto;
   border: 0;
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--rule);
   background: transparent;
-  color: var(--dim);
-  font: 600 var(--fs-xs)/1 var(--sans);
-  padding: 0 16px;
+  color: var(--ink-3);
+  font: 600 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 0 15px;
   cursor: pointer;
-  transition: background .16s ease, color .16s ease;
+  transition: background .16s var(--ease-out), color .16s var(--ease-out);
 }
-.copy:hover { background: rgba(224, 165, 78, .12); color: var(--brass); }
-.copy.done { background: var(--brass); color: #17110a; }
+.copy:hover { background: var(--signal-glow); color: var(--signal); }
+.copy.done  { background: var(--signal); color: var(--on-signal); }
 
-.hint { font-size: var(--fs-sm); color: var(--faint); margin-top: 10px; max-width: var(--measure); }
-.hint code { color: var(--brass); background: var(--brass-glow); padding: 1px 6px; border-radius: 4px; }
+.hint { font-size: var(--fs-sm); color: var(--ink-3); margin-top: 12px; max-width: var(--measure); }
+.hint code { color: var(--signal); }
 
-/* ---------- callout ---------- */
+/* ------------------------------------------------------------- callout --- */
 .callout {
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--brass);
-  background: var(--ink-850);
-  border-radius: 10px;
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--signal);
+  background: var(--bg-3);
   padding: 16px 18px;
   font-size: var(--fs-sm);
-  color: var(--dim);
+  color: var(--ink-2);
 }
-.callout strong { color: var(--text); }
-.callout.verdigris { border-left-color: var(--verdigris); }
+.callout strong { color: var(--ink); }
+.callout.steel { border-left-color: var(--steel); }
+.callout code { color: var(--signal); }
 
-/* ---------- prompt / result transcript ---------- */
-.exchange { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+/* --------------------------------------------------------- transcripts --- */
+.exchange { border: 1px solid var(--rule); }
 .exchange > div { padding: 15px 17px; }
-.exchange > div + div { border-top: 1px solid var(--line-soft); }
+.exchange > div + div { border-top: 1px solid var(--rule-soft); }
 .exchange .who {
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--faint);
   display: block;
-  margin-bottom: 7px;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 9px;
 }
-.exchange .ask { background: var(--ink-850); }
-.exchange .ask .who { color: var(--brass); }
-.exchange .ask p { font-family: var(--mono); font-size: var(--fs-sm); color: var(--text); }
-.exchange .got { background: var(--ink-900); }
-.exchange .got p { font-size: var(--fs-sm); color: var(--dim); }
-.exchange .got p + p { margin-top: 9px; }
-.exchange code { color: var(--brass); font-size: .92em; }
+.exchange .ask { background: var(--bg-3); }
+.exchange .ask .who { color: var(--signal); }
+.exchange .ask p { font-family: var(--mono); font-size: var(--fs-sm); color: var(--ink); }
+.exchange .got { background: var(--bg-2); }
+.exchange .got p { font-size: var(--fs-sm); color: var(--ink-2); }
+.exchange .got p + p { margin-top: 10px; }
+.exchange code { color: var(--signal); font-size: .92em; }
 
-/* ---------- table ---------- */
-.table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--ink-900);
-}
+/* --------------------------------------------------------------- table --- */
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); background: var(--bg-2); }
 table.grid { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 table.grid th, table.grid td {
   text-align: left;
   padding: 12px 14px;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--rule-soft);
   vertical-align: top;
 }
 table.grid tr:last-child td { border-bottom: 0; }
 table.grid th {
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
+  font: 500 var(--fs-xs)/1 var(--mono);
   text-transform: uppercase;
-  letter-spacing: .08em;
-  color: var(--faint);
-  font-weight: 500;
-  background: var(--ink-850);
+  letter-spacing: .14em;
+  color: var(--ink-3);
+  background: var(--bg-3);
+  white-space: nowrap;
 }
-table.grid td.name { font-family: var(--mono); color: var(--brass); white-space: nowrap; }
-table.grid td .mini-cmd {
-  display: flex; align-items: center; gap: 8px;
-}
-table.grid td code { font-size: var(--fs-xs); color: var(--dim); }
+table.grid td.name { font-family: var(--mono); color: var(--signal); white-space: nowrap; }
+table.grid td code { font-size: var(--fs-xs); color: var(--ink-2); }
+table.grid td .mini-cmd { display: flex; align-items: center; gap: 10px; }
 .copy-mini {
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   background: transparent;
-  color: var(--dim);
-  border-radius: 6px;
-  font: 600 var(--fs-xs)/1 var(--sans);
-  padding: 5px 9px;
+  color: var(--ink-3);
+  font: 600 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 6px 9px;
   cursor: pointer;
   flex: 0 0 auto;
+  transition: border-color .16s var(--ease-out), color .16s var(--ease-out);
 }
-.copy-mini:hover { border-color: var(--brass); color: var(--brass); }
-.copy-mini.done { background: var(--brass); color: #17110a; border-color: var(--brass); }
+.copy-mini:hover { border-color: var(--signal); color: var(--signal); }
+.copy-mini.done { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
 
-/* ---------- reveal on scroll ---------- */
-.reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s cubic-bezier(.2, .7, .3, 1); }
+/* Support matrix: yes / partial / no, as marks rather than words. */
+.mark-yes  { color: var(--acid); font-weight: 700; }
+.mark-part { color: var(--signal); font-weight: 700; }
+.mark-no   { color: var(--ink-4); }
+table.grid td .mark-note { display: block; color: var(--ink-3); font-size: var(--fs-xs); margin-top: 3px; }
+
+/* ------------------------------------------------------ install builder -- */
+/* The one genuinely interactive control on the page: pick agent + scope + skill
+   and the command below rewrites itself. It exists because "where does this go"
+   is the question the README kept having to answer twice. */
+.builder { border: 1px solid var(--rule); background: var(--bg-2); }
+.builder-row {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+@media (max-width: 620px) {
+  .builder-row { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+}
+.builder-row > .label { margin: 0; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  appearance: none;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink-2);
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .08em;
+  padding: 9px 13px;
+  cursor: pointer;
+  transition: border-color .16s var(--ease-out), color .16s var(--ease-out),
+              background .16s var(--ease-out);
+}
+.seg button:hover { border-color: var(--signal); color: var(--signal); }
+.seg button[aria-pressed="true"] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.builder-out { padding: 16px; background: var(--bg-3); }
+.builder-dest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  font: 500 var(--fs-xs)/1.6 var(--mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+.builder-dest b { color: var(--ink); font-weight: 500; text-transform: none; letter-spacing: 0; }
+.builder-note {
+  margin-top: 12px;
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+}
+.builder-note strong { color: var(--ink-2); }
+
+/* ------------------------------------------------------ reveal on scroll -- */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .8s var(--ease-out), transform .8s var(--ease-out);
+}
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
 </style>
 <style>
 /* ---- css/demos.css ---- */
-/* Demo-specific styling. Each demo is an operable instrument, so controls read
-   as controls and live numbers get tabular figures. */
+/* ============================================================================
+ * Demo chrome. Each demo is an instrument, so controls read as controls and
+ * live numbers get tabular figures. Everything here inherits the plate rules:
+ * square corners, hairline separators, one accent.
+ * ========================================================================= */
 
 .demo { position: relative; }
-.demo canvas { width: 100%; height: auto; background: var(--ink-950); }
+
+/* Canvas grounds stay dark in both themes, like the code blocks and the
+   terminal. Every demo's shading was tuned against a dark field — a light
+   ground would turn carefully lit crates into murky silhouettes — and a dark
+   viewport inside a light panel reads as an instrument screen, which is what
+   these are. */
+.demo canvas { width: 100%; height: auto; background: var(--code-bg); }
+
 .demo-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--line-soft);
-  background: var(--ink-850);
+  gap: 7px;
+  padding: 11px 15px;
+  border-top: 1px solid var(--rule-soft);
+  background: var(--bg-3);
 }
 .chip {
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   background: transparent;
-  color: var(--dim);
-  border-radius: 999px;
-  font: 600 var(--fs-xs)/1 var(--sans);
-  padding: 8px 14px;
+  color: var(--ink-2);
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .08em;
+  padding: 8px 13px;
   cursor: pointer;
-  transition: border-color .16s ease, color .16s ease, background .16s ease;
+  transition: border-color .16s var(--ease-out), color .16s var(--ease-out),
+              background .16s var(--ease-out);
 }
-.chip:hover { border-color: var(--brass); color: var(--brass); }
+.chip:hover { border-color: var(--signal); color: var(--signal); }
 .chip[aria-pressed="true"], .chip.active {
-  background: var(--brass); color: #17110a; border-color: var(--brass);
+  background: var(--signal);
+  color: var(--on-signal);
+  border-color: var(--signal);
 }
 .spacer { flex: 1 1 auto; }
 
 .readout {
   display: flex;
   gap: 16px;
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
-  color: var(--faint);
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .06em;
+  color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
-.readout b { color: var(--verdigris); font-weight: 600; }
+.readout b { color: var(--steel); font-weight: 600; }
 
-/* ---------- canvas-atelier stage strip ---------- */
-.stages { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-@media (max-width: 760px) { .stages { grid-template-columns: repeat(2, 1fr); } }
-.stage {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--ink-950);
+/* ------------------------------------------ canvas-atelier stage strip --- */
+.stages {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
 }
+@media (max-width: 760px) { .stages { grid-template-columns: repeat(2, 1fr); } }
+.stage { background: var(--code-bg); position: relative; }
 .stage canvas { width: 100%; height: auto; aspect-ratio: 1 / 1; }
 .stage .cap {
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
-  color: var(--faint);
-  padding: 8px 10px;
-  border-top: 1px solid var(--line-soft);
-  background: var(--ink-900);
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .1em;
+  color: var(--ink-3);
+  padding: 9px 10px;
+  border-top: 1px solid var(--rule-soft);
+  background: var(--bg-2);
   text-align: center;
 }
-.stage.on { border-color: var(--brass); }
-.stage.on .cap { color: var(--brass); }
+.stage.on .cap { color: var(--signal); }
+.stage.on::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--signal);
+  pointer-events: none;
+}
 
-/* ---------- caveman ---------- */
+/* ----------------------------------------------------------- caveman ----- */
 .cave-grid { display: grid; gap: 14px; }
-.cave-levels { display: flex; flex-wrap: wrap; gap: 8px; }
+.cave-levels { display: flex; flex-wrap: wrap; gap: 6px; }
 .cave-out {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--ink-950);
+  border: 1px solid var(--rule);
+  background: var(--bg);
   padding: 18px;
   min-height: 132px;
   font-size: var(--fs-base);
   line-height: 1.7;
-  color: var(--text);
+  color: var(--ink);
 }
+.cave-out code { color: var(--signal); }
 .cave-out .cursor {
   display: inline-block;
   width: 8px; height: 1.05em;
-  background: var(--brass);
+  background: var(--signal);
   vertical-align: -2px;
   animation: blink 1s steps(2) infinite;
 }
 @keyframes blink { 50% { opacity: 0; } }
+
 .cave-meter { display: grid; gap: 8px; }
 .meter-row {
   display: grid;
   grid-template-columns: 5.6em 1fr 4.4em;
   align-items: center;
-  gap: 10px;
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
-  color: var(--faint);
+  gap: 12px;
+  font: 500 var(--fs-xs)/1 var(--mono);
+  letter-spacing: .06em;
+  color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 .meter-track {
   display: block;
-  height: 9px;
-  background: var(--ink-800);
-  border-radius: 999px;
+  height: 6px;
+  background: var(--bg-4);
   overflow: hidden;
 }
 .meter-fill {
@@ -788,192 +1304,382 @@ table.grid td code { font-size: var(--fs-xs); color: var(--dim); }
      every bar showing only its empty track. */
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--brass-dim), var(--brass));
-  border-radius: 999px;
-  transition: width .55s cubic-bezier(.2, .8, .3, 1);
+  background: var(--signal-dim);
+  transition: width .55s var(--ease-out);
 }
-.meter-row.is-active { color: var(--brass); }
-.meter-row.is-active .meter-fill { background: linear-gradient(90deg, var(--brass), var(--brass-hi)); }
+.meter-row.is-active { color: var(--signal); }
+.meter-row.is-active .meter-fill { background: var(--signal); }
 
-/* ---------- matrix session ---------- */
+/* ----------------------------------------------------- matrix session ---- */
 .session {
   display: grid;
-  grid-template-columns: 1fr 260px;
-  gap: 0;
+  grid-template-columns: 1fr 264px;
   min-height: 330px;
 }
 @media (max-width: 820px) { .session { grid-template-columns: 1fr; } }
 .session-feed {
   padding: 16px;
-  border-right: 1px solid var(--line-soft);
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
+  border-right: 1px solid var(--rule-soft);
+  font: 500 var(--fs-xs)/1.5 var(--mono);
   display: flex;
   flex-direction: column;
   gap: 7px;
   overflow: hidden;
 }
-@media (max-width: 820px) { .session-feed { border-right: 0; border-bottom: 1px solid var(--line-soft); } }
+@media (max-width: 820px) {
+  .session-feed { border-right: 0; border-bottom: 1px solid var(--rule-soft); }
+}
 .feed-line {
   display: grid;
   grid-template-columns: 3.4em 1fr auto;
   gap: 10px;
   align-items: baseline;
-  color: var(--dim);
-  animation: slideIn .45s cubic-bezier(.2, .8, .3, 1) both;
+  color: var(--ink-2);
+  animation: slideIn .45s var(--ease-out) both;
 }
 @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } }
-.feed-line .t { color: var(--faint); }
-.feed-line .p { color: var(--verdigris); white-space: nowrap; }
-.feed-line.none .p { color: var(--faint); }
-.tally { padding: 16px; background: var(--ink-850); }
+.feed-line .t { color: var(--ink-4); }
+.feed-line .p { color: var(--steel); white-space: nowrap; }
+.feed-line.none .p { color: var(--ink-4); }
+
+.tally { padding: 16px; background: var(--bg-3); }
 .tally-row {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
   align-items: center;
-  padding: 7px 0;
-  border-bottom: 1px dashed var(--line-soft);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule-soft);
   font-size: var(--fs-xs);
-  color: var(--dim);
+  color: var(--ink-2);
 }
 .tally-row:last-of-type { border-bottom: 0; }
 .tally-row .pips { display: flex; gap: 3px; }
-.pip { width: 7px; height: 7px; border-radius: 2px; background: var(--ink-700); }
-.pip.on { background: var(--brass); box-shadow: 0 0 8px var(--brass-glow); }
-.tally-row.tripped { color: var(--brass); }
+.pip { width: 7px; height: 7px; background: var(--bg-4); }
+.pip.on { background: var(--signal); }
+.tally-row.tripped { color: var(--signal); }
 .proposal {
   margin-top: 14px;
-  border: 1px solid var(--brass-edge);
-  background: var(--brass-glow);
-  border-radius: 10px;
+  border: 1px solid var(--signal-edge);
+  background: var(--signal-glow);
   padding: 12px;
   font-size: var(--fs-xs);
-  color: var(--text);
-  animation: pop .5s cubic-bezier(.2, 1.3, .4, 1) both;
+  line-height: 1.6;
+  color: var(--ink);
+  animation: pop .5s var(--ease-spring) both;
 }
-@keyframes pop { from { opacity: 0; transform: scale(.94); } }
+@keyframes pop { from { opacity: 0; transform: scale(.96); } }
 
-/* ---------- skill-report terminal ---------- */
+/* ------------------------------------------------ skill-report terminal -- */
 .term {
   background: var(--code-bg);
   padding: 18px;
   font-family: var(--mono);
   font-size: var(--fs-sm);
-  color: var(--code-text);
+  color: var(--code-ink);
   min-height: 290px;
   display: flex;
   flex-direction: column;
   gap: 9px;
 }
 .term-line { display: flex; gap: 10px; align-items: baseline; animation: slideIn .35s ease both; }
-.term-line .gutter { color: #3d4a66; flex: 0 0 auto; }
-.term-user { color: var(--verdigris); }
-.term-tool {
-  display: inline-flex; align-items: center; gap: 8px;
-  color: #8fa0bd;
-}
+.term-line .gutter { color: #3c3830; flex: 0 0 auto; }
+.term-user { color: var(--acid); }
+.term-tool { display: inline-flex; align-items: center; gap: 8px; color: #8d877d; }
 .term-tool .badge {
-  border: 1px solid var(--brass-edge);
-  color: var(--brass);
-  border-radius: 5px;
+  border: 1px solid var(--signal-edge);
+  color: var(--signal);
   padding: 1px 7px;
   font-size: var(--fs-xs);
 }
-.term-tool.counted .badge { background: var(--brass-glow); }
+.term-tool.counted .badge { background: var(--signal-glow); }
 .term-foot {
   margin-top: auto;
-  border-top: 1px solid #1b2436;
+  border-top: 1px solid #23201b;
   padding-top: 12px;
-  color: var(--brass);
-  animation: pop .45s cubic-bezier(.2, 1.3, .4, 1) both;
+  color: var(--signal);
+  animation: pop .45s var(--ease-spring) both;
 }
-.term-foot .k { color: #64738f; }
+.term-foot .k { color: #6b6459; }
 </style>
 </head>
 <body>
 
 <a class="skip-link" href="#main">Skip to content</a>
 
+<!-- fixed apparatus: column rules, crop marks, progress, reticle -->
+<div class="apparatus" aria-hidden="true">
+  <div class="cols"><span></span><span></span><span></span><span></span></div>
+</div>
+<i class="crop tl" aria-hidden="true"></i><i class="crop tr" aria-hidden="true"></i>
+<i class="crop bl" aria-hidden="true"></i><i class="crop br" aria-hidden="true"></i>
+<div class="progress" data-progress aria-hidden="true"></div>
+<div class="reticle" data-reticle aria-hidden="true"><span class="ring"></span></div>
+
+<nav class="index-rail" aria-label="Skill index">
+  <span class="rail-cap">index</span>
+  <a href="#canvas-atelier">01 · atelier</a>
+  <a href="#physics-2d">02 · physics</a>
+  <a href="#caveman">03 · caveman</a>
+  <a href="#matrix-agents-skill">04 · matrix</a>
+  <a href="#skill-report">05 · report</a>
+</nav>
+
 <header class="masthead">
-  <span class="mark"><span class="dot"></span><b>useful-skills</b></span>
+  <span class="mark"><span class="pip"></span>useful-skills</span>
   <nav>
+    <a href="#protocol" class="hide-sm">Protocol</a>
     <a href="#install" class="hide-sm">Install</a>
-    <a href="#catalog" class="hide-sm">Catalog</a>
-    <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">GitHub ↗</a>
+    <a href="#catalogue" class="hide-sm">Catalogue</a>
+    <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">GitHub&nbsp;↗</a>
+    <button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch colour theme">
+      <span data-theme-label>dark</span>
+    </button>
   </nav>
 </header>
 
+<!-- ================================ HERO ================================ -->
 <div class="hero">
   <canvas id="hero-stage" data-demo="hero" aria-hidden="true"></canvas>
-  <div class="hero-scrim"></div>
+  <div class="hero-veil"></div>
   <div class="shell hero-inner">
-    <div class="hero-copy">
-      <span class="eyebrow">Five skills · one command each</span>
-      <h1>Sharper<br />tools for<br /><em>Claude Code.</em></h1>
-      <p class="lede">
-        A small workshop of skills that teach Claude to draw like an illustrator, simulate like an
-        engine, speak in half the tokens, and remember what it learned. Drop one into a project and
-        it picks it up next session.
-      </p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="#install">Install a skill</a>
-        <a class="btn btn-ghost" href="#catalog">See what they do</a>
-      </div>
+
+    <div class="hero-meta">
+      <span>Catalogue of five</span>
+      <span class="now">Claude Code + GitHub Copilot</span>
+      <span>Plain text · MIT</span>
     </div>
+
+    <h1 class="hero-title">
+      <span class="line">Sharper</span>
+      <span class="line">tools for</span>
+      <span class="line hollow">your agent<span class="stop">.</span></span>
+    </h1>
+
+    <p class="hero-lede">
+      Five skills that teach a coding agent to draw like an illustrator, simulate like an engine,
+      speak in half the tokens, and remember what it learned. One folder each — <em>and the same
+      folder works in both</em> Claude Code and GitHub Copilot.
+    </p>
+
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#install">Build my install command <span class="arrow">→</span></a>
+      <a class="btn btn-ghost" href="#catalogue">See what they do</a>
+    </div>
+
+    <dl class="hero-spec">
+      <div><dt>Skills</dt><dd>05</dd></div>
+      <div><dt>Agents</dt><dd>02</dd></div>
+      <div><dt>Runtime deps</dt><dd>00</dd></div>
+      <div><dt>Format</dt><dd><span class="u">SKILL</span>.md</dd></div>
+    </dl>
+
   </div>
 </div>
 
-<main id="main" class="shell">
-  <div class="body-grid">
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span>canvas-atelier</span><span><b>◆</b></span><span>physics-2d</span><span><b>◆</b></span><span>caveman</span><span><b>◆</b></span><span>matrix-agents-skill</span><span><b>◆</b></span><span>skill-report</span><span><b>◆</b></span><span>.claude/skills</span><span><b>◆</b></span><span>.github/skills</span><span><b>◆</b></span><span>~/.copilot/skills</span><span><b>◆</b></span>
+    <span>canvas-atelier</span><span><b>◆</b></span><span>physics-2d</span><span><b>◆</b></span><span>caveman</span><span><b>◆</b></span><span>matrix-agents-skill</span><span><b>◆</b></span><span>skill-report</span><span><b>◆</b></span><span>.claude/skills</span><span><b>◆</b></span><span>.github/skills</span><span><b>◆</b></span><span>~/.copilot/skills</span><span><b>◆</b></span>
+  </div>
+</div>
 
-    <aside class="rail">
-      <div class="rail-title">Catalog</div>
-      <ol>
-        <li><a href="#canvas-atelier"><span class="num">01</span><span>canvas-atelier</span></a></li>
-        <li><a href="#physics-2d"><span class="num">02</span><span>physics-2d</span></a></li>
-        <li><a href="#caveman"><span class="num">03</span><span>caveman</span></a></li>
-        <li><a href="#matrix-agents-skill"><span class="num">04</span><span>matrix-agents</span></a></li>
-        <li><a href="#skill-report"><span class="num">05</span><span>skill-report</span></a></li>
-      </ol>
-    </aside>
-
+<main id="main">
+  <div class="shell">
     <div class="column">
 
-      <!-- ============ WHAT / INSTALL ============ -->
-      <section id="install">
+      <!-- ========================= PROTOCOL ========================= -->
+      <section class="band" id="protocol">
         <div class="section-head reveal">
-          <span class="eyebrow">How this works</span>
-          <h2>A skill is a folder Claude reads before it works.</h2>
+          <span class="eyebrow">00 — the format</span>
+          <h2>A skill is a folder your agent reads before it works.</h2>
           <p>
             One <code>SKILL.md</code> describing <em>when</em> to use it and <em>how</em>, plus optional
-            reference documents and helper scripts it opens only when the task calls for them. Put the
-            folder in <code>.claude/skills/</code> and Claude finds it on the next session — no build
-            step, no configuration, no restart beyond starting a new session.
+            reference documents and helper scripts it opens only when the task calls for them. No build
+            step, no configuration, no runtime.
           </p>
         </div>
 
-        <div class="reveal">
-          <span class="label">Install any skill</span>
-          <div class="cmd">
-            <pre id="cmd-generic"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">&lt;name&gt;</span> .claude/skills/<span class="tok-path">&lt;name&gt;</span></pre>
-            <button class="copy" data-copy="#cmd-generic">Copy</button>
+        <div class="prose reveal">
+          <p>
+            The format is not Anthropic-specific any more. Claude Code reads skills from
+            <code>.claude/skills/</code>; GitHub Copilot reads <code>.github/skills/</code> — and also
+            <code>.claude/skills/</code>, which means a repository that already has Claude Code skills
+            needs no second copy for Copilot's coding agent, CLI, or agent mode in VS Code and
+            JetBrains. Same frontmatter, same Markdown, same folder.
+          </p>
+        </div>
+
+        <div class="reveal" style="margin-top:26px">
+          <span class="label">Where a skill goes</span>
+          <div class="table-wrap">
+            <table class="grid">
+              <thead>
+                <tr><th>Scope</th><th>Claude Code</th><th>GitHub Copilot</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="name">project</td>
+                  <td><code>.claude/skills/&lt;name&gt;</code></td>
+                  <td><code>.github/skills/&lt;name&gt;</code></td>
+                </tr>
+                <tr>
+                  <td class="name">global</td>
+                  <td><code>~/.claude/skills/&lt;name&gt;</code></td>
+                  <td><code>~/.copilot/skills/&lt;name&gt;</code></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           <p class="hint">
-            Needs only <code>npx</code>, which ships with Node — already a Claude Code prerequisite. It
-            copies one folder, not the whole repository. Run it from your project root, or install to
-            <code>~/.claude/skills/&lt;name&gt;</code> to make a skill available in every project.
-            Each skill below has this line filled in and ready to copy.
+            "Global" means your user folder — on Windows that is
+            <code>C:\Users\&lt;you&gt;\.claude\skills\</code>. The installer resolves it for you and
+            prints the full path before it writes anything.
+          </p>
+        </div>
+
+        <div class="reveal" style="margin-top:34px">
+          <span class="label">What survives the port</span>
+          <div class="table-wrap">
+            <table class="grid">
+              <thead>
+                <tr><th>Skill</th><th>Claude Code</th><th>GitHub Copilot</th><th>Why</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="name">canvas-atelier</td>
+                  <td><span class="mark-yes">●</span> full</td>
+                  <td><span class="mark-yes">●</span> full</td>
+                  <td>Pure technique. No host APIs — it only needs some way to look at the rendered pixels.</td>
+                </tr>
+                <tr>
+                  <td class="name">physics-2d</td>
+                  <td><span class="mark-yes">●</span> full</td>
+                  <td><span class="mark-yes">●</span> full</td>
+                  <td>Plain CommonJS modules plus reference docs. Nothing host-specific anywhere in it.</td>
+                </tr>
+                <tr>
+                  <td class="name">caveman</td>
+                  <td><span class="mark-yes">●</span> full</td>
+                  <td><span class="mark-yes">●</span> full</td>
+                  <td>Response style only. <code>/caveman</code> is Claude Code's slash form; on Copilot the plain words work, or add a prompt file.</td>
+                </tr>
+                <tr>
+                  <td class="name">matrix-agents-skill</td>
+                  <td><span class="mark-yes">●</span> full</td>
+                  <td><span class="mark-part">◐</span> adapted</td>
+                  <td>Resolves the host's skills directory and memory file at runtime. Copilot has no <code>AskUserQuestion</code> and no hooks, so the interview runs as chat and the trigger word carries the weight.</td>
+                </tr>
+                <tr>
+                  <td class="name">skill-report</td>
+                  <td><span class="mark-yes">●</span> full</td>
+                  <td><span class="mark-part">◐</span> best-effort</td>
+                  <td>The footer is portable; the guarantee is not. Its Stop hook reads the transcript, and Copilot has no post-turn interception point at all.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="hint">
+            The two <span class="mark-part">◐</span> rows are honest, not hedged: both skills ship a
+            <code>references/</code> file spelling out exactly what degrades on Copilot and what to add
+            to <code>.github/copilot-instructions.md</code> to compensate.
           </p>
         </div>
       </section>
 
-      <span id="catalog"></span>
+      <!-- ========================= INSTALL ========================== -->
+      <section class="band" id="install">
+        <div class="section-head reveal">
+          <span class="eyebrow">01 — installation</span>
+          <h2>Answer three questions, copy one line.</h2>
+          <p>
+            Every skill installs the same way, straight from GitHub — one folder, not the whole
+            repository. It needs only <code>npx</code>, which ships with Node.
+          </p>
+        </div>
 
-      <!-- ============ 01 · CANVAS-ATELIER ============ -->
-      <section class="skill-section" id="canvas-atelier">
-        <div class="skill-head reveal">
-          <span class="skill-index">01 — rendering</span>
+        <div class="builder reveal" data-builder>
+          <div class="builder-row">
+            <span class="label">Agent</span>
+            <div class="seg" data-group="agent" role="group" aria-label="Target agent">
+              <button type="button" data-val="claude" aria-pressed="true">Claude Code</button>
+              <button type="button" data-val="copilot" aria-pressed="false">GitHub Copilot</button>
+            </div>
+          </div>
+          <div class="builder-row">
+            <span class="label">Scope</span>
+            <div class="seg" data-group="scope" role="group" aria-label="Install scope">
+              <button type="button" data-val="project" aria-pressed="true">This project</button>
+              <button type="button" data-val="global" aria-pressed="false">Every project</button>
+            </div>
+          </div>
+          <div class="builder-row">
+            <span class="label">Skill</span>
+            <div class="seg" data-group="skill" role="group" aria-label="Skill">
+              <button type="button" data-val="canvas-atelier" aria-pressed="true">canvas-atelier</button>
+              <button type="button" data-val="physics-2d" aria-pressed="false">physics-2d</button>
+              <button type="button" data-val="caveman" aria-pressed="false">caveman</button>
+              <button type="button" data-val="matrix-agents-skill" aria-pressed="false">matrix-agents-skill</button>
+              <button type="button" data-val="skill-report" aria-pressed="false">skill-report</button>
+            </div>
+          </div>
+          <div class="builder-row">
+            <span class="label">Shell</span>
+            <div class="seg" data-group="shell" role="group" aria-label="Shell">
+              <button type="button" data-val="posix" aria-pressed="true">bash / zsh</button>
+              <button type="button" data-val="pwsh" aria-pressed="false">PowerShell</button>
+            </div>
+          </div>
+
+          <div class="builder-out">
+            <p class="builder-dest">Destination <b data-dest>.claude/skills/canvas-atelier</b></p>
+            <div class="cmd">
+              <pre id="cmd-builder" data-cmd></pre>
+              <button class="copy" data-copy="#cmd-builder">Copy</button>
+            </div>
+            <p class="builder-note" data-bnote></p>
+          </div>
+        </div>
+
+        <div class="two-col reveal" style="margin-top:34px">
+          <div>
+            <span class="label">Or run the guided installer</span>
+            <div class="cmd nodollar">
+              <pre id="cmd-guided"><span class="tok-dim"># macOS · Linux · WSL · Git Bash</span>
+<span class="tok-cmd">./install.sh</span>
+
+<span class="tok-dim"># Windows PowerShell</span>
+<span class="tok-cmd">.\install.ps1</span></pre>
+              <button class="copy" data-copy="#cmd-guided">Copy</button>
+            </div>
+            <p class="hint">
+              With no arguments it asks which skills, which agent, and which scope, then prints every
+              resolved destination path and waits for confirmation. <code>--dry-run</code> shows the
+              plan and writes nothing.
+            </p>
+          </div>
+          <div>
+            <span class="label">Both agents, one folder</span>
+            <div class="callout steel">
+              <strong>Project scope with both agents installs a single copy</strong> into
+              <code>.claude/skills/</code>, because Copilot reads that directory too. Pass
+              <code>--separate</code> if your team pins to <code>.github/skills/</code> and wants a
+              literal second copy.
+              <br /><br />
+              Globally the two paths don't overlap — <code>~/.claude/skills/</code> and
+              <code>~/.copilot/skills/</code> — so there the installer writes both.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <span id="catalogue"></span>
+
+      <!-- ==================== 01 · CANVAS-ATELIER ==================== -->
+      <section class="plate" id="canvas-atelier">
+        <div class="plate-ord" aria-hidden="true">01</div>
+        <div class="plate-head reveal">
+          <span class="plate-cat">rendering <span class="of">plate 01 / 05</span></span>
           <h2>canvas-atelier</h2>
           <p class="tagline">
             Gallery-quality drawing and animation on HTML canvas: construction-based form,
@@ -981,110 +1687,117 @@ table.grid td code { font-size: var(--fs-xs); color: var(--dim); }
           </p>
         </div>
 
-        <div class="prose reveal">
-          <p>
-            Most canvas drawings look like clip art, and the reason is process rather than code. A
-            trained illustrator never draws final lines first — the work moves through stages, and each
-            stage catches a mistake the next one would otherwise bake in permanently. Jump straight from
-            idea to final shapes and you get the flat, symmetric, sterile look that gives generated art
-            away at a glance.
+        <div class="plate-body">
+          <p class="lead reveal">
+            Most canvas drawings look like clip art, and the reason is <em>process</em>, not code.
           </p>
-        </div>
-        <div class="prose reveal" style="margin-top:14px">
-          <p>
-            This skill encodes that process as eight stages, and hands Claude the reference material and
-            helper code for each one. Its sharpest opinions: pick <strong>one</strong> light direction and
-            make every highlight and shadow agree with it; shade with a darker, desaturated version of the
-            local hue rather than black; derive the shadow's warmth from the light's own temperature; put
-            peak saturation at the core-shadow transition rather than the highlight; and never finish
-            without <em>rendering the image and actually looking at it</em>, because gradient math and
-            compositing order fail in ways that are invisible in source and obvious in pixels.
-          </p>
-        </div>
 
-        <div class="panel bleed reveal" style="margin-top:30px">
-          <div class="panel-head">
-            <span class="label">Live · Verlet silk, shaded by fold curvature</span>
-            <span class="readout">drag the banner</span>
+          <div class="prose reveal" style="margin-top:20px">
+            <p>
+              A trained illustrator never draws final lines first — the work moves through stages, and
+              each stage catches a mistake the next one would otherwise bake in permanently. Jump
+              straight from idea to final shapes and you get the flat, symmetric, sterile look that
+              gives generated art away at a glance.
+            </p>
           </div>
-          <div class="demo" data-demo="atelier-cloth">
-            <canvas width="900" height="380" style="aspect-ratio:900/380"
-              aria-label="An animated silk banner rippling in wind, shaded so folds turned toward the light are brighter"></canvas>
+          <div class="prose reveal" style="margin-top:16px">
+            <p>
+              This skill encodes that process as eight stages, and hands the agent the reference
+              material and helper code for each one. Its sharpest opinions: pick <strong>one</strong>
+              light direction and make every highlight and shadow agree with it; shade with a darker,
+              desaturated version of the local hue rather than black; derive the shadow's warmth from
+              the light's own temperature; put peak saturation at the core-shadow transition rather
+              than the highlight; and never finish without <em>rendering the image and actually looking
+              at it</em>, because gradient math and compositing order fail in ways that are invisible
+              in source and obvious in pixels.
+            </p>
           </div>
-          <p class="panel-note">
-            Connected points can't be animated one eased curve at a time — they come apart. This is Verlet
-            integration with distance constraints, the approach in the skill's
-            <code>references/physics-motion.md</code>, with each quad shaded by how far its own surface
-            has turned from the light. That local-normal shading is the difference between lit cloth and a
-            moving wireframe.
-          </p>
-        </div>
 
-        <div class="reveal" style="margin-top:30px">
-          <span class="label">The workflow, rendered — same subject, five stages</span>
-          <div class="stages" data-demo="atelier-stages">
-            <div class="stage" data-stage="block"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">1 · block-in</div></div>
-            <div class="stage" data-stage="contour"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">2 · contour</div></div>
-            <div class="stage" data-stage="light"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">3 · light</div></div>
-            <div class="stage" data-stage="texture"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">4 · texture</div></div>
-            <div class="stage on" data-stage="final"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">5 · finish</div></div>
+          <div class="panel bleed reveal" style="margin-top:34px">
+            <div class="panel-head">
+              <span class="label">Verlet silk, shaded by fold curvature</span>
+              <span class="live">drag the banner</span>
+            </div>
+            <div class="demo" data-demo="atelier-cloth">
+              <canvas width="900" height="380" style="aspect-ratio:900/380"
+                aria-label="An animated silk banner rippling in wind, shaded so folds turned toward the light are brighter"></canvas>
+            </div>
+            <p class="panel-note">
+              Connected points can't be animated one eased curve at a time — they come apart. This is
+              Verlet integration with distance constraints, the approach in the skill's
+              <code>references/physics-motion.md</code>, with each quad shaded by how far its own
+              surface has turned from the light. That local-normal shading is the difference between
+              lit cloth and a moving wireframe.
+            </p>
           </div>
-          <p class="hint">
-            Proportion first with flat primitives; primitives replaced by asymmetric beziers; one light
-            direction with core shadow, cast shadow and bounce light; noise to break the plastic
-            smoothness; then the specular hit, stalk and rim light. Skipping to stage five is what
-            produces clip art.
-          </p>
-        </div>
 
-        <div class="two-col reveal" style="margin-top:34px">
-          <div>
-            <span class="label">What ships in the folder</span>
-            <ul class="files">
-              <li><code>SKILL.md</code><span>The eight-stage workflow and a "do this, not that" table</span></li>
-              <li><code>composition.md</code><span>Focal point, selective fidelity, depth, negative space</span></li>
-              <li><code>lighting-and-shading.md</code><span>Core / cast / ambient-occlusion / rim model with gradient code</span></li>
-              <li><code>organic-curves.md</code><span>Turning primitives into believable asymmetric contours</span></li>
-              <li><code>color-theory.md</code><span>Shadow temperature and where saturation should peak</span></li>
-              <li><code>precision-and-form.md</code><span>Perspective, value before colour, lost-and-found edges</span></li>
-              <li><code>animation-principles.md</code><span>Easing, squash and stretch, anticipation, arcs, follow-through</span></li>
-              <li><code>physics-motion.md</code><span>Verlet for cloth, hair, rope, flags</span></li>
-              <li><code>scripts/</code><span><code>canvas-setup</code>, <code>easing</code>, <code>bezier-utils</code>, <code>noise</code>, <code>verlet</code></span></li>
-            </ul>
+          <div class="reveal" style="margin-top:34px">
+            <span class="label">The workflow, rendered — same subject, five stages</span>
+            <div class="stages" data-demo="atelier-stages">
+              <div class="stage" data-stage="block"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">1 · block-in</div></div>
+              <div class="stage" data-stage="contour"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">2 · contour</div></div>
+              <div class="stage" data-stage="light"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">3 · light</div></div>
+              <div class="stage" data-stage="texture"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">4 · texture</div></div>
+              <div class="stage on" data-stage="final"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">5 · finish</div></div>
+            </div>
+            <p class="hint">
+              Proportion first with flat primitives; primitives replaced by asymmetric beziers; one
+              light direction with core shadow, cast shadow and bounce light; noise to break the plastic
+              smoothness; then the specular hit, stalk and rim light. Skipping to stage five is what
+              produces clip art.
+            </p>
           </div>
-          <div>
-            <span class="label">In practice</span>
-            <div class="exchange">
-              <div class="ask">
-                <span class="who">You type</span>
-                <p>Draw a realistic red apple on a wooden table.</p>
+
+          <div class="two-col reveal" style="margin-top:38px">
+            <div>
+              <span class="label">What ships in the folder</span>
+              <ul class="files">
+                <li><code>SKILL.md</code><span>The eight-stage workflow and a "do this, not that" table</span></li>
+                <li><code>composition.md</code><span>Focal point, selective fidelity, depth, negative space</span></li>
+                <li><code>lighting-and-shading.md</code><span>Core / cast / ambient-occlusion / rim model with gradient code</span></li>
+                <li><code>organic-curves.md</code><span>Turning primitives into believable asymmetric contours</span></li>
+                <li><code>color-theory.md</code><span>Shadow temperature and where saturation should peak</span></li>
+                <li><code>precision-and-form.md</code><span>Perspective, value before colour, lost-and-found edges</span></li>
+                <li><code>animation-principles.md</code><span>Easing, squash and stretch, anticipation, arcs, follow-through</span></li>
+                <li><code>physics-motion.md</code><span>Verlet for cloth, hair, rope, flags</span></li>
+                <li><code>scripts/</code><span><code>canvas-setup</code>, <code>easing</code>, <code>bezier-utils</code>, <code>noise</code>, <code>verlet</code></span></li>
+              </ul>
+            </div>
+            <div>
+              <span class="label">In practice</span>
+              <div class="exchange">
+                <div class="ask">
+                  <span class="who">You type</span>
+                  <p>Draw a realistic red apple on a wooden table.</p>
+                </div>
+                <div class="got">
+                  <span class="who">What changes</span>
+                  <p>Without the skill: two <code>arc()</code> calls, a flat red fill, a brown rectangle, a grey ellipse for shadow.</p>
+                  <p>With it: the canvas is sized for real pixel density first; the apple is blocked in at low opacity to check proportion; every contour becomes a slightly asymmetric bezier; one light direction drives a multi-stop gradient with a core shadow, a cast shadow that follows the table's angle and bounce light on the shadow side; a noise layer breaks the plastic sheen; a pinpoint specular lands last. Then it renders the image and checks it against a critique list before calling it done.</p>
+                </div>
               </div>
-              <div class="got">
-                <span class="who">What changes</span>
-                <p>Without the skill: two <code>arc()</code> calls, a flat red fill, a brown rectangle, a grey ellipse for shadow.</p>
-                <p>With it: the canvas is sized for real pixel density first; the apple is blocked in at low opacity to check proportion; every contour becomes a slightly asymmetric bezier; one light direction drives a multi-stop gradient with a core shadow, a cast shadow that follows the table's angle and bounce light on the shadow side; a noise layer breaks the plastic sheen; a pinpoint specular lands last. Then it renders the image and checks it against a critique list before calling it done.</p>
+              <div class="callout" style="margin-top:18px">
+                <strong>Triggers on</strong> any request to draw, illustrate, render, sketch or animate
+                on canvas — and on words like "realistic", "polished" or "professional" — without
+                needing the skill named.
               </div>
             </div>
-            <div class="callout" style="margin-top:16px">
-              <strong>Triggers on</strong> any request to draw, illustrate, render, sketch or animate on
-              canvas — and on words like "realistic", "polished" or "professional" — without needing the
-              skill named.
-            </div>
           </div>
-        </div>
 
-        <div class="reveal" style="margin-top:26px">
-          <div class="cmd">
-            <pre id="cmd-atelier"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">canvas-atelier</span> .claude/skills/canvas-atelier</pre>
-            <button class="copy" data-copy="#cmd-atelier">Copy</button>
+          <div class="reveal" style="margin-top:30px">
+            <div class="cmd">
+              <pre id="cmd-atelier"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">canvas-atelier</span> .claude/skills/canvas-atelier</pre>
+              <button class="copy" data-copy="#cmd-atelier">Copy</button>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- ============ 02 · PHYSICS-2D ============ -->
-      <section class="skill-section" id="physics-2d">
-        <div class="skill-head reveal">
-          <span class="skill-index">02 — simulation</span>
+      <!-- ====================== 02 · PHYSICS-2D ====================== -->
+      <section class="plate" id="physics-2d">
+        <div class="plate-ord" aria-hidden="true">02</div>
+        <div class="plate-head reveal">
+          <span class="plate-cat">simulation <span class="of">plate 02 / 05</span></span>
           <h2>physics-2d</h2>
           <p class="tagline">
             A small, tested rigid-body engine, plus the reasoning behind every choice in it — for when
@@ -1092,196 +1805,208 @@ table.grid td code { font-size: var(--fs-xs); color: var(--dim); }
           </p>
         </div>
 
-        <div class="prose reveal">
-          <p>
-            Hand-rolled game physics is usually wrong in ways that only surface later: objects gain energy
-            and vibrate, stacks explode or sink into the floor, fast objects pass through walls, nothing
-            ever comes to rest. None of that is bad luck — each is a specific known mistake with a
-            specific known fix, and this skill ships an engine that already makes the right call, with
-            reference documents explaining why so the engine can be extended or debugged rather than
-            treated as a black box.
+        <div class="plate-body">
+          <p class="lead reveal">
+            Hand-rolled game physics is usually wrong in ways that only surface <em>later</em>.
           </p>
-        </div>
-        <div class="prose reveal" style="margin-top:14px">
-          <p>
-            The choices it argues for: velocity before position (semi-implicit Euler, or energy leaks in
-            and the simulation detonates); a fixed timestep accumulator rather than the raw frame delta;
-            <strong>two</strong> contact points for a resting box via face clipping, or it rocks; clamping
-            the <em>accumulated</em> impulse rather than each increment, so resting contacts reach true
-            zero; split-impulse position correction instead of a Baumgarte bias, which injects energy; a
-            slop tolerance so contacts don't flicker; and raycasting rather than substepping to stop a
-            fast bullet.
-          </p>
-        </div>
 
-        <div class="panel bleed reveal" style="margin-top:30px" data-demo="physics">
-          <div class="panel-head">
-            <span class="label">Live · the actual engine</span>
-            <span class="readout" data-readout>bodies <b>—</b></span>
+          <div class="prose reveal" style="margin-top:20px">
+            <p>
+              Objects gain energy and vibrate, stacks explode or sink into the floor, fast objects pass
+              through walls, nothing ever comes to rest. None of that is bad luck — each is a specific
+              known mistake with a specific known fix, and this skill ships an engine that already makes
+              the right call, with reference documents explaining why so the engine can be extended or
+              debugged rather than treated as a black box.
+            </p>
           </div>
-          <div class="demo">
-            <canvas width="900" height="470" style="aspect-ratio:900/470"
-              aria-label="An interactive physics sandbox with a stacked pyramid of crates and a hanging chain"></canvas>
-            <div class="demo-toolbar">
-              <button class="chip active" data-scene="pyramid">Pyramid &amp; chain</button>
-              <button class="chip" data-scene="ramp">Ramps</button>
-              <button class="chip" data-scene="tower">Tower</button>
-              <button class="chip" data-reset>Reset</button>
-              <span class="spacer"></span>
-              <span class="readout">drag a body · click empty space to fire</span>
+          <div class="prose reveal" style="margin-top:16px">
+            <p>
+              The choices it argues for: velocity before position (semi-implicit Euler, or energy leaks
+              in and the simulation detonates); a fixed timestep accumulator rather than the raw frame
+              delta; <strong>two</strong> contact points for a resting box via face clipping, or it
+              rocks; clamping the <em>accumulated</em> impulse rather than each increment, so resting
+              contacts reach true zero; split-impulse position correction instead of a Baumgarte bias,
+              which injects energy; a slop tolerance so contacts don't flicker; and raycasting rather
+              than substepping to stop a fast bullet.
+            </p>
+          </div>
+
+          <div class="panel bleed reveal" style="margin-top:34px" data-demo="physics">
+            <div class="panel-head">
+              <span class="label">The actual engine</span>
+              <span class="readout" data-readout>bodies <b>—</b></span>
             </div>
-          </div>
-          <p class="panel-note">
-            This runs the engine itself, not an approximation of it: SAT with face clipping for two-point
-            manifolds, a block solver that resolves both points of a contact simultaneously, Coulomb
-            friction, revolute joints for the chain, a real <code>world.raycast</code> for the aiming
-            line, and island-based sleeping — watch the "asleep" counter climb as the pyramid settles,
-            then drop the moment you disturb it.
-          </p>
-        </div>
-
-        <div class="two-col reveal" style="margin-top:34px">
-          <div>
-            <span class="label">What ships in the folder</span>
-            <ul class="files">
-              <li><code>SKILL.md</code><span>Workflow from units to tuning, plus the mistake/fix table</span></li>
-              <li><code>index.js</code><span>One entry point over all nine modules</span></li>
-              <li><code>world.js</code><span>Fixed timestep, sleeping, anti-tunneling, filtering</span></li>
-              <li><code>collision.js</code><span>SAT narrow phase and contact manifolds</span></li>
-              <li><code>solver.js</code><span>Accumulated impulses, restitution, friction, split correction</span></li>
-              <li><code>constraints.js</code><span>Distance, revolute and spring joints</span></li>
-              <li><code>raycast.js</code><span>Hitscan, line of sight, picking, swept CCD</span></li>
-              <li><code>broadphase.js</code><span>Spatial hash culling the O(N²) pair test</span></li>
-              <li><code>selftest.js</code><span>Node smoke tests — free-fall, stacking, friction, joints</span></li>
-              <li><code>demo.html</code><span>A full tabbed demo of the engine</span></li>
-            </ul>
-          </div>
-          <div>
-            <span class="label">In practice</span>
-            <div class="exchange">
-              <div class="ask">
-                <span class="who">You type</span>
-                <p>Crates that stack up, and a cannon to knock them over.</p>
-              </div>
-              <div class="got">
-                <span class="who">What changes</span>
-                <p>Without the skill: boxes that jitter forever, sink into the ground, and explode when the tab is backgrounded.</p>
-                <p>With it: a <code>World</code> with gravity and a static floor, box bodies with friction and restitution, everything driven by <code>world.update(dt)</code> on a fixed step with interpolated rendering, and the cannon wired to <code>world.raycast</code>. The pile settles, stays settled, and goes to sleep.</p>
+            <div class="demo">
+              <canvas width="900" height="470" style="aspect-ratio:900/470"
+                aria-label="An interactive physics sandbox with a stacked pyramid of crates and a hanging chain"></canvas>
+              <div class="demo-toolbar">
+                <button class="chip active" data-scene="pyramid">Pyramid &amp; chain</button>
+                <button class="chip" data-scene="ramp">Ramps</button>
+                <button class="chip" data-scene="tower">Tower</button>
+                <button class="chip" data-reset>Reset</button>
+                <span class="spacer"></span>
+                <span class="readout">drag a body · click empty space to fire</span>
               </div>
             </div>
-            <div class="callout verdigris" style="margin-top:16px">
-              <strong>Pairs with canvas-atelier.</strong> This is the "does it behave correctly" half.
-              Soft connected motion — cloth, hair, rope — belongs to the Verlet approach in
-              canvas-atelier. Simulate rigid bodies here, drape soft detail there.
+            <p class="panel-note">
+              This runs the engine itself, not an approximation of it: SAT with face clipping for
+              two-point manifolds, a block solver that resolves both points of a contact simultaneously,
+              Coulomb friction, revolute joints for the chain, a real <code>world.raycast</code> for the
+              aiming line, and island-based sleeping — watch the "asleep" counter climb as the pyramid
+              settles, then drop the moment you disturb it.
+            </p>
+          </div>
+
+          <div class="two-col reveal" style="margin-top:38px">
+            <div>
+              <span class="label">What ships in the folder</span>
+              <ul class="files">
+                <li><code>SKILL.md</code><span>Workflow from units to tuning, plus the mistake/fix table</span></li>
+                <li><code>index.js</code><span>One entry point over all nine modules</span></li>
+                <li><code>world.js</code><span>Fixed timestep, sleeping, anti-tunneling, filtering</span></li>
+                <li><code>collision.js</code><span>SAT narrow phase and contact manifolds</span></li>
+                <li><code>solver.js</code><span>Accumulated impulses, restitution, friction, split correction</span></li>
+                <li><code>constraints.js</code><span>Distance, revolute and spring joints</span></li>
+                <li><code>raycast.js</code><span>Hitscan, line of sight, picking, swept CCD</span></li>
+                <li><code>broadphase.js</code><span>Spatial hash culling the O(N²) pair test</span></li>
+                <li><code>selftest.js</code><span>Node smoke tests — free-fall, stacking, friction, joints</span></li>
+                <li><code>demo.html</code><span>A full tabbed demo of the engine</span></li>
+              </ul>
+            </div>
+            <div>
+              <span class="label">In practice</span>
+              <div class="exchange">
+                <div class="ask">
+                  <span class="who">You type</span>
+                  <p>Crates that stack up, and a cannon to knock them over.</p>
+                </div>
+                <div class="got">
+                  <span class="who">What changes</span>
+                  <p>Without the skill: boxes that jitter forever, sink into the ground, and explode when the tab is backgrounded.</p>
+                  <p>With it: a <code>World</code> with gravity and a static floor, box bodies with friction and restitution, everything driven by <code>world.update(dt)</code> on a fixed step with interpolated rendering, and the cannon wired to <code>world.raycast</code>. The pile settles, stays settled, and goes to sleep.</p>
+                </div>
+              </div>
+              <div class="callout steel" style="margin-top:18px">
+                <strong>Pairs with canvas-atelier.</strong> This is the "does it behave correctly" half.
+                Soft connected motion — cloth, hair, rope — belongs to the Verlet approach in
+                canvas-atelier. Simulate rigid bodies here, drape soft detail there.
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="reveal" style="margin-top:26px">
-          <div class="cmd">
-            <pre id="cmd-physics"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">physics-2d</span> .claude/skills/physics-2d</pre>
-            <button class="copy" data-copy="#cmd-physics">Copy</button>
+          <div class="reveal" style="margin-top:30px">
+            <div class="cmd">
+              <pre id="cmd-physics"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">physics-2d</span> .claude/skills/physics-2d</pre>
+              <button class="copy" data-copy="#cmd-physics">Copy</button>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- ============ 03 · CAVEMAN ============ -->
-      <section class="skill-section" id="caveman">
-        <div class="skill-head reveal">
-          <span class="skill-index">03 — output style</span>
+      <!-- ======================== 03 · CAVEMAN ======================= -->
+      <section class="plate" id="caveman">
+        <div class="plate-ord" aria-hidden="true">03</div>
+        <div class="plate-head reveal">
+          <span class="plate-cat">output style <span class="of">plate 03 / 05</span></span>
           <h2>caveman</h2>
           <p class="tagline">
-            Cuts the padding out of every reply and keeps all of the substance. Its own frontmatter claims
-            a measured 65% reduction in output tokens.
+            Cuts the padding out of every reply and keeps all of the substance. Its own frontmatter
+            claims a measured 65% reduction in output tokens.
           </p>
         </div>
 
-        <div class="prose reveal">
-          <p>
-            The skill drops articles, filler ("just", "basically", "actually"), pleasantries and hedging,
-            and allows fragments. What it explicitly refuses to touch is anything load-bearing: technical
-            terms stay exact, code blocks are untouched, error strings are quoted verbatim, and API and
-            CLI names are never abbreviated. It also refuses to invent abbreviations like
-            <code>cfg</code> or <code>impl</code> — the tokenizer splits those the same as the full word,
-            so they save nothing and cost the reader clarity.
+        <div class="plate-body">
+          <p class="lead reveal">
+            What it refuses to touch is the part that makes it <em>safe</em> to leave on.
           </p>
-        </div>
-        <div class="prose reveal" style="margin-top:14px">
-          <p>
-            It runs at four intensities plus classical-Chinese (<em>wenyan</em>) variants, preserves
-            whatever language you wrote in, and — the part that makes it safe to leave on — it
-            <strong>drops back to normal prose automatically</strong> for security warnings, irreversible
-            action confirmations, and any multi-step sequence where dropped conjunctions would make the
-            order ambiguous. Compression is never allowed to create doubt about whether to back up before
-            dropping a table.
-          </p>
-        </div>
 
-        <div class="panel bleed reveal" style="margin-top:30px" data-demo="caveman">
-          <div class="panel-head">
-            <span class="label">Live · same answer, four intensities</span>
-            <button class="chip" data-cave-next>Another question</button>
+          <div class="prose reveal" style="margin-top:20px">
+            <p>
+              The skill drops articles, filler ("just", "basically", "actually"), pleasantries and
+              hedging, and allows fragments. Anything load-bearing survives untouched: technical terms
+              stay exact, code blocks are untouched, error strings are quoted verbatim, and API and CLI
+              names are never abbreviated. It also refuses to invent abbreviations like <code>cfg</code>
+              or <code>impl</code> — the tokenizer splits those the same as the full word, so they save
+              nothing and cost the reader clarity.
+            </p>
           </div>
-          <div class="panel-body">
-            <div class="cave-grid">
-              <div class="exchange">
-                <div class="ask"><span class="who">Question</span><p data-cave-q></p></div>
+          <div class="prose reveal" style="margin-top:16px">
+            <p>
+              It runs at four intensities plus classical-Chinese (<em>wenyan</em>) variants, preserves
+              whatever language you wrote in, and <strong>drops back to normal prose automatically</strong>
+              for security warnings, irreversible action confirmations, and any multi-step sequence
+              where dropped conjunctions would make the order ambiguous. Compression is never allowed to
+              create doubt about whether to back up before dropping a table.
+            </p>
+          </div>
+
+          <div class="panel bleed reveal" style="margin-top:34px" data-demo="caveman">
+            <div class="panel-head">
+              <span class="label">Same answer, four intensities</span>
+              <button class="chip" data-cave-next>Another question</button>
+            </div>
+            <div class="panel-body">
+              <div class="cave-grid">
+                <div class="exchange">
+                  <div class="ask"><span class="who">Question</span><p data-cave-q></p></div>
+                </div>
+                <div class="cave-levels">
+                  <button class="chip" data-level="normal" aria-pressed="false">off</button>
+                  <button class="chip" data-level="lite" aria-pressed="false">lite</button>
+                  <button class="chip" data-level="full" aria-pressed="true">full</button>
+                  <button class="chip" data-level="ultra" aria-pressed="false">ultra</button>
+                </div>
+                <div class="cave-out" data-cave-out></div>
+                <div class="cave-meter" data-cave-meter></div>
               </div>
-              <div class="cave-levels">
-                <button class="chip" data-level="normal" aria-pressed="false">off</button>
-                <button class="chip" data-level="lite" aria-pressed="false">lite</button>
-                <button class="chip" data-level="full" aria-pressed="true">full</button>
-                <button class="chip" data-level="ultra" aria-pressed="false">ultra</button>
+            </div>
+            <p class="panel-note">
+              Percentages are measured against the "off" answer with a rough token heuristic. Notice
+              what survives all the way to ultra: <code>useMemo</code>, the actual cause, the actual
+              fix. What disappears is everything that was never information.
+            </p>
+          </div>
+
+          <div class="two-col reveal" style="margin-top:38px">
+            <div>
+              <span class="label">What ships in the folder</span>
+              <ul class="files">
+                <li><code>SKILL.md</code><span>The whole skill — rules, the six intensity levels, auto-clarity exceptions, worked examples. No scripts, no references; this one is pure response style, which is also why it ports to any agent unchanged.</span></li>
+              </ul>
+              <div class="callout" style="margin-top:18px">
+                <strong>Stays on.</strong> The skill is explicit that it persists across turns rather
+                than drifting back after a few replies. Turn it off with "stop caveman" or "normal mode".
               </div>
-              <div class="cave-out" data-cave-out></div>
-              <div class="cave-meter" data-cave-meter></div>
+            </div>
+            <div>
+              <span class="label">Intensities</span>
+              <div class="table-wrap">
+                <table class="grid">
+                  <tbody>
+                    <tr><td class="name">lite</td><td>Full sentences and articles kept; filler and hedging gone. Professional but tight.</td></tr>
+                    <tr><td class="name">full</td><td>Articles dropped, fragments fine, short synonyms. The default.</td></tr>
+                    <tr><td class="name">ultra</td><td>Conjunctions stripped where cause and effect stay unambiguous. Each fact stated once.</td></tr>
+                    <tr><td class="name">wenyan</td><td>Classical Chinese, in three depths — up to 80–90% character reduction.</td></tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-          <p class="panel-note">
-            Percentages are measured against the "off" answer with a rough token heuristic. Notice what
-            survives all the way to ultra: <code>useMemo</code>, the actual cause, the actual fix. What
-            disappears is everything that was never information.
-          </p>
-        </div>
 
-        <div class="two-col reveal" style="margin-top:34px">
-          <div>
-            <span class="label">What ships in the folder</span>
-            <ul class="files">
-              <li><code>SKILL.md</code><span>The whole skill — rules, the six intensity levels, auto-clarity exceptions, worked examples. No scripts or references; this one is pure response style.</span></li>
-            </ul>
-            <div class="callout" style="margin-top:16px">
-              <strong>Stays on.</strong> The skill is explicit that it persists across turns rather than
-              drifting back after a few replies. Turn it off with "stop caveman" or "normal mode".
+          <div class="reveal" style="margin-top:30px">
+            <div class="cmd">
+              <pre id="cmd-caveman"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">caveman</span> .claude/skills/caveman</pre>
+              <button class="copy" data-copy="#cmd-caveman">Copy</button>
             </div>
-          </div>
-          <div>
-            <span class="label">Intensities</span>
-            <div class="table-wrap">
-              <table class="grid">
-                <tbody>
-                  <tr><td class="name">lite</td><td>Full sentences and articles kept; filler and hedging gone. Professional but tight.</td></tr>
-                  <tr><td class="name">full</td><td>Articles dropped, fragments fine, short synonyms. The default.</td></tr>
-                  <tr><td class="name">ultra</td><td>Conjunctions stripped where cause and effect stay unambiguous. Each fact stated once.</td></tr>
-                  <tr><td class="name">wenyan</td><td>Classical Chinese, in three depths — up to 80–90% character reduction.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="reveal" style="margin-top:26px">
-          <div class="cmd">
-            <pre id="cmd-caveman"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">caveman</span> .claude/skills/caveman</pre>
-            <button class="copy" data-copy="#cmd-caveman">Copy</button>
           </div>
         </div>
       </section>
 
-      <!-- ============ 04 · MATRIX-AGENTS-SKILL ============ -->
-      <section class="skill-section" id="matrix-agents-skill">
-        <div class="skill-head reveal">
-          <span class="skill-index">04 — meta</span>
+      <!-- ================= 04 · MATRIX-AGENTS-SKILL ================== -->
+      <section class="plate" id="matrix-agents-skill">
+        <div class="plate-ord" aria-hidden="true">04</div>
+        <div class="plate-head reveal">
+          <span class="plate-cat">meta <span class="of">plate 04 / 05</span></span>
           <h2>matrix-agents-skill</h2>
           <p class="tagline">
             Watches a session for knowledge worth keeping, and turns the best of it into a new skill.
@@ -1289,146 +2014,160 @@ table.grid td code { font-size: var(--fs-xs); color: var(--dim); }
           </p>
         </div>
 
-        <div class="prose reveal">
-          <p>
-            Every session creates knowledge and then throws it away: how a flow actually works, why one
-            fix broke something else, which convention the project settled on. This skill runs quietly in
-            the background of ordinary work, appending a line to a tally file after each completed task
-            whenever it matches one of eleven patterns across five families — repetition, pain,
-            exploration, decisions, and environment quirks. It writes the tally down rather than trying to
-            remember, because attention decays over a long session and counts get lost.
+        <div class="plate-body">
+          <p class="lead reveal">
+            Every session creates knowledge and then throws it <em>away</em>.
           </p>
-        </div>
-        <div class="prose reveal" style="margin-top:14px">
-          <p>
-            The restraint is the design. It never interrupts mid-task; when a pattern crosses its
-            threshold it emits exactly one line and keeps working. At the end it proposes
-            <strong>at most one</strong> skill — the strongest candidate, ranked pain over exploration
-            over decisions over repetition — and only if the result would save a future session real
-            work. Say no and the topic goes in a <code>declined.md</code> it never raises again. Say yes
-            and the gate opens onto a real interview (quick or deep), including the question that matters
-            most: <em>was anything here an exception that should not become the rule?</em>
-          </p>
-        </div>
 
-        <div class="panel bleed reveal" style="margin-top:30px" data-demo="matrix">
-          <div class="panel-head">
-            <span class="label">Live · a session in fast-forward</span>
-            <button class="chip" data-replay>Replay</button>
+          <div class="prose reveal" style="margin-top:20px">
+            <p>
+              How a flow actually works, why one fix broke something else, which convention the project
+              settled on. This skill runs quietly in the background of ordinary work, appending a line
+              to a tally file after each completed task whenever it matches one of eleven patterns
+              across five families — repetition, pain, exploration, decisions, and environment quirks.
+              It writes the tally down rather than trying to remember, because attention decays over a
+              long session and counts get lost.
+            </p>
           </div>
-          <div class="demo">
-            <div class="session">
-              <div class="session-feed" data-feed></div>
-              <div class="tally" data-tally></div>
-            </div>
+          <div class="prose reveal" style="margin-top:16px">
+            <p>
+              The restraint is the design. It never interrupts mid-task; when a pattern crosses its
+              threshold it emits exactly one line and keeps working. At the end it proposes
+              <strong>at most one</strong> skill — the strongest candidate, ranked pain over exploration
+              over decisions over repetition — and only if the result would save a future session real
+              work. Say no and the topic goes in a <code>declined.md</code> it never raises again. Say
+              yes and the gate opens onto a real interview, including the question that matters most:
+              <em>was anything here an exception that should not become the rule?</em>
+            </p>
           </div>
-          <p class="panel-note">
-            Real patterns and real thresholds from the skill's table. Four styling fixes trip pattern #1;
-            two regressions in a row trip #4. Both are candidates, but only one gets proposed — pain
-            outranks repetition, because knowledge bought with a regression saves the most time later.
-          </p>
-        </div>
 
-        <div class="two-col reveal" style="margin-top:34px">
-          <div>
-            <span class="label">What ships in the folder</span>
-            <ul class="files">
-              <li><code>SKILL.md</code><span>The eleven-pattern table with thresholds, the interview question bank, the generated-skill format, and the routing-map block it maintains in <code>CLAUDE.md</code></span></li>
-            </ul>
-            <div class="callout" style="margin-top:16px">
-              <strong>Creates two files as it runs</strong>, not shipped with it:
-              <code>session-tally.md</code> (deleted after each proposal) and <code>declined.md</code>.
-              It also delegates the actual writing to Anthropic's <code>skill-creator</code> skill when
-              that's installed, rather than hand-rolling the format.
+          <div class="panel bleed reveal" style="margin-top:34px" data-demo="matrix">
+            <div class="panel-head">
+              <span class="label">A session in fast-forward</span>
+              <button class="chip" data-replay>Replay</button>
             </div>
-          </div>
-          <div>
-            <span class="label">Why it registers what it builds</span>
-            <div class="exchange">
-              <div class="got">
-                <span class="who">The routing map</span>
-                <p>A skill nobody routes to may as well not exist. After every skill it creates, it updates a delimited block in the project's <code>CLAUDE.md</code> — one line per skill, in the form "trigger condition → path".</p>
-                <p>Because <code>CLAUDE.md</code> loads in every session, that block guarantees a future session knows which skills exist without loading any of them.</p>
-              </div>
-              <div class="ask">
-                <span class="who">Trigger words</span>
-                <p>/forge · /matrix · forge · matrix · פורג' · מטריקס</p>
+            <div class="demo">
+              <div class="session">
+                <div class="session-feed" data-feed></div>
+                <div class="tally" data-tally></div>
               </div>
             </div>
+            <p class="panel-note">
+              Real patterns and real thresholds from the skill's table. Four styling fixes trip pattern
+              #1; two regressions in a row trip #4. Both are candidates, but only one gets proposed —
+              pain outranks repetition, because knowledge bought with a regression saves the most time
+              later.
+            </p>
           </div>
-        </div>
 
-        <div class="reveal" style="margin-top:26px">
-          <div class="cmd">
-            <pre id="cmd-matrix"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">matrix-agents-skill</span> .claude/skills/matrix-agents-skill</pre>
-            <button class="copy" data-copy="#cmd-matrix">Copy</button>
+          <div class="two-col reveal" style="margin-top:38px">
+            <div>
+              <span class="label">What ships in the folder</span>
+              <ul class="files">
+                <li><code>SKILL.md</code><span>The eleven-pattern table with thresholds, the interview question bank, the generated-skill format, and the routing-map block it maintains in the host's memory file</span></li>
+                <li><code>host-agents.md</code><span>How it detects which agent it is running under, and the full Claude Code ↔ Copilot mapping for skills directory, memory file, question UI and enforcement</span></li>
+              </ul>
+              <div class="callout" style="margin-top:18px">
+                <strong>Creates two files as it runs</strong>, not shipped with it:
+                <code>session-tally.md</code> (deleted after each proposal) and <code>declined.md</code>.
+                It also delegates the actual writing to Anthropic's <code>skill-creator</code> skill
+                when that's installed, rather than hand-rolling the format.
+              </div>
+            </div>
+            <div>
+              <span class="label">Why it registers what it builds</span>
+              <div class="exchange">
+                <div class="got">
+                  <span class="who">The routing map</span>
+                  <p>A skill nobody routes to may as well not exist. After every skill it creates, it updates a delimited block in the host's always-loaded memory file — <code>CLAUDE.md</code>, <code>.github/copilot-instructions.md</code>, or <code>AGENTS.md</code> — one line per skill, in the form "trigger condition → path".</p>
+                  <p>Because that file loads in every session, the block guarantees a future session knows which skills exist without loading any of them. If a repo has more than one, it writes to each: teams run both agents against the same code.</p>
+                </div>
+                <div class="ask">
+                  <span class="who">Trigger words</span>
+                  <p>/forge · /matrix · forge · matrix · פורג' · מטריקס</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="reveal" style="margin-top:30px">
+            <div class="cmd">
+              <pre id="cmd-matrix"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/skills/<span class="tok-path">matrix-agents-skill</span> .claude/skills/matrix-agents-skill</pre>
+              <button class="copy" data-copy="#cmd-matrix">Copy</button>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- ============ 05 · SKILL-REPORT ============ -->
-      <section class="skill-section" id="skill-report">
-        <div class="skill-head reveal">
-          <span class="skill-index">05 — transparency</span>
+      <!-- ====================== 05 · SKILL-REPORT ==================== -->
+      <section class="plate" id="skill-report">
+        <div class="plate-ord" aria-hidden="true">05</div>
+        <div class="plate-head reveal">
+          <span class="plate-cat">transparency <span class="of">plate 05 / 05</span></span>
           <h2>skill-report</h2>
           <p class="tagline">
             A one-line footer on every reply naming which skills, subagents and web tools actually ran —
-            read from the transcript, not from Claude's memory of what it did.
+            read from the transcript, not from the model's memory of what it did.
           </p>
         </div>
 
-        <div class="prose reveal">
-          <p>
-            Skills fire at Claude's discretion, which makes it genuinely hard to tell whether the one you
-            installed did anything. This skill answers that question on every single turn. The detail that
-            makes it trustworthy is where the answer comes from: a Stop hook reads the session transcript
-            and extracts the real <code>Skill</code>, <code>Agent</code>, <code>WebSearch</code> and
-            <code>WebFetch</code> calls. Asking Claude to recall its own tool use invites a confident,
-            wrong answer; the transcript is ground truth.
+        <div class="plate-body">
+          <p class="lead reveal">
+            Asking a model to recall its own tool use invites a confident, <em>wrong</em> answer.
           </p>
-        </div>
-        <div class="prose reveal" style="margin-top:14px">
-          <p>
-            A skill alone can't guarantee it fires every turn, so this one is paired with a hook that
-            checks for the footer and forces one continuation if it's missing — which is why the report is
-            unconditional rather than best-effort. Routine tools are deliberately excluded: Read, Edit,
-            Bash and Grep run on nearly every turn, and listing them would turn signal into noise. The
-            footer surfaces <em>delegated</em> capability.
-          </p>
-        </div>
 
-        <div class="panel bleed reveal" style="margin-top:30px" data-demo="report">
-          <div class="panel-head">
-            <span class="label">Live · one turn, and the footer it produces</span>
-            <button class="chip" data-next-turn>Next turn</button>
+          <div class="prose reveal" style="margin-top:20px">
+            <p>
+              Skills fire at the agent's discretion, which makes it genuinely hard to tell whether the
+              one you installed did anything. This skill answers that question on every single turn.
+              The detail that makes it trustworthy is where the answer comes from: a Stop hook reads the
+              session transcript and extracts the real <code>Skill</code>, <code>Agent</code>,
+              <code>WebSearch</code> and <code>WebFetch</code> calls. The transcript is ground truth.
+            </p>
           </div>
-          <div class="demo">
-            <div class="term" data-term></div>
+          <div class="prose reveal" style="margin-top:16px">
+            <p>
+              A skill alone can't guarantee it fires every turn, so this one is paired with a hook that
+              checks for the footer and forces one continuation if it's missing — which is why the
+              report is unconditional rather than best-effort. Routine tools are deliberately excluded:
+              Read, Edit, Bash and Grep run on nearly every turn, and listing them would turn signal
+              into noise. The footer surfaces <em>delegated</em> capability.
+            </p>
           </div>
-          <p class="panel-note">
-            Greyed calls are the routine tools the hook ignores on purpose. Note the third turn: when
-            nothing was delegated, the footer still appears and says <code>none</code> three times — an
-            honest negative is the whole point.
-          </p>
-        </div>
 
-        <div class="two-col reveal" style="margin-top:34px">
-          <div>
-            <span class="label">What ships in the folder</span>
-            <ul class="files">
-              <li><code>SKILL.md</code><span>The footer format and why a hook is required for it to be unconditional</span></li>
-              <li><code>scripts/report_hook.py</code><span>The Stop hook — parses the transcript, finds this turn's real tool calls, forces a continuation when the footer is missing, and refuses to loop more than once</span></li>
-            </ul>
-          </div>
-          <div>
-            <span class="label">One extra step</span>
-            <div class="callout">
-              Copying the folder is not enough for this one — the hook has to be registered in your
-              project's <code>.claude/settings.json</code>. Merge this in, adding to an existing
-              <code>Stop</code> array if you already have one.
+          <div class="panel bleed reveal" style="margin-top:34px" data-demo="report">
+            <div class="panel-head">
+              <span class="label">One turn, and the footer it produces</span>
+              <button class="chip" data-next-turn>Next turn</button>
             </div>
-            <div class="cmd" style="margin-top:12px">
-              <pre id="cmd-hookjson">{
+            <div class="demo">
+              <div class="term" data-term></div>
+            </div>
+            <p class="panel-note">
+              Greyed calls are the routine tools the hook ignores on purpose. Note the third turn: when
+              nothing was delegated, the footer still appears and says <code>none</code> three times —
+              an honest negative is the whole point.
+            </p>
+          </div>
+
+          <div class="two-col reveal" style="margin-top:38px">
+            <div>
+              <span class="label">What ships in the folder</span>
+              <ul class="files">
+                <li><code>SKILL.md</code><span>The footer format, the host support matrix, and why a hook is required for it to be unconditional</span></li>
+                <li><code>scripts/report_hook.py</code><span>The Stop hook — parses the transcript, finds this turn's real tool calls, forces a continuation when the footer is missing, and refuses to loop more than once</span></li>
+                <li><code>github-copilot.md</code><span>What degrades under Copilot, the exact instruction block to paste, and why no Copilot equivalent of the hook can exist</span></li>
+              </ul>
+            </div>
+            <div>
+              <span class="label">One extra step</span>
+              <div class="callout">
+                Copying the folder is not enough for this one — on Claude Code the hook has to be
+                registered in your project's <code>.claude/settings.json</code>. Merge this in, adding
+                to an existing <code>Stop</code> array if you already have one.
+              </div>
+              <div class="cmd nodollar" style="margin-top:14px">
+                <pre id="cmd-hookjson">{
   "hooks": {
     "Stop": [
       { "hooks": [ { "type": "command",
@@ -1437,28 +2176,35 @@ table.grid td code { font-size: var(--fs-xs); color: var(--dim); }
     ]
   }
 }</pre>
-              <button class="copy" data-copy="#cmd-hookjson">Copy</button>
+                <button class="copy" data-copy="#cmd-hookjson">Copy</button>
+              </div>
+              <p class="hint">
+                Under GitHub Copilot there is no hook to register — no post-turn interception point
+                exists — so the footer becomes a standing line in
+                <code>.github/copilot-instructions.md</code> and is best-effort by construction.
+              </p>
             </div>
           </div>
-        </div>
 
-        <div class="reveal" style="margin-top:26px">
-          <div class="cmd">
-            <pre id="cmd-report"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/<span class="tok-path">.claude/skills/skill-report</span> .claude/skills/skill-report</pre>
-            <button class="copy" data-copy="#cmd-report">Copy</button>
+          <div class="reveal" style="margin-top:30px">
+            <div class="cmd">
+              <pre id="cmd-report"><span class="tok-cmd">npx degit</span> GiladMeirson/useful-skills/<span class="tok-path">.claude/skills/skill-report</span> .claude/skills/skill-report</pre>
+              <button class="copy" data-copy="#cmd-report">Copy</button>
+            </div>
+            <p class="hint">
+              Note the source path — this skill already lives under <code>.claude/skills/</code> in the
+              repository, so it is not under <code>skills/</code> like the other four.
+            </p>
           </div>
-          <p class="hint">
-            Note the source path — this skill already lives under <code>.claude/skills/</code> in the
-            repository, so it is not under <code>skills/</code> like the other four.
-          </p>
         </div>
       </section>
 
-      <!-- ============ ALL COMMANDS ============ -->
-      <section id="all">
+      <!-- ======================= EVERY COMMAND ======================= -->
+      <section class="band" id="all">
         <div class="section-head reveal">
-          <h2>Every command, in one place</h2>
-          <p>For grabbing more than one.</p>
+          <span class="eyebrow">06 — appendix</span>
+          <h2>Every command, in one place.</h2>
+          <p>For grabbing more than one. Swap the destination for your agent and scope.</p>
         </div>
         <div class="table-wrap reveal">
           <table class="grid">
@@ -1495,9 +2241,9 @@ table.grid td code { font-size: var(--fs-xs); color: var(--dim); }
           </table>
         </div>
         <p class="hint">
-          Prefer a menu? Clone the repository and run <code>./install.sh</code> (macOS, Linux, WSL, Git
-          Bash) or <code>./install.ps1</code> (Windows PowerShell) with no arguments for an interactive
-          picker that also handles project-versus-global placement.
+          For GitHub Copilot, replace <code>.claude/skills/</code> with <code>.github/skills/</code>
+          (project) or <code>~/.copilot/skills/</code> (global) — or use the
+          <a href="#install">builder above</a>, which writes the whole line for you.
         </p>
       </section>
 
@@ -1505,11 +2251,12 @@ table.grid td code { font-size: var(--fs-xs); color: var(--dim); }
   </div>
 
   <footer class="site-foot">
-    <div class="foot-grid">
-      <div>
-        <p>Built by Gilad Meirson · <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">source on GitHub</a></p>
+    <div class="shell">
+      <div class="foot-word" aria-hidden="true">useful-skills</div>
+      <div class="foot-grid">
+        <span>Built by Gilad Meirson · <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">source on GitHub</a></span>
+        <span>Skills are plain text. Read one before you trust it.</span>
       </div>
-      <p style="color:var(--faint)">Skills are plain text. Read one before you trust it.</p>
     </div>
   </footer>
 </main>
@@ -2866,11 +3613,13 @@ window.Render3D = (function () {
 </script>
 <script>
 /* ---- js/main.js ---- */
-/* Page wiring: a demo registry, scroll spy, reveals, and copy buttons.
+/* Page wiring: a demo registry, the install builder, and the small pieces of
+ * apparatus that make the page feel like an instrument — theme, reticle, scroll
+ * progress, index spy, reveals, copy buttons.
  *
- * Demos declare themselves with Demos.register(name, setup) and are only
- * started once they scroll into view — five simultaneous animation loops on a
- * page nobody is looking at is just heat.
+ * Demos declare themselves with Demos.register(name, setup) and are only started
+ * once they scroll into view — six simultaneous animation loops on a page nobody
+ * is looking at is just heat.
  */
 window.Demos = (function () {
   'use strict';
@@ -2927,6 +3676,46 @@ window.Demos = (function () {
   return { register: register, mountAll: mountAll };
 })();
 
+
+/* ------------------------------------------------------- install builder ---
+ * The destination table lives in exactly one place on this page, and it is this
+ * object. Everything the page says about where a skill goes is rendered from
+ * here, so the prose and the command can never drift apart.
+ */
+window.InstallPaths = (function () {
+  'use strict';
+
+  var REPO = 'GiladMeirson/useful-skills';
+
+  // Where each skill's folder lives *in this repository*. skill-report is the
+  // odd one out: it is dogfooded here, so it already sits under .claude/skills.
+  var SOURCE = {
+    'canvas-atelier':      'skills/canvas-atelier',
+    'physics-2d':          'skills/physics-2d',
+    'caveman':             'skills/caveman',
+    'matrix-agents-skill': 'skills/matrix-agents-skill',
+    'skill-report':        '.claude/skills/skill-report'
+  };
+
+  // agent -> scope -> destination prefix. `~` is spelled differently per shell.
+  var DEST = {
+    claude:  { project: '.claude/skills/',  global: '{home}/.claude/skills/' },
+    copilot: { project: '.github/skills/',  global: '{home}/.copilot/skills/' }
+  };
+
+  function destination(agent, scope, shell, skill) {
+    var home = shell === 'pwsh' ? '$HOME' : '~';
+    return DEST[agent][scope].replace('{home}', home) + skill;
+  }
+
+  function command(agent, scope, shell, skill) {
+    return 'npx degit ' + REPO + '/' + SOURCE[skill] + ' ' + destination(agent, scope, shell, skill);
+  }
+
+  return { REPO: REPO, SOURCE: SOURCE, destination: destination, command: command };
+})();
+
+
 (function () {
   'use strict';
 
@@ -2935,25 +3724,111 @@ window.Demos = (function () {
     else document.addEventListener('DOMContentLoaded', fn);
   }
 
-  ready(function () {
-    Demos.mountAll();
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // ---- copy buttons ----
+  /* -------------------------------------------------------------- theme --- */
+  function initTheme() {
+    var btn = document.querySelector('[data-theme-toggle]');
+    var label = document.querySelector('[data-theme-label]');
+    var root = document.documentElement;
+
+    var stored = null;
+    try { stored = localStorage.getItem('us-theme'); } catch (e) { /* private mode */ }
+
+    function systemTheme() {
+      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    function apply(theme) {
+      root.setAttribute('data-theme', theme);
+      if (label) label.textContent = theme;
+      if (btn) btn.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme');
+    }
+
+    apply(stored || systemTheme());
+
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      apply(next);
+      try { localStorage.setItem('us-theme', next); } catch (e) { /* ignore */ }
+    });
+  }
+
+  /* ------------------------------------------------------------ reticle --- *
+   * A lagging crosshair, not a cursor replacement — the native pointer stays
+   * visible, so nothing about clicking or selecting text changes. Fine pointers
+   * only; a touch device gets nothing.
+   */
+  function initReticle() {
+    var el = document.querySelector('[data-reticle]');
+    if (!el || reduceMotion) return;
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+
+    var tx = 0, ty = 0, x = 0, y = 0, seen = false, rafId = null;
+    var HOT = 'a, button, [data-demo], .chip, .seg button, canvas';
+
+    function frame() {
+      x += (tx - x) * 0.2;
+      y += (ty - y) * 0.2;
+      el.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
+      rafId = requestAnimationFrame(frame);
+    }
+
+    document.addEventListener('mousemove', function (e) {
+      tx = e.clientX; ty = e.clientY;
+      if (!seen) {
+        seen = true;
+        x = tx; y = ty;
+        document.body.classList.add('has-reticle');
+        rafId = requestAnimationFrame(frame);
+      }
+      var hot = e.target && e.target.closest && e.target.closest(HOT);
+      document.body.classList.toggle('reticle-hot', !!hot);
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', function () {
+      document.body.classList.remove('has-reticle');
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      seen = false;
+    });
+  }
+
+  /* ----------------------------------------------------------- progress --- */
+  function initProgress() {
+    var bar = document.querySelector('[data-progress]');
+    var head = document.querySelector('.masthead');
+    if (!bar && !head) return;
+
+    var ticking = false;
+    function update() {
+      ticking = false;
+      var doc = document.documentElement;
+      var max = (doc.scrollHeight - doc.clientHeight) || 1;
+      var pct = Math.min(1, Math.max(0, window.scrollY / max));
+      if (bar) bar.style.width = (pct * 100).toFixed(2) + '%';
+      if (head) head.classList.toggle('stuck', window.scrollY > 20);
+    }
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }, { passive: true });
+    update();
+  }
+
+  /* ------------------------------------------------------------- copy ----- */
+  function initCopy() {
     document.querySelectorAll('[data-copy]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var sel = btn.getAttribute('data-copy');
-        var target = document.querySelector(sel);
+        var target = document.querySelector(btn.getAttribute('data-copy'));
         if (!target) return;
         var text = (target.innerText || target.textContent || '').trim();
+        var original = btn.textContent;
         var done = function (ok) {
-          var original = btn.textContent;
-          btn.textContent = ok ? 'Copied' : 'Press Ctrl+C';
+          btn.textContent = ok ? 'Copied' : 'Ctrl+C';
           btn.classList.toggle('done', ok);
           setTimeout(function () { btn.textContent = original; btn.classList.remove('done'); }, 1700);
         };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(function () { done(true); }, function () { fallback(); });
-        } else fallback();
 
         function fallback() {
           try {
@@ -2967,40 +3842,124 @@ window.Demos = (function () {
             done(ok);
           } catch (e) { done(false); }
         }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+        } else fallback();
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------- reveals --- */
+  function initReveals() {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.04 });
+    document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+  }
+
+  /* --------------------------------------------------------- index spy --- */
+  function initSpy() {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.index-rail a[href^="#"]'));
+    if (!links.length) return;
+    var targets = links
+      .map(function (a) { return document.querySelector(a.getAttribute('href')); })
+      .filter(Boolean);
+    if (!targets.length) return;
+
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        links.forEach(function (a) {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id);
+        });
+      });
+    }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+    targets.forEach(function (t) { spy.observe(t); });
+  }
+
+  /* ----------------------------------------------------------- builder --- */
+  function initBuilder() {
+    var root = document.querySelector('[data-builder]');
+    if (!root) return;
+
+    var out = root.querySelector('[data-cmd]');
+    var destOut = root.querySelector('[data-dest]');
+    var noteOut = root.querySelector('[data-bnote]');
+    var state = { agent: 'claude', scope: 'project', skill: 'canvas-atelier', shell: 'posix' };
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function note() {
+      var bits = [];
+
+      if (state.scope === 'global') {
+        bits.push('<strong>Global</strong> means your user folder — on Windows that expands to ' +
+          '<code>C:\\Users\\&lt;you&gt;\\' + (state.agent === 'claude' ? '.claude' : '.copilot') +
+          '\\skills\\</code>. Every project on the machine sees it.');
+      } else {
+        bits.push('<strong>Project</strong> scope — commit the folder and your teammates get it too.');
+      }
+
+      if (state.agent === 'copilot') {
+        bits.push('Copilot also reads <code>.claude/skills/</code>, so a repo that already has Claude Code skills needs no second copy.');
+      }
+
+      if (state.skill === 'skill-report') {
+        bits.push(state.agent === 'claude'
+          ? 'Copying the folder is not enough: register the Stop hook in <code>.claude/settings.json</code> as well.'
+          : 'Copilot has no post-turn hook, so the footer is best-effort — paste the standing instruction from <code>references/github-copilot.md</code> into <code>.github/copilot-instructions.md</code>.');
+      }
+      if (state.skill === 'matrix-agents-skill' && state.agent === 'copilot') {
+        bits.push('It detects the Copilot layout at runtime; without hooks, the <code>/forge</code> trigger word is what guarantees the end-of-session check.');
+      }
+
+      return bits.join(' ');
+    }
+
+    function render() {
+      var dest = window.InstallPaths.destination(state.agent, state.scope, state.shell, state.skill);
+      var src = window.InstallPaths.SOURCE[state.skill];
+
+      if (out) {
+        out.innerHTML =
+          '<span class="tok-cmd">npx degit</span> ' +
+          esc(window.InstallPaths.REPO) + '/<span class="tok-path">' + esc(src) + '</span> ' +
+          esc(dest);
+      }
+      if (destOut) destOut.textContent = dest;
+      if (noteOut) noteOut.innerHTML = note();
+    }
+
+    root.querySelectorAll('.seg').forEach(function (seg) {
+      var group = seg.getAttribute('data-group');
+      seg.addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-val]');
+        if (!btn || !seg.contains(btn)) return;
+        state[group] = btn.getAttribute('data-val');
+        seg.querySelectorAll('button[data-val]').forEach(function (b) {
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+        render();
       });
     });
 
-    // ---- masthead shadow ----
-    var head = document.querySelector('.masthead');
-    var onScroll = function () {
-      if (head) head.classList.toggle('stuck', window.scrollY > 24);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
+    render();
+  }
 
-    // ---- reveals ----
-    var revealIO = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting) { en.target.classList.add('in'); revealIO.unobserve(en.target); }
-      });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
-    document.querySelectorAll('.reveal').forEach(function (el) { revealIO.observe(el); });
-
-    // ---- rail scroll spy ----
-    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a[href^="#"]'));
-    var targets = links.map(function (a) { return document.querySelector(a.getAttribute('href')); })
-                       .filter(Boolean);
-    if (targets.length) {
-      var spy = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          if (!en.isIntersecting) return;
-          links.forEach(function (a) {
-            a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id);
-          });
-        });
-      }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
-      targets.forEach(function (t) { spy.observe(t); });
-    }
+  ready(function () {
+    initTheme();
+    Demos.mountAll();
+    initCopy();
+    initProgress();
+    initReveals();
+    initSpy();
+    initBuilder();
+    initReticle();
   });
 })();
 </script>
@@ -3139,7 +4098,7 @@ Demos.register('hero', function (root) {
       ctx.globalAlpha = 0.3 * fade;
       ctx.beginPath();
       ctx.ellipse(g.pos.x + 8, g.pos.y + g.r * 1.15, g.r * 0.7, g.r * 0.16, 0, 0, Math.PI * 2);
-      ctx.fillStyle = '#02040a';
+      ctx.fillStyle = '#050406';
       ctx.filter = 'blur(10px)';
       ctx.fill();
       ctx.restore();
@@ -3150,10 +4109,13 @@ Demos.register('hero', function (root) {
         rx: g.rx, ry: g.ry, rz: g.rz,
         depth: g.depth,
         light: light,
-        base: '#c98f3d',
-        highlight: '#ffeccb',
-        shadow: '#1d2b45',
-        edge: 'rgba(255,231,190,0.13)',
+        // Bone facets with a signal-orange edge: the solids read as paper
+        // models under a warm key light, and the accent stays where the eye
+        // already goes — the silhouette.
+        base: '#c9c0b2',
+        highlight: '#fff6ea',
+        shadow: '#2a2620',
+        edge: 'rgba(255,110,50,0.30)',
         alpha: fade
       });
     }
@@ -3370,9 +4332,9 @@ Demos.register('atelier-cloth', function (root) {
     }
 
     // Pole
-    ctx.fillStyle = '#2b3550';
+    ctx.fillStyle = '#2b2620';
     ctx.fillRect(ORIGIN_X - 7, ORIGIN_Y - 22, 7, (ROWS - 1) * SPACING + 44);
-    ctx.fillStyle = 'rgba(247,214,158,.5)';
+    ctx.fillStyle = 'rgba(255,210,170,.5)';
     ctx.fillRect(ORIGIN_X - 7, ORIGIN_Y - 22, 2, (ROWS - 1) * SPACING + 44);
   }
 
@@ -3476,8 +4438,8 @@ Demos.register('atelier-stages', function (root) {
 
     // ground
     var gg = ctx.createLinearGradient(0, S * 0.72, 0, S);
-    gg.addColorStop(0, '#0d1526');
-    gg.addColorStop(1, '#070b14');
+    gg.addColorStop(0, '#191510');
+    gg.addColorStop(1, '#0b0908');
     ctx.fillStyle = gg;
     ctx.fillRect(0, S * 0.72, S, S * 0.28);
 
@@ -3486,7 +4448,7 @@ Demos.register('atelier-stages', function (root) {
       ctx.globalAlpha = .5;
       ctx.beginPath();
       ctx.ellipse(cx + 14, cy + 92, 54, 11, 0, 0, Math.PI * 2);
-      ctx.fillStyle = '#03060d';
+      ctx.fillStyle = '#050403';
       ctx.filter = 'blur(7px)';
       ctx.fill();
       ctx.restore();
@@ -3496,10 +4458,10 @@ Demos.register('atelier-stages', function (root) {
       ctx.save();
       ctx.globalAlpha = .55;
       pearPath(ctx, cx, cy, false);
-      ctx.fillStyle = '#5a6a8c';
+      ctx.fillStyle = '#6a6156';
       ctx.fill();
       ctx.restore();
-      ctx.strokeStyle = 'rgba(224,165,78,.5)';
+      ctx.strokeStyle = 'rgba(255,90,31,.55)';
       ctx.setLineDash([3, 4]);
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(cx, 18); ctx.lineTo(cx, S - 18); ctx.stroke();
@@ -3510,9 +4472,9 @@ Demos.register('atelier-stages', function (root) {
 
     if (stage === 'contour') {
       pearPath(ctx, cx, cy, true);
-      ctx.fillStyle = '#4a5570';
+      ctx.fillStyle = '#57503f';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(247,214,158,.75)';
+      ctx.strokeStyle = 'rgba(255,208,172,.78)';
       ctx.lineWidth = 1.4;
       ctx.stroke();
       return;
@@ -3528,7 +4490,7 @@ Demos.register('atelier-stages', function (root) {
     grad.addColorStop(.32, '#cfa845');
     grad.addColorStop(.62, '#8f7526');
     grad.addColorStop(.85, '#4c4326');
-    grad.addColorStop(1, '#25243a');
+    grad.addColorStop(1, '#2a2018');
     ctx.fillStyle = grad;
     ctx.fillRect(cx - 70, cy - 80, 150, 190);
 
@@ -3627,7 +4589,9 @@ Demos.register('physics', function (root) {
   var readout = root.querySelector('[data-readout]');
   var drag = null, aim = null;
 
-  var PALETTE = ['#e0a54e', '#c98f3d', '#a97a2f', '#f0c076', '#8a6428', '#d9a45f'];
+  // Crates alternate bone and signal so a settled pile still has rhythm in it —
+  // an all-one-hue stack reads as a texture rather than as separate bodies.
+  var PALETTE = ['#cdc3b3', '#e0561f', '#b4aa9a', '#e8815a', '#9a9184', '#d4482a'];
 
   function addStatics() {
     world.add(new P.Body({ shape: P.makeBox(VW + 200, 46), x: VW / 2, y: VH - 12, isStatic: true, friction: .85, tag: 'ground' }));
@@ -3657,7 +4621,7 @@ Demos.register('physics', function (root) {
     for (var i = 0; i < 8; i++) {
       var link = world.add(new P.Body({
         shape: P.makeBox(9, seg - 2), x: ax, y: ay + 12 + i * seg,
-        friction: .4, restitution: .02, color: '#6fbfa6', allowSleep: false
+        friction: .4, restitution: .02, color: '#6f8fd8', allowSleep: false
       }));
       world.addJoint(new P.RevoluteJoint(prev, link,
         { x: 0, y: prev === anchor ? 7 : (seg - 2) / 2 }, { x: 0, y: -(seg - 2) / 2 }));
@@ -3665,7 +4629,7 @@ Demos.register('physics', function (root) {
     }
     var ball = world.add(new P.Body({
       shape: P.makeCircle(22), x: ax, y: ay + 12 + 8 * seg + 12,
-      friction: .5, restitution: .15, density: .009, color: '#e0725a', allowSleep: false
+      friction: .5, restitution: .15, density: .009, color: '#ff5a1f', allowSleep: false
     }));
     world.addJoint(new P.RevoluteJoint(prev, ball, { x: 0, y: (seg - 2) / 2 }, { x: 0, y: -22 }));
     // A nudge, so it is already swinging rather than hanging dead still.
@@ -3698,7 +4662,7 @@ Demos.register('physics', function (root) {
     for (var j = 0; j < 5; j++) {
       world.add(new P.Body({
         shape: P.makeCircle(15), x: 140 + j * 44, y: VH - 70,
-        friction: .3, restitution: .5, color: '#6fbfa6'
+        friction: .3, restitution: .5, color: '#6f8fd8'
       }));
     }
   }
@@ -3721,7 +4685,7 @@ Demos.register('physics', function (root) {
   // ------------------------------------------------------------- rendering
   function drawBody(b) {
     var asleep = !b.awake && !b.isStatic;
-    var base = b.color || (b.isStatic ? '#243250' : '#c98f3d');
+    var base = b.color || (b.isStatic ? '#3a352d' : '#c2b6a4');
 
     ctx.save();
     ctx.translate(b.position.x, b.position.y);
@@ -3730,14 +4694,14 @@ Demos.register('physics', function (root) {
     if (b.shape.type === 'circle') {
       var r = b.shape.r;
       var grad = ctx.createRadialGradient(-r * .35, -r * .4, r * .05, 0, 0, r * 1.15);
-      grad.addColorStop(0, G.mixHex(base, '#fff3d6', .55));
+      grad.addColorStop(0, G.mixHex(base, '#fff2e4', .55));
       grad.addColorStop(.55, base);
-      grad.addColorStop(1, G.mixHex(base, '#16203a', .6));
+      grad.addColorStop(1, G.mixHex(base, '#191510', .6));
       ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
       ctx.fillStyle = grad; ctx.fill();
       // a spoke, so rotation is actually visible on a circle
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r * .82, 0);
-      ctx.strokeStyle = 'rgba(10,15,25,.35)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = 'rgba(12,10,8,.4)'; ctx.lineWidth = 2; ctx.stroke();
     } else {
       var v = b.shape.verts;
       ctx.beginPath();
@@ -3747,18 +4711,23 @@ Demos.register('physics', function (root) {
       var minY = Infinity, maxY = -Infinity;
       for (var k = 0; k < v.length; k++) { if (v[k].y < minY) minY = v[k].y; if (v[k].y > maxY) maxY = v[k].y; }
       var lg = ctx.createLinearGradient(0, minY, 0, maxY);
-      lg.addColorStop(0, G.mixHex(base, '#fff3d6', b.isStatic ? .12 : .42));
-      lg.addColorStop(1, G.mixHex(base, '#101a2e', b.isStatic ? .35 : .5));
+      // The ground is dark on purpose; the crates are not. Mixing them toward
+      // near-black as hard as the backdrop would flatten the whole pile into one
+      // silhouette, so dynamic bodies keep most of their local value.
+      lg.addColorStop(0, G.mixHex(base, '#fff2e4', b.isStatic ? .10 : .50));
+      lg.addColorStop(1, G.mixHex(base, '#15110d', b.isStatic ? .30 : .34));
       ctx.fillStyle = lg;
       ctx.fill();
-      ctx.strokeStyle = b.isStatic ? 'rgba(120,150,200,.16)' : 'rgba(255,236,203,.16)';
+      ctx.strokeStyle = b.isStatic ? 'rgba(200,190,175,.14)' : 'rgba(255,224,196,.18)';
       ctx.lineWidth = 1;
       ctx.stroke();
     }
 
     if (asleep) {
-      ctx.globalAlpha = .45;
-      ctx.fillStyle = '#0a0f1b';
+      // Dim, not erase — the point is to see the pile go quiet, which needs the
+      // bodies to still read as bodies against the near-black ground.
+      ctx.globalAlpha = .34;
+      ctx.fillStyle = '#0f0f13';
       if (b.shape.type === 'circle') { ctx.beginPath(); ctx.arc(0, 0, b.shape.r, 0, Math.PI * 2); ctx.fill(); }
       else ctx.fill();
     }
@@ -3770,7 +4739,7 @@ Demos.register('physics', function (root) {
 
     // faint workshop grid
     ctx.save();
-    ctx.strokeStyle = 'rgba(120,150,200,.055)';
+    ctx.strokeStyle = 'rgba(200,190,175,.05)';
     ctx.lineWidth = 1;
     for (var gx = 0; gx <= VW; gx += 45) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, VH); ctx.stroke(); }
     for (var gy = 0; gy <= VH; gy += 45) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(VW, gy); ctx.stroke(); }
@@ -3783,7 +4752,7 @@ Demos.register('physics', function (root) {
       var pA = { x: j.a.position.x + j.localA.x * ca - j.localA.y * sa, y: j.a.position.y + j.localA.x * sa + j.localA.y * ca };
       var pB = { x: j.b.position.x + j.localB.x * cb - j.localB.y * sb, y: j.b.position.y + j.localB.x * sb + j.localB.y * cb };
       ctx.beginPath(); ctx.moveTo(pA.x, pA.y); ctx.lineTo(pB.x, pB.y);
-      ctx.strokeStyle = 'rgba(111,191,166,.5)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = 'rgba(127,168,255,.55)'; ctx.lineWidth = 2; ctx.stroke();
     }
 
     for (var b = 0; b < world.bodies.length; b++) drawBody(world.bodies[b]);
@@ -3795,16 +4764,16 @@ Demos.register('physics', function (root) {
       var end = hit ? hit.point : { x: 40 + dir.x * 4, y: (VH - 90) + dir.y * 4 };
       ctx.save();
       ctx.setLineDash([7, 7]);
-      ctx.strokeStyle = 'rgba(224,114,90,.75)';
+      ctx.strokeStyle = 'rgba(255,90,31,.8)';
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(40, VH - 90); ctx.lineTo(end.x, end.y); ctx.stroke();
       ctx.restore();
       if (hit) {
         ctx.beginPath(); ctx.arc(hit.point.x, hit.point.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#e0725a'; ctx.fill();
+        ctx.fillStyle = '#ff5a1f'; ctx.fill();
       }
       ctx.beginPath(); ctx.arc(40, VH - 90, 12, 0, Math.PI * 2);
-      ctx.fillStyle = '#e0725a'; ctx.fill();
+      ctx.fillStyle = '#ff5a1f'; ctx.fill();
     }
 
     if (drag && drag.body) {
@@ -3867,7 +4836,7 @@ Demos.register('physics', function (root) {
       var shot = world.add(new P.Body({
         shape: P.makeCircle(11), x: 40, y: VH - 90,
         vx: dir.x / len * 1500, vy: dir.y / len * 1500,
-        density: .02, restitution: .3, friction: .4, color: '#e0725a'
+        density: .02, restitution: .3, friction: .4, color: '#ff5a1f'
       }));
       shot.tag = 'shot';
       aim = null;
@@ -3994,9 +4963,19 @@ Demos.register('caveman', function (root) {
     });
   }
 
+  /* Backticked identifiers are the whole point of the ultra levels — `useMemo`
+   * is what survives when everything else is cut — so they have to read as code
+   * rather than as literal backticks. Typing runs on textContent (cheap, and
+   * safe), then the finished line is swapped for the marked-up version once. */
+  function codify(text) {
+    return String(text)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
+  }
+
   function type(text) {
     if (typer) { clearInterval(typer); typer = null; }
-    if (reduce) { out.textContent = text; return; }
+    if (reduce) { out.innerHTML = codify(text); return; }
     out.innerHTML = '';
     var span = document.createElement('span');
     var cursor = document.createElement('span');
@@ -4009,7 +4988,7 @@ Demos.register('caveman', function (root) {
       i += Math.ceil(text.length / 90);
       span.textContent = text.slice(0, i);
       if (i >= text.length) {
-        span.textContent = text;
+        span.innerHTML = codify(text);
         clearInterval(typer); typer = null;
         cursor.remove();
       }
