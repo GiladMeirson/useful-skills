@@ -89,22 +89,27 @@ Apply wind as an ACCELERATION into the same per-point update that gravity uses �
 Prefer a noise-driven, non-constant strength over a fixed wind vector too — real wind gusts rather than blowing at one steady strength, and a good flag/cloth wave is a *traveling* ripple, not uniform bulk motion:
 
 ```js
-// scale by how far the point is from the pinned edge (0 near anchor, 1 at free edge)
-function windAcceleration(i, cols, noise, time, strengthX = 0.35, strengthY = 0.3) {
-  const col = i % cols;
-  const f = col / (cols - 1);
-  return {
-    x: noise.fbm(i * 0.15, 0, time * 0.0006) * strengthX * f,
-    y: Math.sin(time * 0.0028 - col * 0.4) * strengthY * f + noise.get(i * 0.2, time * 0.001) * 0.15 * f,
-  };
-}
+// Pass the object buildCloth/buildChain returned — it carries cols, rows and
+// pinEdge, and the falloff has to follow whichever edge is actually pinned.
+const cloth = VerletPhysics.buildCloth(14, 8, 18, 60, 40, 'left');
 
-// then each frame:
-points.forEach((p, i) => {
-  const w = windAcceleration(i, cols, noise, time);
-  p.update(w.x, 0.08 + w.y, 0.985); // 0.08 gravity + wind's y-acceleration
-});
+function frame(time) {
+  VerletPhysics.simulateStep(cloth.points, cloth.constraints, 0, 0.08, 0.985, 6,
+    (p, i) => VerletPhysics.windAcceleration(i, cloth, noise, time));
+  requestAnimationFrame(frame);
+}
 ```
+
+Two things that look like details and are not:
+
+- **The falloff axis follows the pinned edge.** A flag on a pole ramps across
+  columns; a hanging curtain ramps down rows. Ramping by column on a top-pinned
+  cloth blows hardest *at the anchor*, which is both wrong and hard to spot.
+- **A rope or hair strand is a one-column grid**, so any `col / (cols - 1)`
+  falloff divides by zero and yields `NaN`. Worse, the natural defensive idiom
+  `gx += w.x || 0` swallows it — `NaN` is falsy — so the wind silently becomes
+  zero and the strand simply hangs there with nothing thrown and no clue in the
+  source. `simulateStep` now throws on a non-finite wind instead.
 
 ## Simple collision
 

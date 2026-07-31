@@ -50,14 +50,67 @@ const BezierUtils = {
 
   // Nudges a set of "reference" primitive points (e.g. from a perfect
   // polygon/circle sampling) by small, seeded, per-point offsets — the core
-  // trick behind organicBlob() in organic-curves.md, factored out for reuse
-  // with arbitrary base shapes (not just circles).
-  jitterPoints(points, irregularity = 0.1, rand = Math.random) {
-    return points.map(([x, y]) => {
-      const dx = (rand() - 0.5) * irregularity;
-      const dy = (rand() - 0.5) * irregularity;
-      return [x + dx, y + dy];
-    });
+  // trick behind organicBlob(), factored out for reuse with arbitrary base
+  // shapes (not just circles).
+  //
+  // `irregularity` is a FRACTION OF THE SHAPE'S SIZE, matching the 5-15% band
+  // in organic-curves.md — not an absolute pixel offset. `scale` defaults to
+  // the mean distance from the point set's centroid, so the same 0.12 means
+  // the same visual amount of wobble on a 40px shape and a 400px one. Pass
+  // `scale` explicitly to lock the jitter to some other reference length.
+  jitterPoints(points, irregularity = 0.1, rand = Math.random, scale = null) {
+    if (!points.length) return [];
+    let scaleRef = scale;
+    if (scaleRef == null) {
+      let cx = 0, cy = 0;
+      for (const [x, y] of points) { cx += x; cy += y; }
+      cx /= points.length; cy /= points.length;
+      let sum = 0;
+      for (const [x, y] of points) sum += Math.hypot(x - cx, y - cy);
+      scaleRef = sum / points.length;
+    }
+    const amp = scaleRef * irregularity;
+    return points.map(([x, y]) => [
+      x + (rand() - 0.5) * amp,
+      y + (rand() - 0.5) * amp,
+    ]);
+  },
+
+  // Closed, organic silhouette through `points` — the primitive-killer from
+  // stage 3. Uses the midpoint-quadratic construction: each on-curve point
+  // becomes a control point and each segment ends at the midpoint of the next
+  // edge, which keeps the tangent continuous all the way around.
+  //
+  // Starting this loop at points[0] instead of the first midpoint (a very easy
+  // mistake) makes the opening segment's control point coincide with its start
+  // point. A quadratic with P0 === P1 reduces to B(t) = P0(1-t²) + t²P2 — a
+  // straight chord — and the closing segment then arrives at a different
+  // tangent, so every shape gets one flat edge and one corner at the seam.
+  closedOrganicPath(ctx, points) {
+    const n = points.length;
+    if (n < 3) return;
+    const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    ctx.beginPath();
+    ctx.moveTo(...mid(points[n - 1], points[0]));
+    for (let i = 0; i < n; i++) {
+      const cur = points[i], next = points[(i + 1) % n];
+      const end = mid(cur, next);
+      ctx.quadraticCurveTo(cur[0], cur[1], end[0], end[1]);
+    }
+    ctx.closePath();
+  },
+
+  // Ready-made organic blob: samples a circle, jitters it, closes it smoothly.
+  // irregularity follows the same 5-15%-reads-natural band as jitterPoints.
+  organicBlob(ctx, cx, cy, baseR, { points = 8, irregularity = 0.12, rand = Math.random } = {}) {
+    const pts = [];
+    for (let i = 0; i < points; i++) {
+      const angle = (i / points) * Math.PI * 2;
+      const r = baseR * (1 + (rand() - 0.5) * irregularity);
+      pts.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
+    }
+    BezierUtils.closedOrganicPath(ctx, pts);
+    return pts;
   },
 
   // Distance-based line-width taper — call per stroke segment when you want

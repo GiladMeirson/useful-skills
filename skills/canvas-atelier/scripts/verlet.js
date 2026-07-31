@@ -48,8 +48,18 @@ const VerletPhysics = {
       let gx = gravityX, gy = gravityY;
       if (windFn) {
         const w = windFn(p, i);
-        gx += w.x || 0;
-        gy += w.y || 0;
+        // Do NOT write this as `gx += w.x || 0`. NaN is falsy, so that idiom
+        // silently converts a broken wind function into zero wind: the cloth
+        // just hangs there, nothing throws, and the source looks correct.
+        // A loud failure here is worth far more than a plausible-looking one.
+        if (!Number.isFinite(w.x) || !Number.isFinite(w.y)) {
+          throw new Error(
+            `windFn returned a non-finite acceleration at point ${i}: ` +
+            `{x: ${w.x}, y: ${w.y}}. Check the grid dimensions passed to windAcceleration().`
+          );
+        }
+        gx += w.x;
+        gy += w.y;
       }
       p.update(gx, gy, damping);
     });
@@ -60,6 +70,10 @@ const VerletPhysics = {
 
   // pinEdge: 'left' pins the whole left column (e.g. a flag against a pole),
   // 'top' pins the whole top row (e.g. a hanging tapestry/curtain).
+  //
+  // The returned object carries cols/rows/pinEdge so windAcceleration() can
+  // work out which axis runs away from the anchor. Pass the whole object
+  // rather than a bare column count.
   buildCloth(cols, rows, spacing, originX, originY, pinEdge = 'left') {
     const points = [], constraints = [];
     for (let y = 0; y < rows; y++) {
@@ -75,10 +89,11 @@ const VerletPhysics = {
         if (y < rows - 1) constraints.push(new DistanceConstraint(points[idx(x, y)], points[idx(x, y + 1)]));
       }
     }
-    return { points, constraints, idx };
+    return { points, constraints, idx, cols, rows, pinEdge };
   },
 
-  // Single chain (rope/hair): first point pinned at the anchor.
+  // Single chain (rope/hair): first point pinned at the anchor. Shaped like a
+  // one-column, top-pinned cloth so the same wind function drives both.
   buildChain(length, spacing, originX, originY, vertical = true) {
     const points = [], constraints = [];
     for (let i = 0; i < length; i++) {
@@ -89,13 +104,36 @@ const VerletPhysics = {
     for (let i = 0; i < length - 1; i++) {
       constraints.push(new DistanceConstraint(points[i], points[i + 1]));
     }
-    return { points, constraints };
+    return { points, constraints, cols: 1, rows: length, pinEdge: 'top' };
+  },
+
+  // How far point `i` sits from the pinned edge, as 0 (at the anchor) to 1
+  // (at the free edge). Which axis that runs along depends on which edge is
+  // pinned — a flag on a pole ramps across columns, a hanging curtain ramps
+  // down rows — so this needs the grid, not just a column count.
+  //
+  // Both denominators are guarded: a rope or hair strand is a 1-column grid,
+  // and `col / (cols - 1)` divides by zero there, producing NaN that then
+  // propagates silently through the whole simulation.
+  anchorDistance(i, grid) {
+    const g = typeof grid === 'number' ? { cols: grid, rows: Infinity, pinEdge: 'left' } : grid;
+    const cols = g.cols || 1;
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    if (g.pinEdge === 'top') {
+      const rows = g.rows || 1;
+      return rows > 1 ? row / (rows - 1) : 1;
+    }
+    return cols > 1 ? col / (cols - 1) : 1;
   },
 
   // Returns a wind ACCELERATION {x, y} for a given point index — pass this
-  // into simulateStep's windFn, e.g.:
-  //   VerletPhysics.simulateStep(points, constraints, 0, 0.08, 0.985, 6,
-  //     (p, i) => VerletPhysics.windAcceleration(i, cols, noise, time));
+  // into simulateStep's windFn. `grid` is the object buildCloth/buildChain
+  // returned (it carries cols/rows/pinEdge):
+  //
+  //   const cloth = VerletPhysics.buildCloth(14, 8, 18, 60, 40, 'left');
+  //   VerletPhysics.simulateStep(cloth.points, cloth.constraints, 0, 0.08, 0.985, 6,
+  //     (p, i) => VerletPhysics.windAcceleration(i, cloth, noise, time));
   //
   // Do NOT apply wind as a direct p.x/p.y += offset. That was this
   // function's original (buggy) design: an unbounded random walk with
@@ -106,12 +144,17 @@ const VerletPhysics = {
   // has "no back side" where it should be folding away from the viewer.
   // Feeding it in as an acceleration through the same Verlet update as
   // gravity keeps it a bounded oscillation instead.
-  windAcceleration(i, cols, noise, time, strengthX = 0.35, strengthY = 0.3) {
-    const col = i % cols;
-    const f = col / (cols - 1); // 0 near the anchor, 1 at the free edge
+  windAcceleration(i, grid, noise, time, strengthX = 0.35, strengthY = 0.3) {
+    const f = VerletPhysics.anchorDistance(i, grid);
+    // The travelling ripple has to run along the same axis as the falloff,
+    // or the wave crosses the cloth sideways to the direction it's blowing.
+    const g = typeof grid === 'number' ? { cols: grid, pinEdge: 'left' } : grid;
+    const cols = g.cols || 1;
+    const alongAxis = g.pinEdge === 'top' ? Math.floor(i / cols) : i % cols;
     return {
       x: noise.fbm(i * 0.15, 0, time * 0.0006) * strengthX * f,
-      y: Math.sin(time * 0.0028 - col * 0.4) * strengthY * f + noise.get(i * 0.2, time * 0.001) * 0.15 * f,
+      y: Math.sin(time * 0.0028 - alongAxis * 0.4) * strengthY * f
+         + noise.get(i * 0.2, time * 0.001) * 0.15 * f,
     };
   },
 

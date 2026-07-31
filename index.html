@@ -1702,7 +1702,7 @@ table.grid td .mark-note { display: block; color: var(--ink-3); font-size: var(-
           </div>
           <div class="prose reveal" style="margin-top:16px">
             <p>
-              This skill encodes that process as eight stages, and hands the agent the reference
+              This skill encodes that process as nine stages, and hands the agent the reference
               material and helper code for each one. Its sharpest opinions: pick <strong>one</strong>
               light direction and make every highlight and shadow agree with it; shade with a darker,
               desaturated version of the local hue rather than black; derive the shadow's warmth from
@@ -1710,6 +1710,19 @@ table.grid td .mark-note { display: block; color: var(--ink-3); font-size: var(-
               than the highlight; and never finish without <em>rendering the image and actually looking
               at it</em>, because gradient math and compositing order fail in ways that are invisible
               in source and obvious in pixels.
+            </p>
+          </div>
+          <div class="prose reveal" style="margin-top:16px">
+            <p>
+              It also assumes something unusual about who is drawing. An illustrator types no
+              coordinates at all — they put a mark down, look at it, and move it.
+              <code>bezierCurveTo(340, 210, …)</code> is dead reckoning in an invisible coordinate
+              system, and independently guessed features don't cancel their errors, they accumulate.
+              So the skill leans on the one faculty that survives not being able to see: it
+              <em>computes</em>. Gradient stops are sampled from surface normals rather than picked by
+              eye; landmarks are derived from a rig so an eye cannot drift off a head; proportions are
+              asserted and throw before a pixel is drawn; and the critique stage looks at the
+              silhouette, the mirror image and the blur, not just the straight render.
             </p>
           </div>
 
@@ -1752,15 +1765,17 @@ table.grid td .mark-note { display: block; color: var(--ink-3); font-size: var(-
             <div>
               <span class="label">What ships in the folder</span>
               <ul class="files">
-                <li><code>SKILL.md</code><span>The eight-stage workflow and a "do this, not that" table</span></li>
+                <li><code>SKILL.md</code><span>The nine-stage workflow and a "do this, not that" table</span></li>
+                <li><code>proportion-canon.md</code><span>Measured proportions per subject, each with the error it prevents</span></li>
                 <li><code>composition.md</code><span>Focal point, selective fidelity, depth, negative space</span></li>
                 <li><code>lighting-and-shading.md</code><span>Core / cast / ambient-occlusion / rim model with gradient code</span></li>
                 <li><code>organic-curves.md</code><span>Turning primitives into believable asymmetric contours</span></li>
-                <li><code>color-theory.md</code><span>Shadow temperature and where saturation should peak</span></li>
-                <li><code>precision-and-form.md</code><span>Perspective, value before colour, lost-and-found edges</span></li>
+                <li><code>color-theory.md</code><span>Limited palette, shadow temperature, where saturation should peak</span></li>
+                <li><code>precision-and-form.md</code><span>Perspective, value before colour, lost-and-found edges, draw-through</span></li>
+                <li><code>canvas-craft.md</code><span>Compositing as painting, layer stacks, the sRGB gradient dead zone</span></li>
                 <li><code>animation-principles.md</code><span>Easing, squash and stretch, anticipation, arcs, follow-through</span></li>
                 <li><code>physics-motion.md</code><span>Verlet for cloth, hair, rope, flags</span></li>
-                <li><code>scripts/</code><span><code>canvas-setup</code>, <code>easing</code>, <code>bezier-utils</code>, <code>noise</code>, <code>verlet</code></span></li>
+                <li><code>scripts/</code><span><code>canvas-setup</code>, <code>armature</code>, <code>shading</code>, <code>bezier-utils</code>, <code>noise</code>, <code>easing</code>, <code>verlet</code>, <code>critique</code>, <code>selftest</code></span></li>
               </ul>
             </div>
             <div>

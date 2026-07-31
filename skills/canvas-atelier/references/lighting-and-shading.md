@@ -1,5 +1,39 @@
 # Lighting and Shading
 
+## Compute it, don't eyeball it
+
+Everything below describes the model qualitatively, and every number in the
+hand-written examples is picked by feel. `scripts/shading.js` computes the same
+model from a surface normal and a light vector, so the gradient stops are a
+result rather than a guess:
+
+```js
+const light = Shading.light(225, 35);   // azimuth 225° = upper left, 35° out of the screen
+ctx.fillStyle = Shading.sphereGradient(ctx, cx, cy, r, [15, 65, 52], light);
+ctx.fill();
+```
+
+It already folds in the two colour rules from `color-theory.md` — shadow
+temperature derived from the light's temperature, peak chroma at the terminator
+— and it will not produce a black shadow or a blown highlight.
+
+**Cylinders are where this matters most.** Limbs, tree trunks, bottles,
+columns, fingers and rolled sleeves are all cylinders. A cylinder's terminator
+sits exactly where `N·L = 0` and its falloff is `cos θ`, not a linear ramp;
+hand-placed stops put the terminator in the wrong place and ramp it linearly,
+which is why canvas limbs come out looking like painted tubes. There's a second
+trap: a cylinder's cross-section normal is perpendicular to its own axis, so its
+shading genuinely does not depend on the light's component along the axis.
+Shading a limb as if it were a sphere — which does depend on it — reads wrong
+immediately even when the colours are right.
+
+```js
+ctx.fillStyle = Shading.cylinderGradient(ctx, shoulderX, shoulderY, elbowX, elbowY, radius, base, light);
+```
+
+Read the rest of this file to understand *what* is being computed and to shade
+anything the two helpers don't cover.
+
 ## The model
 
 Every convincingly-lit shape on canvas needs four things, all consistent with one chosen light direction:

@@ -15,20 +15,28 @@ The single biggest tell of programmer-made animation is `progress += 1/frames` d
 A ball is never a perfectly rigid circle in motion — it stretches slightly along its direction of travel and squashes on impact. This single technique sells weight and material more than almost anything else.
 
 ```js
-// stretch factor based on velocity magnitude, squash on impact
-function squashStretch(ctx, x, y, r, vx, vy, isImpact) {
+// Builds the deformed path only — the caller fills or strokes it afterward.
+// The transform is deliberately restored first: a path is captured in device
+// space as it is constructed, so it stays correct once the transform is gone,
+// and the caller gets to pick a fillStyle without fighting the scale.
+function squashStretchPath(ctx, x, y, r, vx, vy, isImpact) {
   const speed = Math.hypot(vx, vy);
   const stretch = isImpact ? 0.7 : 1 + Math.min(speed * 0.01, 0.3);
   const squash = isImpact ? 1.3 : 1 - Math.min(speed * 0.01, 0.15);
   const angle = Math.atan2(vy, vx);
   ctx.save();
   ctx.translate(x, y);
-  ctx.rotate(angle);
-  ctx.scale(stretch, squash);
+  ctx.rotate(angle);          // x-axis now points along the direction of travel
+  ctx.scale(stretch, squash); // so stretch is along travel, squash across it
   ctx.beginPath();
   ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.restore();
 }
+
+// usage
+squashStretchPath(ctx, x, y, 20, vx, vy, grounded);
+ctx.fillStyle = Shading.sphereGradient(ctx, x, y, 20, [15, 65, 52], light);
+ctx.fill();
 ```
 
 Keep total area roughly conserved (stretch one axis, squash the other) — objects that just get bigger/smaller instead of deforming look like they're changing size, not moving fast.

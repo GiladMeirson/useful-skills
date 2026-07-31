@@ -9,27 +9,29 @@
 Replace circles/ellipses with a closed bezier path built from 4-8 points around the desired shape, each with a small, non-uniform random offset:
 
 ```js
-function organicBlob(ctx, cx, cy, baseR, points = 8, irregularity = 0.12, seed = Math.random) {
-  const angleStep = (Math.PI * 2) / points;
-  const pts = [];
-  for (let i = 0; i < points; i++) {
-    const angle = i * angleStep;
-    // irregularity should stay small: 0.08-0.15 reads as "organic", 0.3+ reads as "damaged"
-    const r = baseR * (1 + (seed() - 0.5) * irregularity);
-    pts.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
-  }
-  ctx.beginPath();
-  ctx.moveTo(...pts[0]);
-  for (let i = 0; i < points; i++) {
-    const p0 = pts[i], p1 = pts[(i + 1) % points];
-    const midX = (p0[0] + p1[0]) / 2, midY = (p0[1] + p1[1]) / 2;
-    ctx.quadraticCurveTo(p0[0], p0[1], midX, midY);
-  }
-  ctx.closePath();
-}
+// scripts/bezier-utils.js — organicBlob(ctx, cx, cy, baseR, opts)
+BezierUtils.organicBlob(ctx, cx, cy, 60, {
+  points: 8,
+  irregularity: 0.12,                       // 8-15% reads organic; 0.3+ reads damaged
+  rand: BezierUtils.seededRandom(42),       // seeded, so the shape is stable across frames
+});
+ctx.fill();
 ```
 
-Use a seeded PRNG (not `Math.random`) if the shape needs to be identical across redraws/frames — see the seed note in `bezier-utils.js`.
+Use a seeded PRNG (not `Math.random`) if the shape needs to be identical across redraws/frames — otherwise the silhouette jitters every frame.
+
+The closing loop matters more than it looks. `closedOrganicPath()` walks
+**midpoint → vertex-as-control → midpoint**, which keeps the tangent continuous
+all the way round. Starting the loop at `points[0]` instead — the obvious way to
+write it — makes the first segment's control point coincide with its start, and
+a quadratic with `P0 === P1` reduces to `B(t) = P0(1−t²) + t²P2`, a straight
+chord. The closing segment then arrives at a different tangent. The result is
+one flat edge and one corner on every shape, in the function whose entire job is
+to have no geometric tells. It is invisible in the source and obvious in pixels.
+
+Both `organicBlob` and `jitterPoints` take `irregularity` as a **fraction of the
+shape's size**, not a pixel offset, so the same 0.12 means the same amount of
+wobble at any scale.
 
 ## Smooth curve through a set of points (Catmull-Rom → Bezier)
 

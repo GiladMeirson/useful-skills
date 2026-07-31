@@ -10,7 +10,7 @@ They work in **[Claude Code](https://claude.com/claude-code)** and **[GitHub Cop
 
 | Skill | What it does | Claude Code | Copilot |
 |---|---|:--:|:--:|
-| [`canvas-atelier`](skills/canvas-atelier) | Gallery-quality drawing & animation on HTML canvas — construction-based shapes, physically-based light/shadow, organic curves, animation-principle-driven motion. | full | full |
+| [`canvas-atelier`](skills/canvas-atelier) | Gallery-quality drawing & animation on HTML canvas — landmark rigs with asserted proportions, gradient stops computed from surface normals, organic curves, animation-principle-driven motion, and a diagnostic critique pass. | full | full |
 | [`physics-2d`](skills/physics-2d) | A small, tested 2D rigid-body physics engine — gravity, collisions, bouncing, friction, stacking, joints, raycasting, a deterministic fixed-timestep loop. | full | full |
 | [`caveman`](skills/caveman) | Ultra-compressed responses — drops articles, filler, and hedging while keeping full technical accuracy. Frontmatter claims a measured ~65% token reduction. | full | full |
 | [`matrix-agents-skill`](skills/matrix-agents-skill) | A meta-skill that watches a coding session for reusable knowledge and proposes turning it into a new skill. | full | adapted¹ |
@@ -124,10 +124,13 @@ node build-site.mjs
 
 `site/index.html` is the readable source with normal `<link>` and `<script src>` tags; the root `index.html` is a generated bundle with all CSS and JS inlined. Both are needed: the split version is what you edit, and the bundle is what gets published, because a single self-contained document is the only form that survives a strict CSP with no sibling files to fetch.
 
-The demos are not decorative. The physics sandbox runs the same engine design the `physics-2d` skill teaches — SAT with face clipping, a block solver for two-point manifolds, split-impulse position correction, revolute joints and island sleeping — and it is smoke-tested under Node:
+The demos are not decorative. The physics sandbox runs the same engine design the `physics-2d` skill teaches — SAT with face clipping, a block solver for two-point manifolds, split-impulse position correction, revolute joints and island sleeping. Both skills that ship code are smoke-tested under Node:
 
 ```sh
 node skills/physics-2d/scripts/selftest.js
+node skills/canvas-atelier/scripts/selftest.js
 ```
+
+The atelier suite asserts what the reference docs *claim* — that a shadow never reaches black, that chroma peaks between highlight and terminator, that a cylinder's shading ignores the light's axial component, that wind on a cloth is zero at the pinned edge. That is deliberate: this skill's recurring failure mode is code that runs cleanly and draws the wrong picture, so several of those checks are regressions for bugs that never threw.
 
 Skills are plain text — read one before you trust it.

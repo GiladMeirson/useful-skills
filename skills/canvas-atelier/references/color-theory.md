@@ -1,5 +1,49 @@
 # Color Theory
 
+## Constrain the palette before anything else
+
+Painters work from a limited palette — often three or four pigments plus white —
+not because of scarcity but because it is what makes a picture cohere. Every
+colour mixed from the same small set shares a common cast, so unrelated objects
+look like they're standing in the same light.
+
+Choosing a hue independently per object is the opposite of that, and it is one
+of the most reliable tells of generated art: a scene where the apple is pure
+`hsl(0, 90%, 50%)`, the leaf is pure `hsl(120, 90%, 40%)` and the sky is pure
+`hsl(210, 90%, 60%)` reads as a set of stickers on a background, no matter how
+well each individual object is shaded.
+
+Pick 3–4 base hues at the start of the piece and derive every colour in it from
+them by shifting lightness and saturation, blending between them, or tinting
+toward the ambient light. If something needs to stand out, spend the *accent* —
+one small area of a hue outside the set, placed at the focal point.
+
+```js
+// A palette is a decision, made once, that everything else refers back to.
+const palette = {
+  dominant:  [ 25, 55, 55],   // the hue most of the canvas is built from
+  secondary: [200, 40, 45],   // supports and cools; usually the shadow family
+  neutral:   [ 35, 12, 62],   // low-chroma connective tissue
+  accent:    [355, 78, 52],   // used ONCE, small, at the focal point
+};
+
+// Everything else is mixed, not invented.
+function mixHue(a, b, t) {
+  const d = ((b[0] - a[0]) % 360 + 540) % 360 - 180;   // shortest way round
+  return [(a[0] + d * t + 360) % 360, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+const foliage = mixHue(palette.dominant, palette.secondary, 0.6);
+```
+
+A quick test: list every distinct hue in the finished piece. More than about
+five families, and the palette was never really chosen — it accumulated.
+
+Two useful starting schemes when there's no brief to follow: **analogous plus
+accent** (three neighbouring hues plus one small complement — calm, natural,
+very forgiving), or **split-complementary** (one dominant hue plus the two
+neighbours of its complement — livelier, harder to balance). Both give
+harmony for free in a way three arbitrary hues never do.
+
 ## Warm/cool contrast is relative, not absolute
 
 `lighting-and-shading.md`'s default shadow formula cool-shifts by a fixed amount — a reasonable default, but the actually-correct rule is relative to the light source's own temperature. Simultaneous contrast means the eye exaggerates the opposite temperature in adjacent shadow: if the light is warm (sunlight, candlelight, incandescent bulbs), shadows read as cooler/bluer by contrast. If the light is already cool (overcast sky, fluorescent, moonlight), shadows shift warm instead. Always derive the shadow's temperature shift from the light's temperature, not a constant.
@@ -43,11 +87,21 @@ function colorBleed(ctx, clipPath, bounceColor, strength = 0.12) {
 }
 ```
 
+## One more trap: canvas interpolates in sRGB
+
+Both rules above describe colours at specific points on a form. Canvas fills the
+space *between* your gradient stops by interpolating in premultiplied sRGB,
+which drags the midpoint of any wide hue transition through grey. See the
+gradient dead-zone section of `canvas-craft.md` — the short version is to emit
+more stops (which `scripts/shading.js` does automatically) or use `oklch()`.
+
 ## Quick reference
 
 | Mistake | Fix |
 |---|---|
+| A hue chosen independently per object | 3-4 base hues fixed up front; mix everything from them, spend one accent |
 | Fixed cool shadow regardless of light color | Derive the shadow's temperature shift from the light source's own temperature |
 | Most saturated color at the highlight or the deepest shadow | Peak saturation at the core-shadow transition zone |
 | Every object rendered in isolation, ignoring neighbors | Add a subtle color-bleed overlay from nearby dominant colors |
 | Treating local color as the final answer | Always filter local color through the scene's ambient light color |
+| A 2-stop gradient between distant hues | More stops, or `oklch()` — sRGB interpolation runs through grey |
