@@ -27,6 +27,15 @@ html = html.replace(/[ \t]*<link rel="stylesheet" href="([^"]+)"\s*\/?>\r?\n?/g,
   return `<style>\n/* ---- ${href} ---- */\n${read(file).trim()}\n</style>\n`;
 });
 
+// Inline font binaries as data URIs. Same reason as the CSS and JS above: a
+// sibling .woff2 does not resolve under the artifact CSP, and a display face
+// that silently falls back to Arial is worse than not having one.
+html = html.replace(/url\(\.\.\/fonts\/([A-Za-z0-9._-]+\.woff2)\)/g, (m, name) => {
+  const file = join(SRC, 'fonts', name);
+  if (!existsSync(file)) throw new Error(`missing font: ${name}`);
+  return `url(data:font/woff2;base64,${readFileSync(file).toString('base64')})`;
+});
+
 // Inline <script src="...">
 html = html.replace(/[ \t]*<script src="([^"]+)"><\/script>\r?\n?/g, (m, src) => {
   const file = join(SRC, src);
@@ -34,8 +43,8 @@ html = html.replace(/[ \t]*<script src="([^"]+)"><\/script>\r?\n?/g, (m, src) =>
   return `<script>\n/* ---- ${src} ---- */\n${read(file).trim()}\n</script>\n`;
 });
 
-if (/<link rel="stylesheet"|<script src=/.test(html)) {
-  throw new Error('build left an external reference behind — the bundle would break under CSP');
+if (/<link rel="stylesheet"|<script src=|url\(\.\.\//.test(html)) {
+  throw new Error('build left an external reference behind, the bundle would break under CSP');
 }
 
 const banner = `<!--\n  GENERATED FILE — do not edit.\n` +

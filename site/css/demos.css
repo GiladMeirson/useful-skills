@@ -31,9 +31,10 @@
   padding: 8px 13px;
   cursor: pointer;
   transition: border-color .16s var(--ease-out), color .16s var(--ease-out),
-              background .16s var(--ease-out);
+              background .16s var(--ease-out), transform .14s var(--ease-spring);
 }
 .chip:hover { border-color: var(--signal); color: var(--signal); }
+.chip:active { transform: translateY(1px); }
 .chip[aria-pressed="true"], .chip.active {
   background: var(--signal);
   color: var(--on-signal);
@@ -80,6 +81,52 @@
   pointer-events: none;
 }
 
+/* ------------------------------------- canvas-atelier showpiece gallery --- */
+/* The one panel on the page where the canvas IS the argument, so it gets the
+   full bleed, no chrome inside the frame, and a toolbar that reads as a
+   contact-sheet strip rather than a set of buttons. */
+.piece .panel-head .seg { gap: 6px; }
+.piece .demo canvas { cursor: crosshair; }
+.piece .demo-toolbar .sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--rule);
+  margin: 0 5px;
+}
+/* The stage chips are a sequence, so they are set as one connected strip: a
+   reader should see five steps of one process, not five independent toggles. */
+.piece .demo-toolbar [data-stage-btn] { border-left-width: 0; }
+.piece .demo-toolbar [data-stage-btn="0"] { border-left-width: 1px; }
+.piece .demo-toolbar [data-stage-btn]:hover { border-left-width: 1px; }
+.piece [data-play-build] {
+  color: var(--signal);
+  border-color: var(--signal-edge);
+}
+.piece [data-play-build]:hover { background: var(--signal-glow); }
+
+/* ----------------------------------- canvas-atelier light rig (stage 5) --- */
+/* The canvas is the control surface here: the light handle is drawn inside it
+   and dragged directly, so the cursor has to say so before the pointer is down. */
+.rig .demo canvas { cursor: grab; touch-action: none; }
+.rig.dragging .demo canvas { cursor: grabbing; }
+.rig .demo-toolbar .sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--rule);
+  margin: 0 4px;
+}
+.rig-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font: 500 var(--fs-xs)/1.5 var(--mono);
+  letter-spacing: .06em;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.rig-readout b { color: var(--ink-2); font-weight: 600; }
+.rig-readout .kelvin { color: var(--signal); }
+
 /* ----------------------------------------------------------- caveman ----- */
 .cave-grid { display: grid; gap: 14px; }
 .cave-levels { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -115,7 +162,7 @@
 }
 .meter-track {
   display: block;
-  height: 6px;
+  height: 5px;
   background: var(--bg-4);
   overflow: hidden;
 }
@@ -124,13 +171,33 @@
      every bar showing only its empty track. */
   display: block;
   height: 100%;
-  background: var(--signal-dim);
+  background: var(--ink-4);
   transition: width .55s var(--ease-out);
 }
 .meter-row.is-active { color: var(--signal); }
 .meter-row.is-active .meter-fill { background: var(--signal); }
 
 /* ----------------------------------------------------- matrix session ---- */
+/* The rain sits behind the session and is clipped by the demo frame, so it
+   reads as something happening inside the instrument rather than as wallpaper
+   the panel happens to sit on. The feed and tally get their own translucent
+   grounds so the text over it never drops below AA. */
+.demo.rainy { position: relative; overflow: hidden; }
+.demo.rainy .rain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .78;
+}
+.demo.rainy .rain canvas { width: 100%; height: 100%; background: none; }
+.demo.rainy .session { position: relative; z-index: 1; }
+.demo.rainy .session-feed { background: color-mix(in srgb, var(--bg-2) 78%, transparent); }
+.demo.rainy .tally { background: color-mix(in srgb, var(--bg-3) 88%, transparent); }
+@media (prefers-color-scheme: light) { .demo.rainy .rain { opacity: .34; } }
+:root[data-theme="light"] .demo.rainy .rain { opacity: .34; }
+:root[data-theme="dark"]  .demo.rainy .rain { opacity: .78; }
+
 .session {
   display: grid;
   grid-template-columns: 1fr 264px;
@@ -203,9 +270,9 @@
   gap: 9px;
 }
 .term-line { display: flex; gap: 10px; align-items: baseline; animation: slideIn .35s ease both; }
-.term-line .gutter { color: #3c3830; flex: 0 0 auto; }
-.term-user { color: var(--acid); }
-.term-tool { display: inline-flex; align-items: center; gap: 8px; color: #8d877d; }
+.term-line .gutter { color: #3a362f; flex: 0 0 auto; }
+.term-user { color: var(--sage); }
+.term-tool { display: inline-flex; align-items: center; gap: 8px; color: #868076; }
 .term-tool .badge {
   border: 1px solid var(--signal-edge);
   color: var(--signal);
@@ -215,9 +282,9 @@
 .term-tool.counted .badge { background: var(--signal-glow); }
 .term-foot {
   margin-top: auto;
-  border-top: 1px solid #23201b;
+  border-top: 1px solid #211e19;
   padding-top: 12px;
   color: var(--signal);
   animation: pop .45s var(--ease-spring) both;
 }
-.term-foot .k { color: #6b6459; }
+.term-foot .k { color: #655f55; }

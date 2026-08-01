@@ -1,0 +1,31 @@
+/* ============================================================================
+ * Typefaces — self-hosted, subset, variable.
+ *
+ * Both faces are variable and both axes are used, which is the point: the
+ * display face narrows to 74% width for the hero and the plate ordinals, and
+ * relaxes to 100% for running text, so one file covers a range that would
+ * otherwise take four static weights and a separate condensed family.
+ *
+ * They are embedded rather than linked because the published page has to be a
+ * single document under a strict CSP (see build-site.mjs). Subset to Latin plus
+ * the punctuation this page actually sets: 46 kB and 23 kB, from 90 kB and 31 kB.
+ *
+ * Archivo and JetBrains Mono are both SIL Open Font License 1.1.
+ * ========================================================================= */
+
+@font-face {
+  font-family: "Archivo Variable";
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url(../fonts/archivo-var-latin.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url(../fonts/jetbrains-mono-var-latin.woff2) format("woff2");
+}

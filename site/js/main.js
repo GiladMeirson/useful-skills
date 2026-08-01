@@ -237,12 +237,45 @@ window.InstallPaths = (function () {
 
   /* ----------------------------------------------------------- reveals --- */
   function initReveals() {
+    // A .stagger group cascades its own children rather than arriving as one
+    // block. The index is written once here; the delay itself is CSS.
+    document.querySelectorAll('.stagger').forEach(function (group) {
+      Array.prototype.forEach.call(group.children, function (child, i) {
+        child.style.setProperty('--i', i);
+      });
+    });
+
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
         if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
       });
     }, { rootMargin: '0px 0px -8% 0px', threshold: 0.04 });
     document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+  }
+
+  /* --------------------------------------------------------- spotlight --- *
+   * Panel edges catch light where the pointer is, the way a bezel does. The
+   * handler is per-panel and rAF-coalesced, so a fast drag across a demo writes
+   * two custom properties per frame and nothing else.
+   */
+  function initSpotlight() {
+    if (reduceMotion || !window.matchMedia('(pointer: fine)').matches) return;
+    document.querySelectorAll('.panel, .builder').forEach(function (panel) {
+      var queued = false, px = 0, py = 0;
+      function write() {
+        queued = false;
+        panel.style.setProperty('--mx', px.toFixed(1) + '%');
+        panel.style.setProperty('--my', py.toFixed(1) + '%');
+      }
+      panel.addEventListener('pointermove', function (e) {
+        var r = panel.getBoundingClientRect();
+        px = ((e.clientX - r.left) / r.width) * 100;
+        py = ((e.clientY - r.top) / r.height) * 100;
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(write);
+      }, { passive: true });
+    });
   }
 
   /* --------------------------------------------------------- index spy --- */
@@ -345,5 +378,6 @@ window.InstallPaths = (function () {
     initSpy();
     initBuilder();
     initReticle();
+    initSpotlight();
   });
 })();

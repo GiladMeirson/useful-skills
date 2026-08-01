@@ -3,20 +3,35 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>useful-skills — a plate book of agent skills</title>
+<title>useful-skills · a plate book of agent skills</title>
 <meta name="description" content="Five install-ready agent skills for Claude Code and GitHub Copilot: gallery-quality canvas rendering, a tested 2D physics engine, ultra-compressed replies, self-improving sessions, and a transparency footer. One command each." />
 <meta name="color-scheme" content="dark light" />
+<meta name="theme-color" content="#08080b" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="useful-skills · a plate book of agent skills" />
+<meta property="og:description" content="Five install-ready agent skills for Claude Code and GitHub Copilot. Plain Markdown folders, no build step, no runtime dependencies. One command each." />
+<meta property="og:url" content="https://giladmeirson.github.io/useful-skills/" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="useful-skills · a plate book of agent skills" />
+<meta name="twitter:description" content="Five install-ready agent skills for Claude Code and GitHub Copilot. One command each." />
+
+<!-- The masthead pip, at 32px. Inline so the page still makes zero requests. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2308080b'/%3E%3Crect x='6' y='6' width='20' height='2' fill='%23df6a41'/%3E%3Crect x='6' y='13' width='13' height='2' fill='%23524f4a'/%3E%3Crect x='6' y='20' width='17' height='2' fill='%23524f4a'/%3E%3C/svg%3E" />
+
+<link rel="stylesheet" href="css/fonts.css" />
 <link rel="stylesheet" href="css/tokens.css" />
 <link rel="stylesheet" href="css/base.css" />
 <link rel="stylesheet" href="css/layout.css" />
 <link rel="stylesheet" href="css/components.css" />
 <link rel="stylesheet" href="css/demos.css" />
 </head>
-<body>
+<body id="top">
 
 <a class="skip-link" href="#main">Skip to content</a>
 
-<!-- fixed apparatus: column rules, crop marks, progress, reticle -->
+<!-- fixed apparatus: ambient depth, column rules, crop marks, progress, reticle -->
+<canvas class="depth-field" data-demo="depth-field" aria-hidden="true"></canvas>
 <div class="apparatus" aria-hidden="true">
   <div class="cols"><span></span><span></span><span></span><span></span></div>
 </div>
@@ -60,15 +75,14 @@
     </div>
 
     <h1 class="hero-title">
-      <span class="line">Sharper</span>
-      <span class="line">tools for</span>
-      <span class="line hollow">your agent<span class="stop">.</span></span>
+      <span class="line"><span>Sharper tools</span></span>
+      <span class="line hollow"><span>for your agent<span class="stop">.</span></span></span>
     </h1>
 
     <p class="hero-lede">
       Five skills that teach a coding agent to draw like an illustrator, simulate like an engine,
-      speak in half the tokens, and remember what it learned. One folder each — <em>and the same
-      folder works in both</em> Claude Code and GitHub Copilot.
+      speak in half the tokens, and remember what it learned. One folder each, and the same
+      folder works in <em>both</em> Claude Code and GitHub Copilot.
     </p>
 
     <div class="hero-actions">
@@ -76,15 +90,19 @@
       <a class="btn btn-ghost" href="#catalogue">See what they do</a>
     </div>
 
-    <dl class="hero-spec">
+  </div>
+</div>
+
+<section class="specbar" aria-label="At a glance">
+  <div class="shell">
+    <dl class="spec-grid reveal stagger">
       <div><dt>Skills</dt><dd>05</dd></div>
       <div><dt>Agents</dt><dd>02</dd></div>
       <div><dt>Runtime deps</dt><dd>00</dd></div>
       <div><dt>Format</dt><dd><span class="u">SKILL</span>.md</dd></div>
     </dl>
-
   </div>
-</div>
+</section>
 
 <div class="ticker" aria-hidden="true">
   <div class="ticker-track">
@@ -100,7 +118,7 @@
       <!-- ========================= PROTOCOL ========================= -->
       <section class="band" id="protocol">
         <div class="section-head reveal">
-          <span class="eyebrow">00 — the format</span>
+          <span class="eyebrow">the format</span>
           <h2>A skill is a folder your agent reads before it works.</h2>
           <p>
             One <code>SKILL.md</code> describing <em>when</em> to use it and <em>how</em>, plus optional
@@ -199,7 +217,7 @@
       <!-- ========================= INSTALL ========================== -->
       <section class="band" id="install">
         <div class="section-head reveal">
-          <span class="eyebrow">01 — installation</span>
+          <span class="eyebrow">installation</span>
           <h2>Answer three questions, copy one line.</h2>
           <p>
             Every skill installs the same way, straight from GitHub — one folder, not the whole
@@ -335,6 +353,31 @@
             </p>
           </div>
 
+          <div class="panel bleed reveal piece" style="margin-top:36px" data-demo="atelier-showpiece">
+            <div class="panel-head">
+              <span class="label">Drawn, not assembled</span>
+              <div class="seg" data-group="subject" role="group" aria-label="Subject">
+                <button type="button" class="chip" data-subject="eye" aria-pressed="true">the eye</button>
+                <button type="button" class="chip" data-subject="koi" aria-pressed="false">the koi</button>
+              </div>
+            </div>
+            <div class="demo">
+              <canvas width="900" height="470" style="aspect-ratio:900/470"
+                role="img"
+                aria-label="A macro human eye drawn entirely in canvas code: hazel iris built from hundreds of individually shaded fibres, a wobbled collarette, crypts, vessels in the sclera, a four-pane window catchlight and a refraction caustic on the far side of the iris. The gaze follows the pointer and the pupil reacts to it."></canvas>
+              <div class="demo-toolbar">
+                <button class="chip" data-play-build>Build it</button>
+                <span class="sep" aria-hidden="true"></span>
+                <button class="chip" data-stage-btn="0" aria-pressed="false">armature</button>
+                <button class="chip" data-stage-btn="1" aria-pressed="false">contour</button>
+                <button class="chip" data-stage-btn="2" aria-pressed="false">light</button>
+                <button class="chip" data-stage-btn="3" aria-pressed="false">texture</button>
+                <button class="chip" data-stage-btn="4" aria-pressed="true">finish</button>
+              </div>
+            </div>
+            <p class="panel-note" data-piece-note></p>
+          </div>
+
           <div class="panel bleed reveal" style="margin-top:34px">
             <div class="panel-head">
               <span class="label">Verlet silk, shaded by fold curvature</span>
@@ -354,7 +397,7 @@
           </div>
 
           <div class="reveal" style="margin-top:34px">
-            <span class="label">The workflow, rendered — same subject, five stages</span>
+            <span class="label">The workflow, rendered: same subject, five stages</span>
             <div class="stages" data-demo="atelier-stages">
               <div class="stage" data-stage="block"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">1 · block-in</div></div>
               <div class="stage" data-stage="contour"><canvas width="220" height="220" aria-hidden="true"></canvas><div class="cap">2 · contour</div></div>
@@ -370,7 +413,41 @@
             </p>
           </div>
 
-          <div class="two-col reveal" style="margin-top:38px">
+          <div class="panel bleed reveal rig" style="margin-top:38px" data-demo="atelier-light">
+            <div class="panel-head">
+              <span class="label">One light, and everything else solved from it</span>
+              <span class="live">drag the key</span>
+            </div>
+            <div class="demo">
+              <canvas width="900" height="430" style="aspect-ratio:900/430" tabindex="0"
+                role="img"
+                aria-label="A still life of a glazed cylinder, a clay sphere and a bone egg on a dark table. A draggable key light sets the highlight, the terminator, the length and direction of every cast shadow, and the colour temperature of both light and shadow. Arrow keys move the light."></canvas>
+              <div class="demo-toolbar">
+                <button class="chip" data-pass="render" aria-pressed="true">render</button>
+                <span class="sep" aria-hidden="true"></span>
+                <button class="chip" data-pass="silhouette" aria-pressed="false">silhouette</button>
+                <button class="chip" data-pass="flipped" aria-pressed="false">flipped</button>
+                <button class="chip" data-pass="blurred" aria-pressed="false">blurred</button>
+                <button class="chip" data-pass="value" aria-pressed="false">value</button>
+                <span class="spacer"></span>
+                <span class="rig-readout" data-rig-readout aria-live="off"></span>
+              </div>
+            </div>
+            <p class="panel-note">
+              Nothing here is re-authored when the light moves. Every gradient stop is sampled from the
+              surface normal at that point, so the terminator lands where <code>N·L</code> crosses zero
+              rather than where a stop was dragged to; the cylinder's terminator stays a straight line
+              because its normal does not vary with height, which is the reason
+              <code>cylinderGradient</code> exists separately from <code>sphereGradient</code>. Take the
+              key out to the rim and it drops toward grazing: the shadows stretch by 1/L<sub>z</sub>,
+              the light warms to about 2300 K and the shadows cool to the complement, because shadow
+              temperature is derived from the light's rather than fixed at blue. The four buttons after
+              <em>render</em> are stage nine, the critique contact sheet: the same passes an art
+              director looks at instead of trusting the eye that placed the forms.
+            </p>
+          </div>
+
+          <div class="two-col lean reveal" style="margin-top:40px">
             <div>
               <span class="label">What ships in the folder</span>
               <ul class="files">
@@ -481,7 +558,7 @@
             </p>
           </div>
 
-          <div class="two-col reveal" style="margin-top:38px">
+          <div class="two-col lean reveal" style="margin-top:40px">
             <div>
               <span class="label">What ships in the folder</span>
               <ul class="files">
@@ -591,15 +668,63 @@
             </p>
           </div>
 
-          <div class="two-col reveal" style="margin-top:38px">
+          <div class="reveal" style="margin-top:38px">
+            <span class="label">How to invoke it</span>
+            <div class="invoke">
+              <div class="invoke-col">
+                <span class="label">Turn it on</span>
+                <ul class="phrases">
+                  <li>/caveman</li>
+                  <li>caveman mode</li>
+                  <li>talk like caveman</li>
+                  <li>be brief</li>
+                  <li>use fewer tokens</li>
+                </ul>
+              </div>
+              <div class="invoke-col">
+                <span class="label">Pick an intensity</span>
+                <ul class="phrases">
+                  <li>/caveman lite</li>
+                  <li>/caveman full <span class="alt">default</span></li>
+                  <li>/caveman ultra</li>
+                  <li>/caveman wenyan-full</li>
+                </ul>
+              </div>
+              <div class="invoke-col off">
+                <span class="label">Turn it off</span>
+                <ul class="phrases">
+                  <li>stop caveman</li>
+                  <li>normal mode</li>
+                </ul>
+              </div>
+              <p class="invoke-note">
+                <strong>It stays on until you stop it</strong>, across every turn of the session, and it
+                answers in whatever language you asked in: write Portuguese and you get Portuguese
+                caveman. The last two phrases are the only off switches, and it drops back to full prose
+                by itself for security warnings and irreversible-action confirmations without being told.
+              </p>
+            </div>
+            <p class="hint">
+              <code>/caveman</code> is Claude Code's native slash form for a skill. Copilot has no slash
+              invocation for skills, so there the plain phrases carry it. To get a real
+              <code>/caveman</code> in Copilot Chat, add one prompt file:
+            </p>
+            <div class="cmd nodollar" style="margin-top:14px">
+              <pre id="cmd-cavemanprompt"><span class="tok-dim"># .github/prompts/caveman.prompt.md</span>
+Adopt the caveman skill's ultra intensity for the rest of this session.</pre>
+              <button class="copy" data-copy="#cmd-cavemanprompt">Copy</button>
+            </div>
+          </div>
+
+          <div class="two-col lean reveal" style="margin-top:40px">
             <div>
               <span class="label">What ships in the folder</span>
               <ul class="files">
-                <li><code>SKILL.md</code><span>The whole skill — rules, the six intensity levels, auto-clarity exceptions, worked examples. No scripts, no references; this one is pure response style, which is also why it ports to any agent unchanged.</span></li>
+                <li><code>SKILL.md</code><span>The whole skill: rules, the six intensity levels, auto-clarity exceptions, worked examples. No scripts, no references; this one is pure response style, which is also why it ports to any agent unchanged.</span></li>
               </ul>
               <div class="callout" style="margin-top:18px">
-                <strong>Stays on.</strong> The skill is explicit that it persists across turns rather
-                than drifting back after a few replies. Turn it off with "stop caveman" or "normal mode".
+                <strong>Nothing to register.</strong> No hooks, no scripts, no host APIs. Copy the folder
+                and the next session already knows the phrases above.
               </div>
             </div>
             <div>
@@ -610,7 +735,7 @@
                     <tr><td class="name">lite</td><td>Full sentences and articles kept; filler and hedging gone. Professional but tight.</td></tr>
                     <tr><td class="name">full</td><td>Articles dropped, fragments fine, short synonyms. The default.</td></tr>
                     <tr><td class="name">ultra</td><td>Conjunctions stripped where cause and effect stay unambiguous. Each fact stated once.</td></tr>
-                    <tr><td class="name">wenyan</td><td>Classical Chinese, in three depths — up to 80–90% character reduction.</td></tr>
+                    <tr><td class="name">wenyan</td><td>Classical Chinese, in three depths, up to 80-90% character reduction.</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -670,7 +795,8 @@
               <span class="label">A session in fast-forward</span>
               <button class="chip" data-replay>Replay</button>
             </div>
-            <div class="demo">
+            <div class="demo rainy">
+              <div class="rain" data-demo="matrix-rain" aria-hidden="true"><canvas></canvas></div>
               <div class="session">
                 <div class="session-feed" data-feed></div>
                 <div class="tally" data-tally></div>
@@ -684,7 +810,7 @@
             </p>
           </div>
 
-          <div class="two-col reveal" style="margin-top:38px">
+          <div class="two-col lean reveal" style="margin-top:40px">
             <div>
               <span class="label">What ships in the folder</span>
               <ul class="files">
@@ -774,7 +900,7 @@
             </p>
           </div>
 
-          <div class="two-col reveal" style="margin-top:38px">
+          <div class="two-col lean reveal" style="margin-top:40px">
             <div>
               <span class="label">What ships in the folder</span>
               <ul class="files">
@@ -826,7 +952,7 @@
       <!-- ======================= EVERY COMMAND ======================= -->
       <section class="band" id="all">
         <div class="section-head reveal">
-          <span class="eyebrow">06 — appendix</span>
+          <span class="eyebrow">appendix</span>
           <h2>Every command, in one place.</h2>
           <p>For grabbing more than one. Swap the destination for your agent and scope.</p>
         </div>
@@ -878,8 +1004,13 @@
     <div class="shell">
       <div class="foot-word" aria-hidden="true">useful-skills</div>
       <div class="foot-grid">
-        <span>Built by Gilad Meirson · <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">source on GitHub</a></span>
+        <span>Built by Gilad Meirson</span>
         <span>Skills are plain text. Read one before you trust it.</span>
+        <span class="foot-links">
+          <a href="https://github.com/GiladMeirson/useful-skills" target="_blank" rel="noopener">Source</a>
+          <a href="https://github.com/GiladMeirson/useful-skills/issues" target="_blank" rel="noopener">Issues</a>
+          <a href="#top">Back to top</a>
+        </span>
       </div>
     </div>
   </footer>
@@ -889,11 +1020,15 @@
 <script src="js/lib/render3d.js"></script>
 <script src="js/lib/engine2d.js"></script>
 <script src="js/main.js"></script>
+<script src="js/demos/depth.js"></script>
 <script src="js/demos/hero.js"></script>
 <script src="js/demos/atelier.js"></script>
+<script src="js/demos/atelier-light.js"></script>
+<script src="js/demos/atelier-showpiece.js"></script>
 <script src="js/demos/physics.js"></script>
 <script src="js/demos/caveman.js"></script>
 <script src="js/demos/matrix.js"></script>
+<script src="js/demos/matrixrain.js"></script>
 <script src="js/demos/report.js"></script>
 </body>
 </html>

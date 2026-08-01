@@ -16,13 +16,32 @@
 
 /* ------------------------------------------------------- fixed apparatus --- */
 
+/* The ambient depth field. Fixed, at the grid layer, under every rule and every
+   plate, and never interactive. Its brightest mote is dimmer than the hairlines
+   it sits behind: if a reader notices it as an effect it is turned up too far.
+   On a light ground it goes darker rather than lighter, because dust in a lit
+   room is the thing that blocks light, not the thing that emits it. */
+.depth-field {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-grid);
+  pointer-events: none;
+  opacity: .5;
+}
+@media (prefers-color-scheme: light) { .depth-field { opacity: .2; mix-blend-mode: multiply; } }
+:root[data-theme="light"] .depth-field { opacity: .2; mix-blend-mode: multiply; }
+:root[data-theme="dark"]  .depth-field { opacity: .5; mix-blend-mode: normal; }
+@media (max-width: 700px) { .depth-field { display: none; } }
+
 /* Four hairlines behind everything. They are the reason the layout reads as a
    system rather than a stack of boxes — every rule and every plate edge lands
    on one of them. */
 .apparatus {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: var(--z-grid);
   pointer-events: none;
 }
 .apparatus .cols {
@@ -35,7 +54,7 @@
 }
 .apparatus .cols span {
   border-left: 1px solid var(--rule-soft);
-  opacity: .55;
+  opacity: .5;
 }
 .apparatus .cols span:first-child { border-left: 0; }
 @media (max-width: 700px) { .apparatus { display: none; } }
@@ -43,7 +62,7 @@
 /* Crop marks. Print-craft signal, four corners, hairline only. */
 .crop {
   position: fixed;
-  z-index: 61;
+  z-index: var(--z-crop);
   width: 13px; height: 13px;
   pointer-events: none;
   border: 0 solid var(--ink-4);
@@ -61,24 +80,24 @@
   height: 2px;
   width: 0;
   background: var(--signal);
-  z-index: 70;
+  z-index: var(--z-progress);
   pointer-events: none;
   transition: width .08s linear;
 }
 
 /* ----------------------------------------------------------- reticle ---- */
-/* A crosshair that replaces the pointer on fine-pointer devices. Purely
-   additive: the native cursor stays as the fallback until JS confirms it can
-   track, and it is switched off entirely for coarse pointers. */
+/* A crosshair that trails the pointer on fine-pointer devices. Purely additive:
+   the native cursor stays as the fallback until JS confirms it can track, and it
+   is switched off entirely for coarse pointers. */
 .reticle {
   position: fixed;
   top: 0; left: 0;
   width: 26px; height: 26px;
   margin: -13px 0 0 -13px;
-  z-index: 9999;
+  z-index: var(--z-reticle);
   pointer-events: none;
   opacity: 0;
-  transition: opacity .2s var(--ease-out), transform .12s var(--ease-out);
+  transition: opacity .2s var(--ease-out);
   will-change: transform;
 }
 .reticle::before,
@@ -96,8 +115,8 @@
   border-radius: 50%;
   transition: inset .18s var(--ease-spring), opacity .18s var(--ease-out);
 }
-body.has-reticle .reticle { opacity: .85; }
-body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
+body.has-reticle .reticle { opacity: .8; }
+body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .45; }
 @media (pointer: coarse) { .reticle { display: none; } }
 
 /* --------------------------------------------------------- index rail ---- */
@@ -108,16 +127,23 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
   position: fixed;
   top: 0; left: 0;
   height: 100vh;
-  width: 52px;
-  z-index: 55;
+  height: 100dvh;
+  width: 54px;
+  z-index: var(--z-rail);
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 26px;
+  /* The rail has to fit a short laptop viewport as well as a tall monitor, and
+     a fixed gap overflows the first one and strands the second. */
+  gap: clamp(10px, 2.4vh, 26px);
+  /* Clears the masthead, which is fixed at a higher layer and would otherwise
+     sit on top of the first two characters of the rail's cap. */
+  padding: 68px 0 22px;
+  overflow: hidden;
   border-right: 1px solid var(--rule-soft);
   background: color-mix(in srgb, var(--bg) 55%, transparent);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(7px);
 }
 @media (min-width: 1340px) { .index-rail { display: flex; } }
 
@@ -145,35 +171,46 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
 .index-rail a::before {
   content: "";
   width: 1px;
-  height: 14px;
+  /* Fixed slot, scaled rather than grown: animating the height changes the
+     rail's total content height, which pushed the whole column out of centre
+     the moment a link went active. */
+  height: 32px;
   background: currentColor;
-  transition: height .28s var(--ease-out);
+  transform: scaleY(.44);
+  transition: transform .28s var(--ease-out);
 }
 .index-rail a:hover { color: var(--ink-2); }
 .index-rail a.active { color: var(--signal); }
-.index-rail a.active::before { height: 30px; }
+.index-rail a.active::before { transform: scaleY(1); }
 
 /* ------------------------------------------------------------ masthead --- */
 .masthead {
   position: fixed;
   top: 0; left: 0; right: 0;
-  z-index: 60;
+  z-index: var(--z-head);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 13px var(--gutter);
+  height: 56px;
+  padding: 0 var(--gutter);
   font-family: var(--mono);
   font-size: var(--fs-xs);
   letter-spacing: .06em;
   color: var(--ink-2);
-  background: color-mix(in srgb, var(--bg) 78%, transparent);
-  backdrop-filter: blur(16px) saturate(130%);
+  /* Opaque enough to stand on its own. A translucent bar that relies on the
+     backdrop filter to stay readable turns into whatever scrolled under it, and
+     a dark code block passing beneath was enough to lose the nav entirely. */
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(18px) saturate(125%);
   border-bottom: 1px solid transparent;
   transition: border-color .3s var(--ease-out), background .3s var(--ease-out);
 }
-.masthead.stuck { border-bottom-color: var(--rule-soft); }
-@media (min-width: 1340px) { .masthead { padding-left: calc(52px + var(--gutter)); } }
+.masthead.stuck {
+  border-bottom-color: var(--rule-soft);
+  background: color-mix(in srgb, var(--bg) 97%, transparent);
+}
+@media (min-width: 1340px) { .masthead { padding-left: calc(54px + var(--gutter)); } }
 
 .masthead .mark {
   display: inline-flex;
@@ -181,7 +218,7 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
   gap: 9px;
   color: var(--ink);
   text-transform: uppercase;
-  letter-spacing: .14em;
+  letter-spacing: .16em;
   font-weight: 600;
 }
 .masthead .mark .pip {
@@ -189,17 +226,31 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
   background: var(--signal);
   box-shadow: 0 0 0 3px var(--signal-glow);
 }
-.masthead nav { display: flex; gap: 4px; align-items: center; }
+.masthead nav { display: flex; gap: 2px; align-items: center; }
 .masthead nav a {
+  position: relative;
   color: var(--ink-2);
   text-decoration: none;
   border: 0;
   padding: 6px 10px;
   text-transform: uppercase;
   letter-spacing: .12em;
-  transition: color .16s var(--ease-out), background .16s var(--ease-out);
+  transition: color .16s var(--ease-out);
 }
-.masthead nav a:hover { color: var(--signal); background: var(--signal-glow); }
+/* Underline grows from the left rather than a background block appearing: the
+   page has no other filled hover state at this size. */
+.masthead nav a::after {
+  content: "";
+  position: absolute;
+  left: 10px; right: 10px; bottom: 2px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .24s var(--ease-out);
+}
+.masthead nav a:hover { color: var(--signal); }
+.masthead nav a:hover::after { transform: scaleX(1); }
 @media (max-width: 760px) { .masthead nav .hide-sm { display: none; } }
 
 .theme-toggle {
@@ -211,7 +262,7 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
   letter-spacing: .1em;
   text-transform: uppercase;
   padding: 7px 10px;
-  margin-left: 6px;
+  margin-left: 8px;
   cursor: pointer;
   transition: border-color .16s var(--ease-out), color .16s var(--ease-out);
 }
@@ -220,7 +271,7 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
 /* ---------------------------------------------------------------- hero --- */
 .hero {
   position: relative;
-  min-height: min(100svh, 900px);
+  min-height: min(94svh, 880px);
   display: flex;
   align-items: flex-end;
   overflow: hidden;
@@ -231,21 +282,24 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  z-index: var(--z-grid);
 }
+/* Two veils, not one: a horizontal wash that clears the left column for type,
+   and a vertical wash that lands the composition on the rule at the bottom. */
 .hero-veil {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(94deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 84%, transparent) 34%, transparent 66%),
-    linear-gradient(0deg, var(--bg) 0%, transparent 38%);
+    linear-gradient(94deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 86%, transparent) 33%, transparent 64%),
+    linear-gradient(0deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 30%, transparent) 34%, transparent 58%),
+    radial-gradient(120% 78% at 68% 42%, transparent 40%, color-mix(in srgb, var(--bg) 62%, transparent) 100%);
 }
 @media (max-width: 900px) {
   .hero-veil {
     background: linear-gradient(180deg,
-      color-mix(in srgb, var(--bg) 62%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 60%, transparent) 0%,
       color-mix(in srgb, var(--bg) 90%, transparent) 46%,
       var(--bg) 88%);
   }
@@ -255,12 +309,12 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
    hero flush against the viewport edge on narrow screens. */
 .hero-inner {
   position: relative;
-  z-index: 2;
+  z-index: var(--z-content);
   width: 100%;
-  padding-top: 128px;
-  padding-bottom: clamp(36px, 6vw, 74px);
+  padding-top: 104px;
+  padding-bottom: clamp(38px, 6vw, 78px);
 }
-@media (min-width: 1340px) { .hero-inner { padding-left: calc(52px + var(--gutter)); } }
+@media (min-width: 1340px) { .hero-inner { padding-left: calc(54px + var(--gutter)); } }
 
 .hero-meta {
   display: flex;
@@ -268,30 +322,54 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
   gap: 8px 22px;
   align-items: center;
   font: 500 var(--fs-xs)/1 var(--mono);
-  letter-spacing: .18em;
+  letter-spacing: .2em;
   text-transform: uppercase;
   color: var(--ink-3);
   padding-bottom: 14px;
-  margin-bottom: clamp(20px, 4vw, 38px);
+  margin-bottom: clamp(20px, 4vw, 40px);
   border-bottom: 1px solid var(--rule);
 }
 .hero-meta .now { color: var(--signal); }
 
 .hero-title {
   font-size: var(--fs-hero);
-  line-height: .84;
-  letter-spacing: -0.055em;
+  font-weight: 800;
+  /* Condensed. A 74% width axis is what lets a line this large stay on one line
+     and still have colour on the page rather than being all counter. */
+  font-variation-settings: "wdth" var(--wd-hero);
+  line-height: .87;
+  letter-spacing: -0.03em;
+  /* Condensed plus negative tracking closes word gaps until FOR YOUR reads as
+     one word. The space has to be bought back explicitly. */
+  word-spacing: .1em;
   text-transform: uppercase;
-  margin-bottom: clamp(20px, 3vw, 34px);
+  margin-bottom: clamp(22px, 3vw, 36px);
   text-wrap: initial;
 }
-.hero-title .line { display: block; }
+/* Each line is a window; the word inside it rises through. The padding pair
+   keeps the stroked line's overshoot from being clipped by the window. */
+.hero-title .line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: .06em;
+  margin-bottom: -.06em;
+}
+.hero-title .line > span {
+  display: block;
+  transform: translateY(102%);
+  animation: lineRise 1.05s var(--ease-reveal) forwards;
+}
+.hero-title .line:nth-child(2) > span { animation-delay: .1s; }
+@keyframes lineRise { to { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-title .line > span { transform: none; animation: none; }
+}
 /* Outline only where the browser can actually stroke text — otherwise a
    transparent fill would render the line invisible. */
 @supports (-webkit-text-stroke: 1px currentColor) {
-  .hero-title .line.hollow {
+  .hero-title .line.hollow > span {
     color: transparent;
-    -webkit-text-stroke: clamp(1px, .13vw, 2px) var(--ink);
+    -webkit-text-stroke: clamp(1px, .14vw, 2.5px) var(--ink);
   }
 }
 .hero-title .stop { color: var(--signal); -webkit-text-stroke: 0; }
@@ -299,46 +377,66 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
 .hero-lede {
   font-size: var(--fs-lg);
   color: var(--ink-2);
-  max-width: 46ch;
-  margin-bottom: clamp(22px, 3vw, 32px);
+  max-width: 48ch;
+  margin-bottom: clamp(24px, 3vw, 34px);
 }
 .hero-lede em { font-family: var(--serif); font-style: italic; color: var(--ink); }
 
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 
-.hero-spec {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1px;
-  margin-top: clamp(30px, 5vw, 56px);
-  border-top: 1px solid var(--rule);
-  border-left: 1px solid var(--rule);
-  background: var(--rule);
-  max-width: 720px;
+/* Fade the whole block up once, after the headline lines have started. Anything
+   more granular here fights the headline for attention. */
+.hero-meta, .hero-lede, .hero-actions {
+  animation: heroIn .9s var(--ease-reveal) both;
 }
-@media (max-width: 620px) { .hero-spec { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.hero-spec div {
+.hero-meta   { animation-delay: .05s; }
+.hero-lede   { animation-delay: .42s; }
+.hero-actions{ animation-delay: .52s; }
+@keyframes heroIn { from { opacity: 0; transform: translateY(14px); } }
+
+/* ------------------------------------------------------------ spec bar --- */
+/* Lifted out of the hero. Four numbers are a specification, not a value
+   proposition, and inside the hero they were a fifth text element competing
+   with the headline. On their own rule they read as the plate's colophon. */
+.specbar {
+  position: relative;
+  z-index: var(--z-content);
   background: var(--bg);
-  padding: 13px 14px;
-  border-right: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
 }
-.hero-spec dt {
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+@media (max-width: 620px) { .spec-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.spec-grid > div {
+  padding: 18px 20px 20px;
+  border-left: 1px solid var(--rule-soft);
+}
+.spec-grid > div:first-child { border-left: 0; padding-left: 0; }
+@media (max-width: 620px) {
+  .spec-grid > div:nth-child(odd)  { border-left: 0; padding-left: 0; }
+  .spec-grid > div:nth-child(n+3)  { border-top: 1px solid var(--rule-soft); }
+}
+.spec-grid dt {
   font: 500 var(--fs-xs)/1 var(--mono);
-  letter-spacing: .14em;
+  letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--ink-3);
-  margin-bottom: 7px;
+  margin-bottom: 10px;
 }
-.hero-spec dd {
+.spec-grid dd {
   margin: 0;
   font-family: var(--display);
-  font-weight: 800;
-  font-size: var(--fs-xl);
+  font-weight: 780;
+  font-variation-settings: "wdth" var(--wd-tight);
+  font-size: var(--fs-2xl);
+  line-height: 1;
   letter-spacing: -0.03em;
   color: var(--ink);
 }
-.hero-spec dd .u { color: var(--signal); }
+.spec-grid dd .u { color: var(--signal); }
 
 /* --------------------------------------------------------------- ticker -- */
 .ticker {
@@ -348,16 +446,19 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
   background: var(--bg-2);
   padding: 11px 0;
   font: 500 var(--fs-xs)/1 var(--mono);
-  letter-spacing: .22em;
+  letter-spacing: .24em;
   text-transform: uppercase;
   color: var(--ink-3);
-  z-index: 2;
+  z-index: var(--z-content);
+  /* Fade both ends into the ground so the strip reads as continuous rather than
+     as text that stops at the viewport edge. */
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
 }
 .ticker-track {
   display: flex;
   width: max-content;
   gap: 0;
-  animation: ticker 46s linear infinite;
+  animation: ticker 52s linear infinite;
 }
 .ticker-track span { padding: 0 26px; white-space: nowrap; }
 .ticker-track span b { color: var(--signal); font-weight: 500; }
@@ -366,13 +467,13 @@ body.has-reticle.reticle-hot .reticle .ring { inset: 0; opacity: .5; }
 @media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }
 
 /* ------------------------------------------------------------ main flow -- */
-main { position: relative; z-index: 2; }
-@media (min-width: 1340px) { main .shell { padding-left: calc(52px + var(--gutter)); } }
+main { position: relative; z-index: var(--z-content); }
+@media (min-width: 1340px) { main .shell { padding-left: calc(54px + var(--gutter)); } }
 
 .column { max-width: 900px; min-width: 0; }
 
 section.band {
-  padding: clamp(58px, 9vw, 118px) 0;
+  padding: clamp(64px, 9.5vw, 132px) 0 clamp(72px, 10vw, 140px);
   border-bottom: 1px solid var(--rule);
 }
 section.band:last-of-type { border-bottom: 0; }
@@ -380,24 +481,27 @@ section.band:last-of-type { border-bottom: 0; }
 /* ---------------------------------------------------------------- plate -- */
 .plate {
   position: relative;
-  padding: clamp(64px, 10vw, 130px) 0;
+  padding: clamp(70px, 10vw, 140px) 0 clamp(78px, 11vw, 150px);
   border-bottom: 1px solid var(--rule);
   scroll-margin-top: 64px;
 }
 .plate-ord {
   position: absolute;
-  top: clamp(30px, 5vw, 58px);
-  left: calc(-1 * clamp(6px, 1.6vw, 26px));
-  z-index: 0;
+  top: clamp(26px, 4.6vw, 54px);
+  left: calc(-1 * clamp(8px, 2.2vw, 40px));
+  z-index: var(--z-grid);
   font-family: var(--display);
   font-weight: 800;
+  /* Narrowest the axis goes. The ordinal is a watermark, and a condensed
+     numeral leaves the reading column more air than a normal-width one. */
+  font-variation-settings: "wdth" 62;
   font-size: var(--fs-numeral);
-  line-height: .74;
-  letter-spacing: -0.06em;
+  line-height: .72;
+  letter-spacing: -0.05em;
   color: transparent;
   pointer-events: none;
   user-select: none;
-  opacity: .5;
+  opacity: .45;
 }
 @supports (-webkit-text-stroke: 1px currentColor) {
   .plate-ord { -webkit-text-stroke: 1px var(--rule); }
@@ -405,18 +509,36 @@ section.band:last-of-type { border-bottom: 0; }
 @supports not (-webkit-text-stroke: 1px currentColor) {
   .plate-ord { color: var(--rule-soft); }
 }
-@media (max-width: 760px) { .plate-ord { opacity: .28; } }
+/* Scroll-driven, not scroll-listened: the ordinal drifts against the plate as
+   it passes, which is the only parallax on the page and the reason the
+   watermark reads as sitting behind the paper rather than printed on it.
+   Browsers without view() timelines simply get the static position. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .plate-ord {
+      animation: ordDrift linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+    @keyframes ordDrift {
+      from { transform: translateY(56px); opacity: .16; }
+      50%  { opacity: .5; }
+      to   { transform: translateY(-56px); opacity: .16; }
+    }
+  }
+}
+@media (max-width: 760px) { .plate-ord { opacity: .22; } }
 
-.plate-head { position: relative; z-index: 1; margin-bottom: clamp(26px, 4vw, 44px); }
+.plate-head { position: relative; z-index: 1; margin-bottom: clamp(28px, 4vw, 46px); }
 .plate-cat {
   display: flex;
   align-items: center;
   gap: 12px;
   font: 500 var(--fs-xs)/1 var(--mono);
-  letter-spacing: .22em;
+  letter-spacing: .24em;
   text-transform: uppercase;
   color: var(--signal);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 .plate-cat::after {
   content: "";
@@ -424,11 +546,13 @@ section.band:last-of-type { border-bottom: 0; }
   height: 1px;
   background: var(--rule);
 }
-.plate-cat .of { color: var(--ink-3); letter-spacing: .14em; }
+.plate-cat .of { color: var(--ink-3); letter-spacing: .16em; }
 .plate-head h2 {
   font-size: var(--fs-4xl);
-  letter-spacing: -0.045em;
-  margin-bottom: 14px;
+  font-weight: 800;
+  font-variation-settings: "wdth" 82;
+  letter-spacing: -0.038em;
+  margin-bottom: 16px;
 }
 .plate-head .tagline {
   color: var(--ink-2);
@@ -441,27 +565,32 @@ section.band:last-of-type { border-bottom: 0; }
    own centring margin leaves room — otherwise the bleed is what pushes the page
    sideways. */
 .bleed { width: 100%; }
-@media (min-width: 1480px) { .bleed { width: calc(100% + 120px); } }
+@media (min-width: 1480px) { .bleed { width: calc(100% + 132px); } }
 
 /* --------------------------------------------------------------- footer -- */
 footer.site-foot {
   position: relative;
-  z-index: 2;
+  z-index: var(--z-content);
   border-top: 1px solid var(--rule);
-  padding: clamp(48px, 7vw, 84px) 0 clamp(40px, 6vw, 70px);
+  padding: clamp(54px, 7.5vw, 92px) 0 clamp(40px, 6vw, 70px);
   color: var(--ink-2);
   font-size: var(--fs-sm);
+  overflow: hidden;
 }
 .foot-word {
   font-family: var(--display);
   font-weight: 800;
-  font-size: clamp(2.6rem, 13vw, 11rem);
-  line-height: .8;
-  letter-spacing: -0.06em;
+  font-variation-settings: "wdth" 68;
+  /* Sized to land inside the column at the widest breakpoint. A nowrap wordmark
+     one size too large stops reading as a bleed and starts reading as overflow. */
+  font-size: clamp(2.3rem, 10.8vw, 9.5rem);
+  line-height: .78;
+  letter-spacing: -0.045em;
   text-transform: uppercase;
   color: transparent;
-  margin-bottom: clamp(26px, 4vw, 48px);
+  margin-bottom: clamp(28px, 4vw, 52px);
   user-select: none;
+  white-space: nowrap;
 }
 @supports (-webkit-text-stroke: 1px currentColor) {
   .foot-word { -webkit-text-stroke: 1px var(--rule); }
@@ -483,5 +612,6 @@ footer.site-foot {
   text-transform: uppercase;
   color: var(--ink-3);
 }
-.foot-grid a { color: var(--ink-2); }
+.foot-grid a { color: var(--ink-2); border-bottom-color: var(--rule); }
 .foot-grid a:hover { color: var(--signal); }
+.foot-links { display: flex; flex-wrap: wrap; gap: 8px 20px; }

@@ -9,67 +9,90 @@
  *
  * Rules of the system:
  *   - radius is 0 (2px maximum, and only where a control must read as pressable)
- *   - one accent. --signal points at things. --steel and --acid are data, never
- *     decoration
+ *   - one accent. --signal points at things. --steel and --sage are data, never
+ *     decoration, and both sit close enough to the neutrals that they read as
+ *     tinted grey until you look for them
  *   - every component styles through these variables, so the light theme is a
  *     token swap and never a second set of rules
+ *
+ * On the accent: it used to be a full-saturation #ff5a1f, which won every
+ * contest on the page including the ones it was not entered in. Ember at ~72%
+ * saturation still carries every pointing job and stops competing with the
+ * demos, which are the actual illustrations.
  * ========================================================================= */
 
 :root {
-  /* ---- ground ---- */
-  --bg:        #0a0a0c;
-  --bg-2:      #0f0f13;
-  --bg-3:      #16161c;
-  --bg-4:      #1e1e26;
-  --rule:      #2b2b36;
-  --rule-soft: #1c1c24;
+  color-scheme: dark;
+
+  /* ---- ground. Cooler and one step darker than the ink it carries, so the
+     bone text reads warm by comparison rather than by pigment. ---- */
+  --bg:        #08080b;
+  --bg-2:      #0c0c11;
+  --bg-3:      #121218;
+  --bg-4:      #1a1a21;
+  --rule:      #262630;
+  --rule-soft: #18181f;
 
   /* ---- ink ---- */
-  --ink:       #f0ece4;
-  --ink-2:     #a8a29a;
-  --ink-3:     #6f6a64;
-  --ink-4:     #4a4640;
+  --ink:       #ebe8e2;
+  --ink-2:     #a29e97;
+  --ink-3:     #6d6a65;
+  --ink-4:     #474541;
 
   /* ---- signal ---- */
-  --signal:      #ff5a1f;
-  --signal-hi:   #ff9166;
-  --signal-dim:  #b8410f;
-  --signal-glow: rgba(255, 90, 31, .13);
-  --signal-edge: rgba(255, 90, 31, .34);
-  --on-signal:   #140702;
+  --signal:      #df6a41;
+  --signal-hi:   #f18e68;
+  --signal-dim:  #9c4726;
+  --signal-glow: rgba(223, 106, 65, .10);
+  --signal-edge: rgba(223, 106, 65, .30);
+  --on-signal:   #120602;
 
-  /* ---- data colours ---- */
-  --steel: #7fa8ff;
-  --acid:  #b9f24a;
+  /* ---- data colours. Chromatic enough to separate from the ink, quiet enough
+     that a page full of them still reads as one palette. ---- */
+  --steel: #8b9cb8;
+  --sage:  #97b184;
 
   /* ---- code ---- */
-  --code-bg:   #07070a;
-  --code-ink:  #ded9d1;
+  --code-bg:   #06060a;
+  --code-ink:  #d9d5cd;
 
-  /* ---- elevation. Sparingly: a plate book has no drop shadows. ---- */
-  --shadow-sm: 0 1px 0 rgba(0, 0, 0, .5);
-  --shadow-md: 0 24px 60px -34px rgba(0, 0, 0, .95);
+  /* ---- elevation. Tinted with the ground, never neutral black: a plate book
+     has almost no drop shadow, and what little it has is the paper's own. ---- */
+  --shadow-sm: 0 1px 0 rgba(4, 4, 8, .6);
+  --shadow-md: 0 26px 64px -36px rgba(3, 3, 7, .96);
+  --shadow-lift: 0 1px 0 rgba(255, 255, 255, .04) inset;
 
-  /* ---- type ---- */
-  --display: "Inter", "Segoe UI Variable Display", "Segoe UI", -apple-system,
-             BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-  --sans:    "Inter", "Segoe UI Variable Text", "Segoe UI", -apple-system,
-             BlinkMacSystemFont, ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
+  /* ---- type ----
+     One variable grotesque across display and text, one variable mono across
+     every label, number and command. The width axis is what makes that enough:
+     the hero and the plate ordinals run condensed, running text runs normal. */
+  --display: "Archivo Variable", "Segoe UI Variable Display", "Segoe UI",
+             -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --sans:    "Archivo Variable", "Segoe UI Variable Text", "Segoe UI",
+             -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui,
+             "Helvetica Neue", Arial, sans-serif;
   --serif:   "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
              Georgia, "Times New Roman", serif;
-  --mono:    ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Menlo,
-             Consolas, "Liberation Mono", monospace;
+  --mono:    "JetBrains Mono Variable", ui-monospace, "Cascadia Code", "SF Mono",
+             Menlo, Consolas, "Liberation Mono", monospace;
 
-  --fs-xs:   .72rem;
-  --fs-sm:   .82rem;
-  --fs-base: .95rem;
+  /* Width settings, named so a component asks for a voice rather than a number. */
+  --wd-hero:  74;   /* condensed: headline masses */
+  --wd-tight: 88;   /* section heads */
+  --wd-norm: 100;   /* running text */
+
+  --fs-xs:   .715rem;
+  --fs-sm:   .805rem;
+  --fs-base: .945rem;
   --fs-lg:   1.06rem;
-  --fs-xl:   1.28rem;
-  --fs-2xl:  1.65rem;
-  --fs-3xl:  clamp(1.9rem, 3.6vw, 2.9rem);
-  --fs-4xl:  clamp(2.6rem, 6.4vw, 4.6rem);
-  --fs-hero: clamp(3rem, 11.5vw, 9.5rem);
-  --fs-numeral: clamp(6rem, 17vw, 15rem);
+  --fs-xl:   1.3rem;
+  --fs-2xl:  1.7rem;
+  --fs-3xl:  clamp(2rem, 3.9vw, 3.15rem);
+  --fs-4xl:  clamp(2.7rem, 6.8vw, 5rem);
+  /* Sized so the longest hero line still sets on one line inside the column at
+     every width. A headline that wraps to four lines is a font-size error. */
+  --fs-hero: clamp(2.9rem, 8.1vw, 7.3rem);
+  --fs-numeral: clamp(6rem, 16vw, 14rem);
 
   /* ---- measure & rhythm ---- */
   --measure: 62ch;
@@ -80,6 +103,19 @@
 
   --ease-out: cubic-bezier(.16, .84, .32, 1);
   --ease-spring: cubic-bezier(.2, 1.3, .35, 1);
+  /* One long curve for anything that reveals: slow start, no visible landing. */
+  --ease-reveal: cubic-bezier(.16, 1, .3, 1);
+
+  /* ---- layer scale. Every z-index on the page is one of these. ---- */
+  --z-grid:    0;
+  --z-content: 2;
+  --z-rail:    55;
+  --z-head:    60;
+  --z-crop:    61;
+  --z-progress: 70;
+  --z-grain:   80;
+  --z-reticle: 90;
+  --z-skip:    100;
 }
 
 /* ---------------------------------------------------------------- light ---
@@ -87,86 +123,99 @@
  * Code blocks stay dark in both themes on purpose — a terminal is a terminal.
  */
 @media (prefers-color-scheme: light) {
+  :root { color-scheme: light; }
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+
+/* The light palette is written once and applied from two selectors, because a
+   media query cannot be re-run for a manual toggle and a manual toggle must not
+   be overridden by the system. */
+@media (prefers-color-scheme: light) {
   :root {
-    --bg:        #f1eee7;
-    --bg-2:      #ffffff;
-    --bg-3:      #f7f5f0;
-    --bg-4:      #e9e5dc;
-    --rule:      #d3cdc1;
-    --rule-soft: #e3ded4;
+    --bg:        #f2efe9;
+    --bg-2:      #fbfaf7;
+    --bg-3:      #f7f4ee;
+    --bg-4:      #e9e5dd;
+    --rule:      #d5cfc4;
+    --rule-soft: #e4dfd5;
 
-    --ink:       #131318;
-    --ink-2:     #55524c;
-    --ink-3:     #8b867e;
-    --ink-4:     #a9a49b;
+    --ink:       #16161a;
+    --ink-2:     #56534d;
+    --ink-3:     #8a857d;
+    --ink-4:     #a8a39a;
 
-    --signal:      #d13c06;
-    --signal-hi:   #a52d02;
-    --signal-dim:  #ef8055;
-    --signal-glow: rgba(209, 60, 6, .08);
-    --signal-edge: rgba(209, 60, 6, .28);
+    --signal:      #bf4a1c;
+    --signal-hi:   #98380f;
+    --signal-dim:  #e08a68;
+    --signal-glow: rgba(191, 74, 28, .07);
+    --signal-edge: rgba(191, 74, 28, .26);
     --on-signal:   #fff6f1;
 
-    --steel: #2a56cc;
-    --acid:  #4c7810;
+    --steel: #4a5f80;
+    --sage:  #4f6b3c;
 
-    --shadow-sm: 0 1px 0 rgba(20, 18, 14, .06);
-    --shadow-md: 0 24px 50px -36px rgba(20, 18, 14, .45);
+    --shadow-sm: 0 1px 0 rgba(38, 32, 24, .05);
+    --shadow-md: 0 26px 54px -38px rgba(38, 32, 24, .4);
+    --shadow-lift: 0 1px 0 rgba(255, 255, 255, .7) inset;
   }
 }
 
 :root[data-theme="light"] {
-  --bg:        #f1eee7;
-  --bg-2:      #ffffff;
-  --bg-3:      #f7f5f0;
-  --bg-4:      #e9e5dc;
-  --rule:      #d3cdc1;
-  --rule-soft: #e3ded4;
+  --bg:        #f2efe9;
+  --bg-2:      #fbfaf7;
+  --bg-3:      #f7f4ee;
+  --bg-4:      #e9e5dd;
+  --rule:      #d5cfc4;
+  --rule-soft: #e4dfd5;
 
-  --ink:       #131318;
-  --ink-2:     #55524c;
-  --ink-3:     #8b867e;
-  --ink-4:     #a9a49b;
+  --ink:       #16161a;
+  --ink-2:     #56534d;
+  --ink-3:     #8a857d;
+  --ink-4:     #a8a39a;
 
-  --signal:      #d13c06;
-  --signal-hi:   #a52d02;
-  --signal-dim:  #ef8055;
-  --signal-glow: rgba(209, 60, 6, .08);
-  --signal-edge: rgba(209, 60, 6, .28);
+  --signal:      #bf4a1c;
+  --signal-hi:   #98380f;
+  --signal-dim:  #e08a68;
+  --signal-glow: rgba(191, 74, 28, .07);
+  --signal-edge: rgba(191, 74, 28, .26);
   --on-signal:   #fff6f1;
 
-  --steel: #2a56cc;
-  --acid:  #4c7810;
+  --steel: #4a5f80;
+  --sage:  #4f6b3c;
 
-  --shadow-sm: 0 1px 0 rgba(20, 18, 14, .06);
-  --shadow-md: 0 24px 50px -36px rgba(20, 18, 14, .45);
+  --shadow-sm: 0 1px 0 rgba(38, 32, 24, .05);
+  --shadow-md: 0 26px 54px -38px rgba(38, 32, 24, .4);
+  --shadow-lift: 0 1px 0 rgba(255, 255, 255, .7) inset;
 }
 
 :root[data-theme="dark"] {
-  --bg:        #0a0a0c;
-  --bg-2:      #0f0f13;
-  --bg-3:      #16161c;
-  --bg-4:      #1e1e26;
-  --rule:      #2b2b36;
-  --rule-soft: #1c1c24;
+  --bg:        #08080b;
+  --bg-2:      #0c0c11;
+  --bg-3:      #121218;
+  --bg-4:      #1a1a21;
+  --rule:      #262630;
+  --rule-soft: #18181f;
 
-  --ink:       #f0ece4;
-  --ink-2:     #a8a29a;
-  --ink-3:     #6f6a64;
-  --ink-4:     #4a4640;
+  --ink:       #ebe8e2;
+  --ink-2:     #a29e97;
+  --ink-3:     #6d6a65;
+  --ink-4:     #474541;
 
-  --signal:      #ff5a1f;
-  --signal-hi:   #ff9166;
-  --signal-dim:  #b8410f;
-  --signal-glow: rgba(255, 90, 31, .13);
-  --signal-edge: rgba(255, 90, 31, .34);
-  --on-signal:   #140702;
+  --signal:      #df6a41;
+  --signal-hi:   #f18e68;
+  --signal-dim:  #9c4726;
+  --signal-glow: rgba(223, 106, 65, .10);
+  --signal-edge: rgba(223, 106, 65, .30);
+  --on-signal:   #120602;
 
-  --steel: #7fa8ff;
-  --acid:  #b9f24a;
+  --steel: #8b9cb8;
+  --sage:  #97b184;
 
-  --shadow-sm: 0 1px 0 rgba(0, 0, 0, .5);
-  --shadow-md: 0 24px 60px -34px rgba(0, 0, 0, .95);
+  --shadow-sm: 0 1px 0 rgba(4, 4, 8, .6);
+  --shadow-md: 0 26px 64px -36px rgba(3, 3, 7, .96);
+  --shadow-lift: 0 1px 0 rgba(255, 255, 255, .04) inset;
 }
 
 /* ------------------------------------------------------- legacy aliases ---
@@ -180,6 +229,7 @@
   --faint:  var(--ink-3);
   --line:   var(--rule);
   --line-soft: var(--rule-soft);
+  --acid:   var(--sage);
   --brass:  var(--signal);
   --brass-hi: var(--signal-hi);
   --brass-dim: var(--signal-dim);

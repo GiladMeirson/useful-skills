@@ -196,8 +196,61 @@ window.Render3D = (function () {
     ctx.restore();
   }
 
+  /* ------------------------------------------------------------ camera ----
+   *
+   * drawSolid above places an object at a screen coordinate and fakes depth
+   * with a single scalar. That is enough for five shapes on a plane and not
+   * enough for a volume: to get a sense of space you need objects that actually
+   * live at a z, a camera that can move through them, and a projection where
+   * something close to the lens moves faster across the frame than something
+   * far from it. This is that projection - yaw and pitch about the camera, then
+   * a perspective divide - and it is what the hero field and the ambient layer
+   * are both built on.
+   *
+   * Returns null for anything at or behind the near plane. Callers must handle
+   * that: dividing by a z of zero produces Infinity, and a path with Infinity in
+   * it silently poisons every subsequent fill on the context.
+   */
+  function camera(focal) {
+    return { x: 0, y: 0, z: 0, yaw: 0, pitch: 0, focal: focal || 900, near: 60 };
+  }
+
+  function project(p, cam, w, h) {
+    var dx = p.x - cam.x, dy = p.y - cam.y, dz = p.z - cam.z;
+    var cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw);
+    var x = dx * cy - dz * sy;
+    var z = dx * sy + dz * cy;
+    var cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+    var y = dy * cp - z * sp;
+    z = dy * sp + z * cp;
+    if (z < cam.near) return null;
+    var f = cam.focal / z;
+    return { x: w * 0.5 + x * f, y: h * 0.5 + y * f, z: z, f: f };
+  }
+
+  /* A bokeh sprite: one radial gradient baked into a small canvas so a field of
+   * a hundred out-of-focus points costs a hundred drawImage calls instead of a
+   * hundred gradient allocations per frame. `soft` runs 0 (a point) to 1 (a
+   * fully defocused disc), which is what depth of field actually looks like. */
+  function bokehSprite(soft, rgb, size) {
+    size = size || 64;
+    var c = document.createElement('canvas');
+    c.width = c.height = size;
+    var x = c.getContext('2d');
+    var m = size / 2;
+    var g = x.createRadialGradient(m, m, 0, m, m, m);
+    var core = 0.04 + soft * 0.52;
+    g.addColorStop(0, 'rgba(' + rgb + ',' + (1 - soft * 0.62).toFixed(3) + ')');
+    g.addColorStop(core, 'rgba(' + rgb + ',' + (0.5 - soft * 0.34).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(' + rgb + ',0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, size, size);
+    return c;
+  }
+
   return {
     solids: SOLIDS, drawSolid: drawSolid,
+    camera: camera, project: project, bokehSprite: bokehSprite,
     v3: v3, norm3: norm3, rotatePoint: rotatePoint
   };
 })();
