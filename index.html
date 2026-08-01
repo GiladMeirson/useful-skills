@@ -466,11 +466,11 @@ canvas { display: block; }
   height: 100%;
   z-index: var(--z-grid);
   pointer-events: none;
-  opacity: .5;
+  opacity: .78;
 }
-@media (prefers-color-scheme: light) { .depth-field { opacity: .2; mix-blend-mode: multiply; } }
-:root[data-theme="light"] .depth-field { opacity: .2; mix-blend-mode: multiply; }
-:root[data-theme="dark"]  .depth-field { opacity: .5; mix-blend-mode: normal; }
+@media (prefers-color-scheme: light) { .depth-field { opacity: .34; mix-blend-mode: multiply; } }
+:root[data-theme="light"] .depth-field { opacity: .34; mix-blend-mode: multiply; }
+:root[data-theme="dark"]  .depth-field { opacity: .78; mix-blend-mode: normal; }
 @media (max-width: 700px) { .depth-field { display: none; } }
 
 /* Four hairlines behind everything. They are the reason the layout reads as a
@@ -2179,6 +2179,7 @@ table.grid td .mark-note { display: block; color: var(--ink-3); font-size: var(-
               <div class="seg" data-group="subject" role="group" aria-label="Subject">
                 <button type="button" class="chip" data-subject="eye" aria-pressed="true">the eye</button>
                 <button type="button" class="chip" data-subject="koi" aria-pressed="false">the koi</button>
+                <button type="button" class="chip" data-subject="bird" aria-pressed="false">the hummingbird</button>
               </div>
             </div>
             <div class="demo">
@@ -3184,6 +3185,76 @@ window.Render3D = (function () {
     ctx.restore();
   }
 
+  /* Every edge of a solid, including the ones on the far side.
+   *
+   * drawSolid strokes only the silhouette and the front faces, because that is
+   * what an opaque object looks like. This is the other thing: a hidden-line
+   * view, near edges bright and far edges dim, with a tick at each vertex. It
+   * reads as an object that has been *computed* rather than one that has been
+   * lit, which is the whole point of putting it behind a page about renderers.
+   *
+   * Edges are deduplicated by their vertex pair, so a cube draws twelve edges
+   * rather than twenty-four; drawing them twice doubles the alpha on every one
+   * and the mesh comes out looking like it has a seam down every face.
+   */
+  function wireSolid(ctx, mesh, opts) {
+    var scale = opts.scale, cx = opts.x, cy = opts.y;
+    var focal = opts.focal || 620;
+    var sv = new Array(mesh.verts.length);
+    var zmin = Infinity, zmax = -Infinity, i;
+
+    for (i = 0; i < mesh.verts.length; i++) {
+      var p = rotatePoint(mesh.verts[i], opts.rx, opts.ry, opts.rz);
+      p = v3(p.x * scale, p.y * scale, p.z * scale);
+      var f = focal / (focal + p.z);
+      sv[i] = { x: cx + p.x * f, y: cy + p.y * f, z: p.z };
+      if (p.z < zmin) zmin = p.z;
+      if (p.z > zmax) zmax = p.z;
+    }
+    var span = (zmax - zmin) || 1;
+
+    if (!mesh.edges) {
+      var seen = {}, list = [];
+      for (i = 0; i < mesh.faces.length; i++) {
+        var fc = mesh.faces[i];
+        for (var j = 0; j < fc.length; j++) {
+          var a = fc[j], b = fc[(j + 1) % fc.length];
+          var key = Math.min(a, b) + ':' + Math.max(a, b);
+          if (seen[key]) continue;
+          seen[key] = 1;
+          list.push([a, b]);
+        }
+      }
+      mesh.edges = list;
+    }
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (i = 0; i < mesh.edges.length; i++) {
+      var e = mesh.edges[i], p1 = sv[e[0]], p2 = sv[e[1]];
+      // Depth cue by alpha alone. A wireframe with uniform line weight is a
+      // flat pattern; the only thing that makes it read as a volume is the far
+      // half being visibly weaker than the near half.
+      var d = 1 - ((p1.z + p2.z) * 0.5 - zmin) / span;
+      ctx.globalAlpha = opts.alpha * (0.16 + d * 0.84);
+      ctx.strokeStyle = opts.stroke;
+      ctx.lineWidth = opts.width || 0.7;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+    if (opts.vertex) {
+      for (i = 0; i < sv.length; i++) {
+        var s = sv[i];
+        ctx.globalAlpha = opts.alpha * (0.2 + (1 - (s.z - zmin) / span) * 0.8);
+        ctx.fillStyle = opts.vertex;
+        ctx.fillRect(s.x - 1, s.y - 1, 2, 2);
+      }
+    }
+    ctx.restore();
+  }
+
   /* ------------------------------------------------------------ camera ----
    *
    * drawSolid above places an object at a screen coordinate and fakes depth
@@ -3237,7 +3308,7 @@ window.Render3D = (function () {
   }
 
   return {
-    solids: SOLIDS, drawSolid: drawSolid,
+    solids: SOLIDS, drawSolid: drawSolid, wireSolid: wireSolid,
     camera: camera, project: project, bokehSprite: bokehSprite,
     v3: v3, norm3: norm3, rotatePoint: rotatePoint
   };
@@ -4629,36 +4700,97 @@ window.InstallPaths = (function () {
 /* ---- js/demos/depth.js ---- */
 /* The ambient field — the page's one continuous sense of space.
  *
- * A fixed canvas behind everything, holding a volume of dust that the whole
- * document scrolls through. The hero has its own field with its own camera; this
- * is the quieter one that runs the length of the page, so that scrolling from
- * the protocol table to the footer feels like moving through something rather
- * than sliding a sheet of paper past a window.
+ * A fixed canvas behind everything, holding a volume the whole document scrolls
+ * through. The hero has its own field with its own camera; this is the quieter
+ * one that runs the length of the page, so that scrolling from the protocol
+ * table to the footer feels like moving through something rather than sliding a
+ * sheet of paper past a window.
  *
- * Restraint is the entire design. It sits at the grid layer, under every rule
- * and every plate; it never touches the accent; its brightest mote is dimmer
- * than the hairlines it sits behind. If a reader notices it as an effect, it is
- * turned up too far.
+ * There are four layers in it, and they are four different distances.
  *
- * Cost control, in order of how much it matters: it is one canvas rather than a
- * DOM layer, the motes are pre-baked sprites rather than per-frame gradients,
- * the camera is driven by a scrollY read inside the frame that is already
- * running rather than by a scroll listener, and it does not exist at all under
- * prefers-reduced-motion or on a coarse pointer, where the whole effect would
- * cost battery to be invisible behind a thumb.
+ * 1. Stars, at infinity. They are projected by camera *rotation* only: the
+ *    dolly does not touch them. That is the entire trick. Depth is not something
+ *    you can draw, it is something the viewer infers from differential motion,
+ *    and the only way to make a near thing feel near is to put something behind
+ *    it that refuses to move. Everything else here exists to be measured
+ *    against this layer.
+ *
+ * 2. The armillary — five great circles at infinity, one of them graduated in
+ *    three-degree ticks, turning on their own axis about once every four
+ *    minutes. It says the volume is instrumented rather than empty: you are not
+ *    falling through a starfield, you are inside something that was built. It is
+ *    also the only element on the page drawn at a scale nothing else can reach.
+ *
+ * 3. Dust, in the volume, which streaks. At rest the streak length is exactly
+ *    zero and the field is still. Flick the page and every mote elongates along
+ *    its own radial from the vanishing point, by an amount proportional to how
+ *    fast it is passing the lens — which is what a shutter actually integrates.
+ *    So the wow arrives only while you are moving, and moving is the one moment
+ *    you are not reading. An ambient effect that is loudest when the page is
+ *    still has its priorities backwards.
+ *
+ * 4. Solids, tumbling, drawn twice: once shaded and once as a hidden-line
+ *    wireframe over the top. The wireframe is what makes them read as computed
+ *    objects rather than as floating rocks, which is the correct impression for
+ *    the background of a page about renderers.
+ *
+ * Two geometric ideas hold it together.
+ *
+ * The field is periodic in z. Every object's depth is taken modulo the field
+ * length, which tiles the volume into an endless tunnel: scroll forward for
+ * seventeen thousand pixels and it never empties, scroll back up and it is the
+ * same field you came through rather than a fresh roll of the dice. A recycling
+ * scheme keyed to a monotonic counter cannot do that — it only works while the
+ * reader agrees to keep going down.
+ *
+ * And the solids ride a tube rather than a box. Their distance from the axis
+ * grows with their own depth, so every one of them projects to roughly the same
+ * screen radius no matter how far away it is. That leaves the middle of the
+ * frame — where the text is — permanently clear, without a single rule about
+ * where the text happens to be.
+ *
+ * Restraint is the rest of the design. It sits at the grid layer, under every
+ * rule and every plate; it never touches the accent; its brightest element is
+ * dimmer than the hairlines in front of it. If a reader notices it as an effect,
+ * it is turned up too far. Under prefers-reduced-motion it draws one still frame
+ * and stops: reduced motion is an instruction to remove the motion, not to
+ * remove the room.
  */
 Demos.register('depth-field', function (canvas) {
   var G = window.Gfx, R = window.Render3D;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var coarse = window.matchMedia('(pointer: coarse)').matches;
-  if (reduce || coarse) { canvas.style.display = 'none'; return {}; }
+  // A thumb covers most of a phone screen and the field would be invisible
+  // underneath it. Paying for a canvas nobody can see is the definition of a
+  // decorative cost.
+  if (coarse) { canvas.style.display = 'none'; return {}; }
 
   var ctx = canvas.getContext('2d');
   var W = 0, H = 0, dpr = 1;
   var cam = R.camera(820);
-  var FAR = 2600;
-  var motes = [];
+  var NEAR = 240, FIELD = 2500, SKY = 50000;
+  var motes = [], drifters = [], starBands = [], rings = [];
   var SPRITES = [];
+  var MESH_NAMES = ['tetrahedron', 'octahedron', 'cube', 'icosahedron', 'dodecahedron'];
+  var meshes = {};
+
+  /* Two palettes, because the layer composites differently in each theme. In
+   * dark it sits normally and the stars are bone; in light it is multiplied, so
+   * anything pale in it is a no-op and every line has to be drawn dark to show
+   * up at all. Same geometry, inverted ink. */
+  var INK = {
+    dark:  { star: '226,222,212', ring: '150,168,196', wire: '226,220,208', k: 1 },
+    light: { star: '48,54,68',    ring: '58,70,92',    wire: '46,50,60',    k: 0.62 }
+  };
+  var ink = INK.dark;
+  function readTheme() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    ink = INK[t] || INK.dark;
+  }
+  readTheme();
+  var themeWatch = new MutationObserver(readTheme);
+  themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   function rng(seed) {
     var s = seed >>> 0;
@@ -4669,19 +4801,92 @@ Demos.register('depth-field', function (canvas) {
     SPRITES = [0.15, 0.5, 0.85, 1].map(function (s) {
       return R.bokehSprite(s, '214,206,192', 48);
     });
+    MESH_NAMES.forEach(function (n) { meshes[n] = R.solids[n](); });
+
     var rand = rng(31337);
+
+    /* Stars, on a unit sphere. Brightness is fixed per star and quantised into
+     * five bands at build time, so a frame costs five fillStyle assignments
+     * instead of two hundred and sixty string concatenations. */
+    var BANDS = 5;
+    starBands = [];
+    for (var b = 0; b < BANDS; b++) starBands.push({ a: (b + 1) / BANDS, pts: [] });
+    for (var s = 0; s < 260; s++) {
+      // Uniform on the sphere: acos of a uniform z, not a uniform polar angle,
+      // which would crowd them at the poles.
+      var ct = rand() * 2 - 1, st2 = Math.sqrt(1 - ct * ct), ph = rand() * Math.PI * 2;
+      // Magnitude distribution: a few bright ones, a lot of faint ones. Even
+      // brightness is the thing that makes a drawn starfield read as noise.
+      var mag = Math.pow(rand(), 2.6);
+      starBands[Math.min(BANDS - 1, (mag * BANDS) | 0)].pts.push({
+        x: st2 * Math.cos(ph) * SKY, y: ct * SKY * 0.8, z: st2 * Math.sin(ph) * SKY,
+        r: 0.7 + mag * 1.7
+      });
+    }
+
+    /* The armillary. Five great circles, each defined by its normal, sampled at
+     * 132 points. One of them carries graduations. */
+    rings = [];
+    var incl = [0.0, 0.62, -0.48, 1.22, 2.05];
+    for (var g = 0; g < incl.length; g++) {
+      var nx = Math.sin(incl[g]) * Math.cos(g * 1.37);
+      var ny = Math.cos(incl[g]);
+      var nz = Math.sin(incl[g]) * Math.sin(g * 1.37);
+      // Two orthonormal vectors spanning the plane of the circle.
+      var up = Math.abs(ny) > 0.9 ? { x: 1, y: 0, z: 0 } : { x: 0, y: 1, z: 0 };
+      var u = R.norm3({
+        x: up.y * nz - up.z * ny, y: up.z * nx - up.x * nz, z: up.x * ny - up.y * nx
+      });
+      var v = R.norm3({
+        x: ny * u.z - nz * u.y, y: nz * u.x - nx * u.z, z: nx * u.y - ny * u.x
+      });
+      rings.push({ u: u, v: v, n: { x: nx, y: ny, z: nz }, graduated: g === 1 });
+    }
+
     motes = [];
-    for (var i = 0; i < 96; i++) {
-      var z = 160 + rand() * (FAR - 160);
-      var spread = 300 + z * 0.7;
+    for (var i = 0; i < 104; i++) {
       motes.push({
-        x: (rand() - 0.5) * 2 * spread,
-        y: (rand() - 0.5) * 2 * spread,
-        z: z,
+        th: rand() * Math.PI * 2,
+        k: 0.12 + rand() * 1.5,          // distance from the axis, as a fraction of z
+        z0: rand() * FIELD,
         r: 0.9 + rand() * 2.6,
-        vx: (rand() - 0.5) * 3,
-        vy: (rand() - 0.5) * 2.4,
+        vth: (rand() - 0.5) * 0.05,
         tw: rand() * Math.PI * 2
+      });
+    }
+
+    /* Twenty-two solids is the whole budget. Each one costs a gradient per
+     * visible face plus an edge pass, and this canvas runs for the entire
+     * length of the page — it is the one animation on the site with no scroll
+     * position at which it stops. The hard cull below is what keeps that
+     * affordable. */
+    drifters = [];
+    for (var d = 0; d < 22; d++) {
+      var name = MESH_NAMES[(d * 3 + 1) % MESH_NAMES.length];
+      // Every fifth one is a giant. A field of same-sized objects has no scale;
+      // one thing passing close and huge is what tells you how big the rest of
+      // the volume is, and it is the oldest trick in every shot of a spacecraft.
+      var giant = d % 5 === 2;
+      drifters.push({
+        mesh: meshes[name],
+        th: (d / 22) * Math.PI * 2 + rand() * 0.5,
+        // Out on the tube: this projects to a screen radius of roughly
+        // k * 0.42 * focal, so 0.8 puts it at ~275px from centre and 2.1 puts
+        // it off the edge of a laptop viewport entirely. Giants ride further
+        // out, because a giant in the middle of the frame is a wall.
+        k: giant ? 1.85 + rand() * 0.9 : 0.72 + rand() * 1.3,
+        z0: (d / 22) * FIELD + rand() * 100,
+        r: giant ? 92 + rand() * 54 : 38 + rand() * 58,
+        vth: (rand() - 0.5) * 0.028,     // a slow orbit around the axis
+        // Zero gravity: constant angular velocity on all three axes and nothing
+        // that ever damps it. A tumble that eases is a tumble something is
+        // resisting.
+        rx: rand() * Math.PI, ry: rand() * Math.PI, rz: rand() * Math.PI,
+        drx: (rand() - 0.5) * 0.24,
+        dry: (rand() - 0.5) * 0.3,
+        drz: (rand() - 0.5) * 0.16,
+        bob: rand() * Math.PI * 2,
+        giant: giant
       });
     }
   }
@@ -4695,47 +4900,283 @@ Demos.register('depth-field', function (canvas) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
+  /* Depth, tiled. The modulo is what makes the tunnel endless in both
+   * directions; without it, scrolling back up walks off the front of the field.
+   *
+   * The dolly lives here and NOT on cam.z. Putting it in both places subtracts
+   * it twice — once folding the object into the tunnel, once again inside the
+   * projection — which drops every object behind the near plane and culls the
+   * entire field to nothing. The camera stays at the origin and the world moves
+   * past it. */
+  var dolly = 0, vel = 0, prevDolly = 0, roll = 0, spin = 0;
+  function tiled(z0) {
+    return ((z0 - dolly) % FIELD + FIELD) % FIELD + NEAR;
+  }
+
   build();
   layout();
 
   var onResize = function () { layout(); };
   window.addEventListener('resize', onResize, { passive: true });
 
+  var light = R.norm3(R.v3(-0.45, -0.7, 0.8));
+
+  /* ------------------------------------------------------------ the sky ---
+   * Everything in here is at SKY radius and moves with camera rotation only. */
+  function drawSky() {
+    var i, j, p;
+
+    for (i = 0; i < starBands.length; i++) {
+      var band = starBands[i];
+      ctx.fillStyle = 'rgba(' + ink.star + ',' + (band.a * 0.34 * ink.k).toFixed(3) + ')';
+      for (j = 0; j < band.pts.length; j++) {
+        var st = band.pts[j];
+        p = R.project(st, cam, W, H);
+        if (!p) continue;
+        if (p.x < -4 || p.x > W + 4 || p.y < -4 || p.y > H + 4) continue;
+        ctx.fillRect(p.x, p.y, st.r, st.r);
+      }
+    }
+
+    var cs = Math.cos(spin), sn = Math.sin(spin);
+    function onRing(ring, a, lift) {
+      // A point on the great circle, optionally lifted toward the ring's own
+      // normal — which is how a graduation tick gets drawn on a sphere.
+      var x = ring.u.x * Math.cos(a) + ring.v.x * Math.sin(a) + ring.n.x * lift;
+      var y = ring.u.y * Math.cos(a) + ring.v.y * Math.sin(a) + ring.n.y * lift;
+      var z = ring.u.z * Math.cos(a) + ring.v.z * Math.sin(a) + ring.n.z * lift;
+      // The whole armillary turns about the vertical as one rigid body.
+      return { x: (x * cs - z * sn) * SKY, y: y * SKY, z: (x * sn + z * cs) * SKY };
+    }
+
+    ctx.lineWidth = 1;
+    for (i = 0; i < rings.length; i++) {
+      var ring = rings[i];
+      ctx.strokeStyle = 'rgba(' + ink.ring + ',' + (0.09 * ink.k).toFixed(3) + ')';
+      ctx.beginPath();
+      var open = false;
+      for (j = 0; j <= 132; j++) {
+        p = R.project(onRing(ring, (j / 132) * Math.PI * 2, 0), cam, W, H);
+        // A ring that surrounds the camera has half its points behind the lens.
+        // Breaking the path there rather than joining across is the difference
+        // between a circle and a chord slashed across the frame.
+        if (!p) { open = false; continue; }
+        if (!open) { ctx.moveTo(p.x, p.y); open = true; } else ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke();
+
+      if (!ring.graduated) continue;
+      /* Graduations every three degrees, long every fifteen. Nobody will read
+       * them. They are there because a scale that goes all the way round is the
+       * detail that separates an instrument from a decorative circle, and the
+       * page can afford one thing that only rewards looking twice. */
+      ctx.strokeStyle = 'rgba(' + ink.ring + ',' + (0.13 * ink.k).toFixed(3) + ')';
+      ctx.beginPath();
+      for (j = 0; j < 120; j++) {
+        var ang = (j / 120) * Math.PI * 2;
+        var a1 = R.project(onRing(ring, ang, 0), cam, W, H);
+        var a2 = R.project(onRing(ring, ang, j % 5 === 0 ? 0.026 : 0.011), cam, W, H);
+        if (!a1 || !a2) continue;
+        ctx.moveTo(a1.x, a1.y);
+        ctx.lineTo(a2.x, a2.y);
+      }
+      ctx.stroke();
+    }
+  }
+
+  /* ---------------------------------------------------------- the volume --- */
+  function drawVolume(t, dt) {
+    var i, o, zz, rad, pr, fog, defocus, size;
+    // The vanishing point: where a point straight ahead lands. Motes streak
+    // along their own radial from it, because that is the direction the dolly
+    // actually moves them.
+    var vp = R.project({ x: 0, y: 0, z: 4000 }, cam, W, H) || { x: W / 2, y: H / 2 };
+
+    for (i = 0; i < motes.length; i++) {
+      o = motes[i];
+      o.th += o.vth * dt;
+      zz = tiled(o.z0);
+      rad = zz * o.k * 0.42;
+      pr = R.project({ x: Math.cos(o.th) * rad, y: Math.sin(o.th) * rad * 0.82, z: zz }, cam, W, H);
+      if (!pr) continue;
+      if (pr.x < -120 || pr.x > W + 120 || pr.y < -120 || pr.y > H + 120) continue;
+
+      fog = Math.pow(G.clamp(1 - (pr.z - NEAR) / FIELD, 0, 1), 1.5);
+      defocus = G.clamp(Math.abs(pr.z - 700) / 1100, 0, 1);
+      size = o.r * pr.f * (1 + defocus * 4.5) * 7;
+      if (size < 0.6) continue;
+      var midM = G.clamp(Math.abs(pr.x - W / 2) / (W * 0.34), 0, 1);
+      ctx.globalAlpha = G.clamp(fog * (0.3 - defocus * 0.19) * (0.7 + Math.sin(t * 0.7 + o.tw) * 0.3)
+        * (0.34 + 0.66 * midM), 0, 0.34);
+
+      /* The streak. Screen displacement per frame is (distance from the
+       * vanishing point) x (depth travelled / depth), which falls straight out
+       * of the perspective divide — near motes smear, far ones barely move,
+       * and that gradient across the frame is the part that sells the speed.
+       * Centred on the current position, because a shutter integrates either
+       * side of the instant, not forward from it. */
+      var dx = pr.x - vp.x, dy = pr.y - vp.y;
+      var dist = Math.hypot(dx, dy);
+      var len = Math.min(140, dist * Math.abs(vel) / pr.z);
+      if (len < 1.5) {
+        ctx.drawImage(SPRITES[Math.min(3, Math.round(defocus * 3))],
+          pr.x - size / 2, pr.y - size / 2, size, size);
+      } else {
+        ctx.save();
+        ctx.translate(pr.x, pr.y);
+        ctx.rotate(Math.atan2(dy, dx));
+        // Energy is conserved: a mote smeared over ten times its own length is
+        // a tenth as bright. Without this the field gets brighter when you
+        // scroll, which is exactly backwards.
+        ctx.globalAlpha *= G.clamp(size / (size + len * 0.55), 0.22, 1);
+        ctx.drawImage(SPRITES[Math.min(3, Math.round(defocus * 3))],
+          -(size + len) / 2, -size / 2, size + len, size);
+        ctx.restore();
+      }
+    }
+
+    for (i = 0; i < drifters.length; i++) {
+      o = drifters[i];
+      o.th += o.vth * dt;
+      o.rx += o.drx * dt; o.ry += o.dry * dt; o.rz += o.drz * dt;
+      zz = tiled(o.z0);
+      rad = zz * o.k * 0.42;
+      pr = R.project({
+        x: Math.cos(o.th) * rad,
+        y: Math.sin(o.th) * rad * 0.82 + Math.sin(t * 0.2 + o.bob) * 26,
+        z: zz
+      }, cam, W, H);
+      if (!pr) continue;
+
+      var sc = o.r * pr.f;
+      // Cull hard. A solid smaller than a few pixels costs a gradient per face
+      // to render something indistinguishable from a mote.
+      if (sc < 5) continue;
+      if (pr.x < -sc * 2 || pr.x > W + sc * 2 || pr.y < -sc * 2 || pr.y > H + sc * 2) continue;
+
+      fog = Math.pow(G.clamp(1 - (pr.z - NEAR) / FIELD, 0, 1), 1.4);
+      defocus = G.clamp(Math.abs(pr.z - 700) / 1150, 0, 1);
+
+      /* The tube keeps most of the field out of the middle, but the reading
+       * column on this page is nine hundred pixels wide and no amount of
+       * geometry gets a solid out of its way at every viewport. So the field
+       * also thins toward the centre of the frame: a drifter crossing behind
+       * the prose drops to a fifth of its weight and comes back as it clears.
+       * Body copy wins every contest with an ambient effect. */
+      /* Measured from the object's near edge, not its centre. A two-hundred-
+       * pixel solid whose centre is politely off to one side is still lying
+       * across the middle of the frame, and the first version of this rule
+       * happily let it sit there at full weight. */
+      var mid = G.clamp((Math.abs(pr.x - W / 2) - sc) / (W * 0.3), 0, 1);
+      /* And a near limit. Past a certain projected size a thing has come closer
+       * to the lens than the lens can resolve, and what you get in a real frame
+       * is a soft dark shape with no edges — never the crisp wall this used to
+       * draw. Fading it out is both the honest result and the one that keeps a
+       * solid from ever becoming a backdrop. */
+      var near = G.clamp((300 - sc) / 150, 0, 1);
+      var clear = (0.16 + 0.84 * mid * mid) * near * near;
+      if (clear < 0.01) continue;
+
+      // Same trick as the hero: defocus is spent on edge contrast rather than
+      // on a blur filter, because a blur filter here costs the whole frame.
+      if (defocus > 0.3) {
+        var halo = sc * (2.4 + defocus * 2.4);
+        ctx.globalAlpha = G.clamp(defocus * 0.24 * fog * clear, 0, 0.24);
+        ctx.drawImage(SPRITES[3], pr.x - halo / 2, pr.y - halo / 2, halo, halo);
+      }
+
+      ctx.globalAlpha = 1;
+      var body = G.clamp(fog * (1 - defocus * 0.34) * clear * 0.62, 0, 0.62);
+      R.drawSolid(ctx, o.mesh, {
+        x: pr.x, y: pr.y,
+        scale: sc,
+        rx: o.rx, ry: o.ry, rz: o.rz,
+        depth: 0,
+        focal: 560,
+        light: light,
+        base: '#b9b1a4',
+        highlight: '#f4ece0',
+        shadow: '#2b2722',
+        // No accent out here. The one colour allowed to point at things lives
+        // in the content, and a drifting shape is never pointing at anything.
+        edge: null,
+        alpha: body
+      });
+
+      /* The wireframe over the top. Only on the sharp ones: an edge drawn
+       * across a shape that is meant to be out of focus is a contradiction the
+       * eye catches immediately, and it is the fastest way to make a depth-of-
+       * field cue look like a mistake. */
+      if (defocus < 0.55) {
+        R.wireSolid(ctx, o.mesh, {
+          x: pr.x, y: pr.y,
+          scale: sc * 1.001,
+          rx: o.rx, ry: o.ry, rz: o.rz,
+          focal: 560,
+          stroke: 'rgba(' + ink.wire + ',1)',
+          vertex: o.giant ? 'rgba(' + ink.wire + ',1)' : null,
+          width: o.giant ? 0.9 : 0.7,
+          alpha: G.clamp(body * (1 - defocus / 0.55) * 0.85 * ink.k, 0, 0.6)
+        });
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function paint(t, dt) {
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+    /* Roll. A slow bank as the page moves, about a degree end to end. It is
+     * applied to the context rather than the camera because a roll about the
+     * optical axis is exactly a rotation of the finished frame, and doing it
+     * here costs one transform instead of a third trigonometric term in every
+     * projection on the page. */
+    ctx.translate(W / 2, H / 2);
+    ctx.rotate(roll);
+    ctx.translate(-W / 2, -H / 2);
+    drawSky();
+    drawVolume(t, dt);
+    ctx.restore();
+  }
+
+  if (reduce) {
+    // One still frame: the room without the movement.
+    cam.yaw = 0.05; cam.pitch = -0.03; spin = 0.7;
+    paint(1.4, 0);
+    return {
+      destroy: function () { window.removeEventListener('resize', onResize); themeWatch.disconnect(); }
+    };
+  }
+
   return {
     frame: function (dt, t) {
       var doc = document.documentElement;
       var max = (doc.scrollHeight - doc.clientHeight) || 1;
-      // The whole document maps to one long dolly. Ten times the field depth
-      // would be a blur; a fraction of it is what reads as travel.
-      cam.z = (window.scrollY / max) * 1750;
+      var prog = window.scrollY / max;
+      // Two field lengths across the whole document: enough that the reader
+      // passes through solids rather than watching them hold station.
+      dolly = prog * FIELD * 2;
+
+      /* Scroll speed, low-passed. The raw per-frame delta is far too spiky to
+       * drive a streak — one dropped frame doubles it — and a hard cut back to
+       * zero when the wheel stops makes the smear vanish mid-flight. The filter
+       * gives the field a short coast, which is also what it would physically
+       * do. */
+      var raw = (dolly - prevDolly) / Math.max(dt, 0.001);
+      prevDolly = dolly;
+      vel += (raw * 0.016 - vel) * Math.min(1, dt * 9);
+
+      roll = Math.sin(prog * Math.PI * 1.6) * 0.019;
+      spin += dt * 0.026;
       cam.yaw = Math.sin(t * 0.028) * 0.06;
       cam.pitch = Math.cos(t * 0.021) * 0.04;
 
-      ctx.clearRect(0, 0, W, H);
-
-      for (var i = 0; i < motes.length; i++) {
-        var p = motes[i];
-        p.x += p.vx * dt; p.y += p.vy * dt;
-        var spread = 300 + p.z * 0.7;
-        if (p.x > spread) p.x = -spread; else if (p.x < -spread) p.x = spread;
-        if (p.y > spread) p.y = -spread; else if (p.y < -spread) p.y = spread;
-
-        var pr = R.project(p, cam, W, H);
-        if (!pr) continue;
-        if (pr.x < -70 || pr.x > W + 70 || pr.y < -70 || pr.y > H + 70) continue;
-
-        var fog = Math.pow(G.clamp(1 - (pr.z - 160) / (FAR - 160), 0, 1), 1.5);
-        var defocus = G.clamp(Math.abs(pr.z - 620) / 1100, 0, 1);
-        var size = p.r * pr.f * (1 + defocus * 4.5) * 7;
-        if (size < 0.6) continue;
-        var tw = 0.7 + Math.sin(t * 0.7 + p.tw) * 0.3;
-        ctx.globalAlpha = G.clamp(fog * (0.3 - defocus * 0.19) * tw, 0, 0.34);
-        ctx.drawImage(SPRITES[Math.min(3, Math.round(defocus * 3))],
-          pr.x - size / 2, pr.y - size / 2, size, size);
-      }
-      ctx.globalAlpha = 1;
+      paint(t, dt);
     },
-    destroy: function () { window.removeEventListener('resize', onResize); }
+    destroy: function () {
+      window.removeEventListener('resize', onResize);
+      themeWatch.disconnect();
+    }
   };
 });
 </script>
@@ -6277,6 +6718,36 @@ Demos.register('atelier-showpiece', function (root) {
     c.lineWidth = 1.1;
     c.stroke();
 
+    /* Contraction furrows: concentric creases in the outer third, left behind by
+     * the sphincter working. They cross the radial fibres, which is exactly why
+     * they matter - an iris built only of spokes reads as a sunburst, and it is
+     * the second, perpendicular family of lines that makes it read as tissue
+     * that has been moving for forty years. Each furrow is a wobbled ring with a
+     * lit upper edge and a dark lower one, because a crease is a groove. */
+    for (var fu = 0; fu < 6; fu++) {
+      var fr = R * (0.58 + fu * 0.068 + rand() * 0.014);
+      var fphase = rand() * Math.PI * 2;
+      var fw = 0.02 + rand() * 0.022;
+      c.beginPath();
+      for (var fk = 0; fk <= 140; fk++) {
+        var fa = (fk / 140) * Math.PI * 2;
+        var rr = fr * (1 + Math.sin(fa * 3 + fphase) * fw + Math.sin(fa * 8 + fphase * 2) * fw * 0.45);
+        var fx = cx + Math.cos(fa) * rr, fy = cy + Math.sin(fa) * rr;
+        fk === 0 ? c.moveTo(fx, fy) : c.lineTo(fx, fy);
+      }
+      c.closePath();
+      c.strokeStyle = 'rgba(26,18,6,' + (0.1 + rand() * 0.12).toFixed(2) + ')';
+      c.lineWidth = 1.6 + rand() * 1.4;
+      c.stroke();
+      // The lit lip of the groove, offset half a pixel outward.
+      c.save();
+      c.translate(0, -1);
+      c.strokeStyle = 'rgba(226,198,128,.07)';
+      c.lineWidth = 1;
+      c.stroke();
+      c.restore();
+    }
+
     // Crypts: the dark pits sitting just inside the collarette.
     for (var q = 0; q < 18; q++) {
       var qa = rand() * Math.PI * 2;
@@ -6404,6 +6875,71 @@ Demos.register('atelier-showpiece', function (root) {
       c.restore();
     }
 
+    if (st >= 3) {
+      /* Skin. Up to here the lids are gradients, and a gradient is not skin: skin
+       * has pores, and it creases where it folds. Both are baked into the plate,
+       * so this loop of nine hundred marks runs once rather than sixty times a
+       * second. */
+      var sr = rng(556677);
+      c.save();
+      lidBand(c, L.up, 78, true);
+      c.clip();
+      for (var pi = 0; pi < 900; pi++) {
+        var px3 = EYE.inner.x + sr() * (EYE.outer.x - EYE.inner.x);
+        var py3 = L.top - 80 + sr() * 96;
+        var lit3 = sr();
+        c.fillStyle = lit3 > 0.55
+          ? 'rgba(196,158,124,' + (0.03 + sr() * 0.055).toFixed(3) + ')'
+          : 'rgba(44,26,17,' + (0.03 + sr() * 0.06).toFixed(3) + ')';
+        c.beginPath();
+        c.arc(px3, py3, 0.5 + sr() * 1.1, 0, Math.PI * 2);
+        c.fill();
+      }
+      // Crepe: fine creases running parallel to the margin, bunched near it.
+      for (var cr2 = 0; cr2 < 9; cr2++) {
+        offsetCurve(c, L.up, 16 + cr2 * cr2 * 0.95 + sr() * 5, true);
+        c.strokeStyle = 'rgba(38,22,14,' + (0.07 + sr() * 0.08).toFixed(3) + ')';
+        c.lineWidth = 0.8 + sr() * 0.8;
+        c.stroke();
+      }
+      c.restore();
+
+      // Crow's feet, fanning off the temporal canthus. Skin folds where it is
+      // repeatedly compressed, and the outer corner is where an eye does that.
+      c.save();
+      c.lineCap = 'round';
+      for (var cw = 0; cw < 6; cw++) {
+        var ang = -0.5 + cw * 0.2 + sr() * 0.05;
+        var len3 = 46 + sr() * 62;
+        c.beginPath();
+        c.moveTo(EYE.outer.x + 4, EYE.outer.y);
+        c.quadraticCurveTo(
+          EYE.outer.x + len3 * 0.55, EYE.outer.y + Math.sin(ang) * len3 * 0.45,
+          EYE.outer.x + len3, EYE.outer.y + Math.sin(ang) * len3);
+        c.strokeStyle = 'rgba(40,23,15,' + (0.16 + sr() * 0.18).toFixed(3) + ')';
+        c.lineWidth = 1 + sr() * 1.4;
+        c.stroke();
+      }
+      c.restore();
+
+      // The lower lid catches light, so its pores read as highlights rather than
+      // as pits: same texture, inverted.
+      c.save();
+      lidBand(c, L.lo, 30, true);
+      c.clip();
+      for (var pj = 0; pj < 420; pj++) {
+        var qx = EYE.inner.x + sr() * (EYE.outer.x - EYE.inner.x);
+        var qy = L.bot - 4 + sr() * 40;
+        c.fillStyle = sr() > 0.4
+          ? 'rgba(214,176,140,' + (0.03 + sr() * 0.06).toFixed(3) + ')'
+          : 'rgba(52,32,20,' + (0.025 + sr() * 0.05).toFixed(3) + ')';
+        c.beginPath();
+        c.arc(qx, qy, 0.6 + sr() * 1.3, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+    }
+
     c.save();
     aperturePath(c, L);
     c.clip();
@@ -6465,6 +7001,28 @@ Demos.register('atelier-showpiece', function (root) {
         c.lineWidth = 0.5 + vr() * 1.1;
         c.stroke();
       }
+
+      /* The perilimbal arcade: the fine vessels that run up to the cornea and
+       * stop. Every vessel above ends somewhere arbitrary; these end at the same
+       * radius, because that is where the tissue they feed ends. That shared
+       * boundary is what tells a viewer the cornea is a separate structure
+       * sitting on the eye rather than a colour printed on it. */
+      for (var aa = 0; aa < 40; aa++) {
+        var ang2 = vr() * Math.PI * 2;
+        // Sparse at the top and bottom, where the lids cover the sclera anyway.
+        if (Math.abs(Math.sin(ang2)) > 0.72) continue;
+        var out2 = R * (1.06 + vr() * 0.5);
+        var inn = R * (1.015 + vr() * 0.03);
+        c.beginPath();
+        c.moveTo(icx + Math.cos(ang2) * out2, icy + Math.sin(ang2) * out2 * 0.9);
+        c.quadraticCurveTo(
+          icx + Math.cos(ang2 + 0.05) * (out2 + inn) * 0.5,
+          icy + Math.sin(ang2 + 0.05) * (out2 + inn) * 0.45,
+          icx + Math.cos(ang2) * inn, icy + Math.sin(ang2) * inn * 0.9);
+        c.strokeStyle = 'rgba(172,74,58,' + (0.1 + vr() * 0.2).toFixed(2) + ')';
+        c.lineWidth = 0.5 + vr() * 0.7;
+        c.stroke();
+      }
     }
     c.restore();
   }
@@ -6523,8 +7081,16 @@ Demos.register('atelier-showpiece', function (root) {
       c.lineCap = 'round';
       // Upper set. Root and direction both come off the margin curve, so a lash
       // grows out of the lid instead of being laid on top of it.
+      /* Lashes grow in clumps of two and three, not on a comb. The root is
+       * quantised to a cluster and then jittered inside it, which is why the
+       * spacing along the margin comes out uneven the way a real lash line is.
+       * An evenly-spaced lash line is the single most common tell in a drawn
+       * eye after the round white catchlight. */
+      var CLUMPS = 30;
       for (var li = 0; li < 76; li++) {
-        var u = 0.07 + (li / 75) * 0.86 + (lr() - 0.5) * 0.008;
+        var clump = Math.floor(li / 76 * CLUMPS);
+        var u = 0.07 + (clump / (CLUMPS - 1)) * 0.86
+          + (lr() - 0.5) * 0.022 + (lr() - 0.5) * 0.006;
         var p = lidAt(L.up, u), n = lidNormal(L.up, u);
         var arch = Math.pow(Math.sin(u * Math.PI), 0.42);
         var len = (20 + lr() * 34) * (0.4 + arch * 0.8) * (1 - blink * 0.7);
@@ -6540,8 +7106,13 @@ Demos.register('atelier-showpiece', function (root) {
           p.x + dx * len * 0.55, p.y + dy * len * 0.55,
           p.x + dx * len - n.x * curl * len * 0.34 + dy * curl * len * 0.5,
           p.y + dy * len - n.y * curl * len * 0.34 - dx * curl * len * 0.5);
-        c.strokeStyle = 'rgba(12,7,4,' + (0.45 + lr() * 0.5).toFixed(2) + ')';
-        c.lineWidth = 2.5 - arch * 0.5;
+        // Roughly a third sit behind the ones in front of them, so they read
+        // lighter and thinner. Uniform lash value is a flat fringe.
+        var behind = lr() < 0.34;
+        c.strokeStyle = behind
+          ? 'rgba(30,19,12,' + (0.22 + lr() * 0.22).toFixed(2) + ')'
+          : 'rgba(12,7,4,' + (0.5 + lr() * 0.45).toFixed(2) + ')';
+        c.lineWidth = (behind ? 1.5 : 2.6) - arch * 0.5;
         c.stroke();
       }
       // Lower set: shorter, sparser, angled the other way.
@@ -6605,6 +7176,18 @@ Demos.register('atelier-showpiece', function (root) {
     }
 
     if (st >= 4) {
+      /* The limbal transition. The cornea does not stop at a hard circle: for
+         * a couple of millimetres it thins into the sclera, and that annulus is
+         * neither iris nor white but a cool, slightly translucent grey. Drawing
+       * a crisp edge here is what makes an iris look like a contact lens
+       * sitting on top of an eye rather than part of one. */
+      var lim = c.createRadialGradient(icx, icy, R * 0.9, icx, icy, R * 1.02);
+      lim.addColorStop(0, 'rgba(126,134,146,0)');
+      lim.addColorStop(0.55, 'rgba(120,128,142,.16)');
+      lim.addColorStop(1, 'rgba(96,104,118,.42)');
+      c.fillStyle = lim;
+      c.fillRect(icx - R, icy - R, R * 2, R * 2);
+
       /* The caustic.
        *
        * The cornea is a lens in front of the iris, so light from the key does
@@ -6644,9 +7227,22 @@ Demos.register('atelier-showpiece', function (root) {
     c.fillStyle = pupg; c.fill();
 
     if (st >= 3) {
-      c.beginPath(); c.arc(icx, icy, pr + 1.5, 0, Math.PI * 2);
-      c.strokeStyle = 'rgba(54,37,12,.55)';
-      c.lineWidth = 3;
+      /* The pupillary ruff: the pigmented frill where the back of the iris wraps
+       * around the pupil margin. It is scalloped, not circular, and it is the
+       * detail that stops the pupil reading as a hole punched through a disc. */
+      c.beginPath();
+      for (var rk = 0; rk <= 120; rk++) {
+        var ra = (rk / 120) * Math.PI * 2;
+        var rr2 = pr + 1.6 + Math.sin(ra * 17) * 1.5 + Math.sin(ra * 29 + 1.1) * 0.8;
+        var rx2 = icx + Math.cos(ra) * rr2, ry2 = icy + Math.sin(ra) * rr2;
+        rk === 0 ? c.moveTo(rx2, ry2) : c.lineTo(rx2, ry2);
+      }
+      c.closePath();
+      c.strokeStyle = 'rgba(48,32,10,.62)';
+      c.lineWidth = 3.2;
+      c.stroke();
+      c.strokeStyle = 'rgba(150,118,58,.24)';
+      c.lineWidth = 1;
       c.stroke();
     }
 
@@ -7209,14 +7805,520 @@ Demos.register('atelier-showpiece', function (root) {
     }
   }
 
+
+  /* ==========================================================================
+   * SUBJECT THREE - the hummingbird
+   *
+   * The hardest of the three, for a reason that has nothing to do with anatomy.
+   *
+   * A gorget is not coloured. It has no pigment worth speaking of: the barbules
+   * are stacks of thin films a few hundred nanometres thick, and what you see is
+   * light interfering with itself on the way back out. Which means the colour is
+   * a function of the angle you are looking from, not a property of the bird -
+   * turn the head fifteen degrees and a throat goes from crimson to black. This
+   * is modelled here rather than faked: every gorget barbule has a normal, the
+   * path difference through its film is computed from that normal against the
+   * viewer, and the hue comes out of the interference. Nothing is keyframed. The
+   * flash happens because the head turns.
+   *
+   * The wings are the other half. A hummingbird beats at fifty hertz and a
+   * screen refreshes at sixty, so there is no honest single position to draw: at
+   * any real shutter speed the wing IS the smear. So it is integrated - twenty-six
+   * samples along the stroke, weighted by how long the wing spends at each, which
+   * is longest at the reversals where it stops to turn around. That weighting is
+   * why the blur has bright ends and a thin middle, and it is the difference
+   * between motion blur and a fan of copies.
+   * ========================================================================== */
+  var BIRD = {
+    tail: { x: 344, y: 300 },     // where the rectrices leave the body
+    head: { x: 452, y: 216 },     // skull centre
+    headR: 35,
+    billTip: { x: 592, y: 152 },
+    shoulder: { x: 424, y: 252 }
+  };
+
+  // hsl to rgb, because interference is naturally expressed as a hue sweep and
+  // nothing else in this file needs a colour wheel.
+  function hsl(h, sat, li) {
+    h = ((h % 360) + 360) % 360 / 60;
+    var cc = (1 - Math.abs(2 * li - 1)) * sat;
+    var x = cc * (1 - Math.abs((h % 2) - 1));
+    var m = li - cc / 2;
+    var r = 0, g = 0, b = 0;
+    if (h < 1) { r = cc; g = x; }
+    else if (h < 2) { r = x; g = cc; }
+    else if (h < 3) { g = cc; b = x; }
+    else if (h < 4) { g = x; b = cc; }
+    else if (h < 5) { r = x; b = cc; }
+    else { r = cc; b = x; }
+    return G.rgb((r + m) * 255, (g + m) * 255, (b + m) * 255);
+  }
+
+  // Body axis, tail to head. u = 0 at the tail base, 1 at the back of the skull.
+  function birdAt(u) {
+    return {
+      x: lerp(BIRD.tail.x, BIRD.head.x, u),
+      y: lerp(BIRD.tail.y, BIRD.head.y, u) + Math.sin(u * Math.PI) * 16
+    };
+  }
+  function birdFrame(u) {
+    var a = birdAt(Math.max(0, u - 0.01)), b = birdAt(Math.min(1, u + 0.01));
+    var l = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    return { tx: (b.x - a.x) / l, ty: (b.y - a.y) / l, nx: -(b.y - a.y) / l, ny: (b.x - a.x) / l };
+  }
+  // Half-width. A hummingbird is a teardrop: widest just behind the shoulder,
+  // narrow at the wrist where the tail leaves.
+  function birdHalf(u) {
+    // Widest at the breast, just behind the shoulder, and it never tapers to a
+    // point: the tail leaves a body that still has width.
+    return 13 + Math.pow(Math.sin(Math.pow(u, 0.7) * Math.PI * 0.9), 0.62) * 33;
+  }
+
+  function birdBody(c) {
+    var i, p, f, h;
+    c.beginPath();
+    for (i = 0; i <= 40; i++) {
+      var u = i / 40; p = birdAt(u); f = birdFrame(u); h = birdHalf(u);
+      var x = p.x + f.nx * h, y = p.y + f.ny * h;
+      i === 0 ? c.moveTo(x, y) : c.lineTo(x, y);
+    }
+    c.arc(BIRD.head.x, BIRD.head.y, BIRD.headR, 0, Math.PI * 2);
+    for (i = 40; i >= 0; i--) {
+      var u2 = i / 40; p = birdAt(u2); f = birdFrame(u2); h = birdHalf(u2);
+      c.lineTo(p.x - f.nx * h, p.y - f.ny * h);
+    }
+    c.closePath();
+  }
+
+  /* One wing, at one instant of the stroke.
+   *
+   * The blade is a long tapered vane hinged at the shoulder. Its chord narrows
+   * as the wing approaches a reversal, because at that moment it is turning over
+   * and presenting its edge to the viewer - which is also why the smear is
+   * brightest there. */
+  function birdWing(c, phase, alpha, st) {
+    var sx = BIRD.shoulder.x, sy = BIRD.shoulder.y;
+    var sweep = Math.sin(phase * Math.PI * 2);
+    // The stroke plane of a hovering hummingbird is almost horizontal, tilted
+    // back along the body: the wing sweeps fore and aft, not up and down. That
+    // is the whole reason the bird can hold station.
+    var ang = -0.62 + sweep * 1.12;
+    var chord = 0.2 + 0.8 * Math.abs(Math.cos(phase * Math.PI * 2));
+    var len = 138;
+
+    c.save();
+    c.translate(sx, sy);
+    c.rotate(ang);
+    c.globalAlpha = alpha;
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.bezierCurveTo(len * 0.36, -30 * chord, len * 0.78, -34 * chord, len, -6 * chord);
+    c.bezierCurveTo(len * 0.74, 12 * chord, len * 0.34, 14 * chord, 0, 0);
+    c.closePath();
+    if (st === 1) {
+      c.strokeStyle = 'rgba(226,214,196,.5)'; c.lineWidth = 1.2; c.stroke();
+    } else {
+      var wg = c.createLinearGradient(0, -20, len, 10);
+      wg.addColorStop(0, 'rgba(52,48,44,.9)');
+      wg.addColorStop(0.5, 'rgba(146,138,126,.72)');
+      wg.addColorStop(1, 'rgba(206,198,184,.34)');
+      c.fillStyle = wg;
+      c.fill();
+      if (st === 3) {
+        // Primaries. Only at the texture stage: inside the finished smear these
+        // are twenty-six overlapping fans of hairlines, which is just noise.
+        for (var k = 1; k <= 9; k++) {
+          var kk = k / 10;
+          c.beginPath();
+          c.moveTo(len * 0.1, 0);
+          c.quadraticCurveTo(len * 0.6, -26 * chord * kk, len * (0.5 + kk * 0.5), -6 * chord * kk);
+          c.strokeStyle = 'rgba(40,36,32,.22)';
+          c.lineWidth = 0.9;
+          c.stroke();
+        }
+      }
+    }
+    c.restore();
+  }
+
+  function drawBird(c, st, t) {
+    var tt = reduce ? 0.6 : t;
+
+    // The head turns. Everything the gorget does is downstream of this one
+    // number, and it is a slow oscillation with a fast flick in it, because a
+    // hummingbird's head does not sweep - it snaps and holds.
+    var turnBase = Math.sin(tt * 0.55) * 0.5;
+    var flick = Math.sin(tt * 2.1) * 0.12 * Math.max(0, Math.sin(tt * 0.37));
+    var turn = pointer.inside ? (pointer.x - 0.5) * 1.5 : turnBase + flick;
+
+    // Ground: an out-of-focus garden. It is a backdrop, so it gets exactly one
+    // idea (warm light behind cool foliage) and no detail that could compete.
+    var bg = c.createLinearGradient(0, 0, VW * 0.6, VH);
+    bg.addColorStop(0, '#1c2418');
+    bg.addColorStop(0.45, '#243021');
+    bg.addColorStop(1, '#12180f');
+    c.fillStyle = st === 0 ? '#0b0a09' : bg;
+    c.fillRect(0, 0, VW, VH);
+
+    if (st === 0) {
+      c.strokeStyle = 'rgba(223,106,65,.55)';
+      c.lineWidth = 1;
+      c.setLineDash([4, 5]);
+      c.beginPath();
+      for (var ai = 0; ai <= 30; ai++) {
+        var ap = birdAt(ai / 30);
+        ai === 0 ? c.moveTo(ap.x, ap.y) : c.lineTo(ap.x, ap.y);
+      }
+      c.stroke();
+      c.beginPath(); c.arc(BIRD.head.x, BIRD.head.y, BIRD.headR, 0, Math.PI * 2); c.stroke();
+      // Bill, and the wing arc it has to balance against.
+      c.beginPath();
+      c.moveTo(BIRD.head.x + 24, BIRD.head.y - 12);
+      c.lineTo(BIRD.billTip.x, BIRD.billTip.y);
+      c.stroke();
+      c.beginPath();
+      c.arc(BIRD.shoulder.x, BIRD.shoulder.y, 138, -1.74, 0.5);
+      c.stroke();
+      c.setLineDash([]);
+      for (var ri = 0; ri <= 10; ri++) {
+        var ru = ri / 10, rp = birdAt(ru), rf = birdFrame(ru), rh = birdHalf(ru);
+        c.strokeStyle = 'rgba(150,142,132,.4)';
+        c.beginPath();
+        c.moveTo(rp.x + rf.nx * rh, rp.y + rf.ny * rh);
+        c.lineTo(rp.x - rf.nx * rh, rp.y - rf.ny * rh);
+        c.stroke();
+        c.fillStyle = '#df6a41';
+        c.fillRect(rp.x - 2, rp.y - 2, 4, 4);
+      }
+      c.font = '500 11px ui-monospace, monospace';
+      c.fillStyle = 'rgba(140,133,124,.7)';
+      c.fillText('bill = 1.5 x skull   body = 2.2 x skull   stroke plane near horizontal, not vertical', 150, VH - 30);
+      return;
+    }
+
+    if (st >= 2) {
+      // Bokeh behind: the backdrop is a long lens wide open, which is the only
+      // honest way to put a garden behind a bird without drawing a garden.
+      for (var bi = 0; bi < 16; bi++) {
+        var bx = ((bi * 197) % 900), by = ((bi * 311) % 420) + 20;
+        var br = 26 + (bi % 5) * 22;
+        var bgl = c.createRadialGradient(bx, by, 1, bx, by, br);
+        var warm = bi % 3 === 0;
+        bgl.addColorStop(0, warm ? 'rgba(214,176,96,.16)' : 'rgba(126,168,110,.13)');
+        bgl.addColorStop(1, 'rgba(0,0,0,0)');
+        c.fillStyle = bgl;
+        c.fillRect(bx - br, by - br, br * 2, br * 2);
+      }
+    }
+
+    /* ------------------------------------------------------------- the flower */
+    if (st >= 2) {
+      var fx = 690, fy = 132;
+      c.save();
+      c.translate(fx, fy);
+      c.rotate(-0.5);
+      for (var pe = 0; pe < 5; pe++) {
+        c.save();
+        c.rotate((pe / 5) * Math.PI * 2 + 0.3);
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.bezierCurveTo(24, -18, 58, -20, 70, 0);
+        c.bezierCurveTo(58, 20, 24, 18, 0, 0);
+        c.closePath();
+        var pg = c.createLinearGradient(0, 0, 70, 0);
+        pg.addColorStop(0, '#8e2440');
+        pg.addColorStop(0.5, '#c94b64');
+        pg.addColorStop(1, '#e8829a');
+        c.fillStyle = pg;
+        c.fill();
+        if (st >= 3) {
+          // Veins run to the petal tip, and they are what makes a petal read as
+          // a surface rather than a swatch.
+          for (var v2 = 0; v2 < 5; v2++) {
+            var vv = (v2 - 2) / 2;
+            c.beginPath();
+            c.moveTo(4, 0);
+            c.quadraticCurveTo(34, vv * 13, 66, vv * 4);
+            c.strokeStyle = 'rgba(255,208,220,.2)';
+            c.lineWidth = 0.8;
+            c.stroke();
+          }
+        }
+        c.restore();
+      }
+      // Throat of the corolla, and the stamens the bird is actually here for.
+      var tg = c.createRadialGradient(0, 0, 2, 0, 0, 26);
+      tg.addColorStop(0, '#3d0c1a');
+      tg.addColorStop(1, '#96304a');
+      c.fillStyle = tg;
+      c.beginPath(); c.arc(0, 0, 20, 0, Math.PI * 2); c.fill();
+      if (st >= 4) {
+        for (var sm = 0; sm < 6; sm++) {
+          var sa = -0.9 + sm * 0.24;
+          c.beginPath();
+          c.moveTo(0, 0);
+          c.quadraticCurveTo(Math.cos(sa) * 30, Math.sin(sa) * 30 - 8, Math.cos(sa) * 46, Math.sin(sa) * 46 - 6);
+          c.strokeStyle = 'rgba(246,226,178,.6)';
+          c.lineWidth = 1.3;
+          c.stroke();
+          c.beginPath();
+          c.arc(Math.cos(sa) * 46, Math.sin(sa) * 46 - 6, 2.6, 0, Math.PI * 2);
+          c.fillStyle = '#f2d78e';
+          c.fill();
+        }
+      }
+      c.restore();
+    }
+
+    /* --------------------------------------------------------- the far wing */
+    // Behind the body, dimmer, a half-beat out of phase: the two wings of a
+    // hovering bird are not synchronised on screen because one is further away.
+    var beat = tt * 3.1;
+    if (st >= 1) {
+      for (var w1 = 0; w1 < 26; w1++) {
+        var ph1 = beat + 0.5 + w1 / 26;
+        // Weighted by dwell: the wing spends longest where it is reversing, so
+        // that is where the smear is dense. A flat weight is a fan of copies.
+        var dwell1 = 0.3 + 0.7 * (1 - Math.abs(Math.cos(ph1 * Math.PI * 2)));
+        birdWing(c, ph1, 0.036 * dwell1 * (st === 1 ? 3 : 1), st);
+      }
+    }
+
+    /* ------------------------------------------------------------- the body */
+    c.save();
+    birdBody(c);
+    if (st === 1) {
+      c.fillStyle = '#4a4740'; c.fill();
+      c.strokeStyle = 'rgba(226,214,196,.7)'; c.lineWidth = 1.4; c.stroke();
+      c.restore();
+    } else {
+      c.clip();
+      // Base mass: a small dark bird under an overhead key, belly bounced from
+      // the leaves below, which is why the underside is green rather than grey.
+      var body = c.createLinearGradient(0, BIRD.head.y - 70, 0, BIRD.tail.y + 40);
+      body.addColorStop(0, '#5c6b3a');
+      body.addColorStop(0.4, '#2f3a22');
+      body.addColorStop(0.75, '#1d2417');
+      body.addColorStop(1, '#2a3320');
+      c.fillStyle = body;
+      c.fillRect(0, 0, VW, VH);
+
+      if (st >= 3) {
+        /* Contour feathers. Each is placed in the body's own frame at its (u, v),
+         * scaled by the local half-width and rotated to lie along the axis, so
+         * the whole coat follows the form instead of being stamped over it. They
+         * are drawn tail-first: a feather overlaps the one behind it, and getting
+         * that order backwards is what makes plumage look like scales. */
+        var fr2 = rng(70707);
+        for (var row = 0; row < 30; row++) {
+          var bu = 0.02 + (row / 30) * 0.99;
+          var bp = birdAt(bu), bf = birdFrame(bu), bh = birdHalf(bu);
+          var cols = 11;
+          for (var cv = 0; cv < cols; cv++) {
+            // Jittered on both axes. A regular lattice of feathers is chain mail;
+            // what makes a coat read as a coat is that no two rows line up and
+            // every feather is a little longer or shorter than its neighbour.
+            var v = ((cv + (row % 2) * 0.5) / (cols - 1)) * 2 - 1 + (fr2() - 0.5) * 0.16;
+            if (Math.abs(v) > 1.04) continue;
+            var jitU = (fr2() - 0.5) * 0.022;
+            var bp2 = birdAt(clamp(bu + jitU, 0, 1));
+            var fx2 = bp2.x + bf.nx * bh * v;
+            var fy2 = bp2.y + bf.ny * bh * v;
+            var lam = Math.sqrt(Math.max(0, 1 - v * v));   // local normal
+            if (Math.abs(v) > 0.88) continue;
+            var size = (3.8 + fr2() * 2.1) * (0.66 + lam * 0.44);
+            // Back is iridescent green, belly is pale. The transition is the
+            // bird's own waterline and it sits low, not at the equator.
+            var backness = clamp((-v + 0.25) / 1.1, 0, 1);
+            var base = backness > 0.5
+              ? hsl(98 + backness * 26, 0.38, 0.12 + lam * 0.13)
+              : hsl(66, 0.1, 0.24 + lam * 0.2);
+            c.save();
+            c.translate(fx2, fy2);
+            // Feathers point back along the body and splay outward from the
+            // midline, which is the direction water would run off them.
+            c.rotate(Math.atan2(bf.ty, bf.tx) + Math.PI + v * 0.5 + (fr2() - 0.5) * 0.24);
+            c.beginPath();
+            c.moveTo(-size * 1.05, 0);
+            c.quadraticCurveTo(-size * 0.1, -size * 0.74, size * 0.95, 0);
+            c.quadraticCurveTo(-size * 0.1, size * 0.74, -size * 1.05, 0);
+            c.closePath();
+            c.fillStyle = base;
+            c.fill();
+            // One hairline of shadow along the trailing edge only. A full
+            // outline turns every feather into a sequin.
+            c.beginPath();
+            c.moveTo(-size * 1.05, 0);
+            c.quadraticCurveTo(-size * 0.1, size * 0.74, size * 0.95, 0);
+            c.strokeStyle = 'rgba(8,12,7,.2)';
+            c.lineWidth = 0.5;
+            c.stroke();
+            c.restore();
+          }
+        }
+      }
+
+      if (st >= 4) {
+        /* The gorget.
+         *
+         * Structural colour, computed. Each barbule sits at an angle on the
+         * throat; the path difference through its thin film goes as the cosine
+         * of that angle against the viewer, and hue follows the path difference.
+         * So a barbule pointing straight at you fires crimson, its neighbour
+         * thirty degrees off fires gold, and the one past that goes black - and
+         * when the head turns, the whole plate sweeps through the sequence.
+         * Nothing here is a keyframe or a gradient: turn is one number, and the
+         * flash is what falls out of it. */
+        var gr = rng(313131);
+        // The throat: an ellipse hung under the chin and running back onto the
+        // breast, tilted to follow the body axis.
+        var thX = BIRD.head.x - 4, thY = BIRD.head.y + 26;
+        for (var gi = 0; gi < 300; gi++) {
+          var ga = gr(), gb = Math.sqrt(gr());       // sqrt: even area, not even radius
+          var gang = ga * Math.PI * 2;
+          var gx = thX + Math.cos(gang) * gb * 34;
+          var gy = thY + Math.sin(gang) * gb * 22 + Math.cos(gang) * gb * 9;
+          // Barbule normal: the throat is a curved plate, so a barbule near its
+          // edge points further off-axis than one at its centre. Then the whole
+          // plate turns with the head.
+          var nAng = Math.cos(gang) * gb * 1.15 + turn;
+          var cosT = Math.cos(nAng);
+          // Thin-film path difference, normalised. Hue sweeps ~140 degrees over
+          // the useful range, which is what a real gorget does.
+          var pathd = clamp(cosT, -1, 1);
+          var hue = 348 - (1 - pathd) * 132;
+          // Off-axis barbules do not just shift hue, they stop returning light
+          // at all. That extinction is the reason a gorget can look black.
+          var amp = Math.pow(clamp(pathd, 0, 1), 2.6);
+          if (amp < 0.02) {
+            c.fillStyle = 'rgba(18,12,10,.55)';
+          } else {
+            c.fillStyle = hsl(hue, 0.72 + amp * 0.24, 0.16 + amp * 0.42);
+          }
+          c.save();
+          c.translate(gx, gy);
+          c.rotate(gang + 1.6);
+          c.beginPath();
+          c.ellipse(0, 0, 4.6, 2.3, 0, 0, Math.PI * 2);
+          c.fill();
+          c.restore();
+        }
+      }
+      c.restore();
+    }
+
+    /* --------------------------------------------------------------- tail */
+    if (st >= 1) {
+      c.save();
+      for (var ti = 0; ti < 5; ti++) {
+        var ta = -0.06 + (ti - 2) * 0.15 + Math.sin(tt * 1.3 + ti) * 0.025;
+        c.save();
+        c.translate(BIRD.tail.x + 6, BIRD.tail.y - 8);
+        c.rotate(Math.PI + 0.5 + ta);
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.quadraticCurveTo(34, -8, 74, -3);
+        c.quadraticCurveTo(36, 7, 0, 0);
+        c.closePath();
+        if (st === 1) {
+          c.strokeStyle = 'rgba(226,214,196,.55)'; c.lineWidth = 1.2; c.stroke();
+        } else {
+          var tg2 = c.createLinearGradient(0, 0, 96, 0);
+          tg2.addColorStop(0, '#232b1c');
+          tg2.addColorStop(0.7, '#39442c');
+          tg2.addColorStop(1, '#1a2015');
+          c.fillStyle = tg2;
+          c.fill();
+          if (st >= 3) {
+            for (var tv = 1; tv < 7; tv++) {
+              c.beginPath();
+              c.moveTo(5, 0);
+              c.quadraticCurveTo(38, -6 * (tv / 7), 70 * (0.5 + tv / 14), -2 * (tv / 7));
+              c.strokeStyle = 'rgba(12,16,10,.3)';
+              c.lineWidth = 0.8;
+              c.stroke();
+            }
+          }
+        }
+        c.restore();
+      }
+      c.restore();
+    }
+
+    /* ---------------------------------------------------------- head detail */
+    if (st >= 2) {
+      // Bill: two mandibles, not one line. The gape between them is the detail
+      // that makes a bill read as a tool rather than a spike.
+      c.save();
+      var bx0 = BIRD.head.x + 24, by0 = BIRD.head.y - 12;
+      var bx1 = BIRD.billTip.x, by1 = BIRD.billTip.y;
+      // Two mandibles with a gape between them, tapering to a point. A bill
+      // drawn as one line is a spike; the gape is what makes it a tool.
+      c.beginPath();
+      c.moveTo(bx0, by0 - 5);
+      c.quadraticCurveTo((bx0 + bx1) / 2, (by0 + by1) / 2 - 5, bx1, by1);
+      c.quadraticCurveTo((bx0 + bx1) / 2, (by0 + by1) / 2 + 3, bx0, by0 + 6);
+      c.closePath();
+      var bill = c.createLinearGradient(bx0, by0, bx1, by1);
+      bill.addColorStop(0, '#100e0c');
+      bill.addColorStop(0.55, '#282320');
+      bill.addColorStop(1, '#0b0a09');
+      c.fillStyle = bill;
+      c.fill();
+      // The culmen catches a thread of the key along its whole length.
+      c.beginPath();
+      c.moveTo(bx0 + 2, by0 - 4);
+      c.quadraticCurveTo((bx0 + bx1) / 2, (by0 + by1) / 2 - 4.5, bx1 - 2, by1 + 0.5);
+      c.strokeStyle = 'rgba(206,198,182,.26)';
+      c.lineWidth = 0.9;
+      c.stroke();
+      c.restore();
+
+      // Eye: black, wet, with one small hard catchlight and a pale crescent
+      // behind it. The white spot behind a hummingbird's eye is diagnostic.
+      c.beginPath();
+      c.arc(BIRD.head.x + 9, BIRD.head.y - 8, 6.4, 0, Math.PI * 2);
+      c.fillStyle = '#080706'; c.fill();
+      if (st >= 4) {
+        c.beginPath();
+        c.arc(BIRD.head.x + 6.8, BIRD.head.y - 10.2, 1.9, 0, Math.PI * 2);
+        c.fillStyle = 'rgba(250,248,242,.92)'; c.fill();
+        // The pale spot behind the eye. It is diagnostic, and leaving it out is
+        // what makes a drawn hummingbird read as a generic small bird.
+        c.beginPath();
+        c.ellipse(BIRD.head.x - 3, BIRD.head.y - 6, 5.5, 2.6, -0.35, 0, Math.PI * 2);
+        c.fillStyle = 'rgba(236,230,214,.55)'; c.fill();
+      }
+    }
+
+    /* --------------------------------------------------------- the near wing */
+    if (st >= 1) {
+      for (var w2 = 0; w2 < 26; w2++) {
+        var ph2 = beat + w2 / 26;
+        var dwell2 = 0.3 + 0.7 * (1 - Math.abs(Math.cos(ph2 * Math.PI * 2)));
+        birdWing(c, ph2, 0.05 * dwell2 * (st === 1 ? 3 : 1), st);
+      }
+    }
+
+    if (st >= 4) {
+      c.save();
+      c.globalAlpha = 0.5;
+      c.drawImage(grain, 0, 0, VW, VH);
+      c.restore();
+    }
+    c.globalAlpha = 1;
+  }
+
   var NOTES = {
     eye: 'Four hundred and sixty iris fibres, each with its own length, bow, width and value, drawn once into a layer and composited. The collarette is a wobbled path rather than a circle, the crypts sit inside it, and the vessels thin as they approach the limbus. The detail almost nobody draws is the caustic: light entering from the key refracts through the cornea and lands as a bright crescent on the far side of the iris, paired with the shadow the corneal overhang throws on the key side. The catchlight is a window with four panes, because a round white dot is what a drawn eye has and a photographed one never does.',
-    koi: 'The body is a spine carrying a travelling wave whose amplitude grows as u^1.6, so the head is nearly still and the tail does the work. Two hundred and eighty-six scales are placed in the spine’s local frame at their own (u, v) and shaded by the local normal, which means the wave carries them instead of sliding underneath them. Fins sample the spine at an earlier time rather than running their own easing curve: that lag is follow-through, and it is why they trail the turn instead of leading it.'
+    koi: 'The body is a spine carrying a travelling wave whose amplitude grows as u^1.6, so the head is nearly still and the tail does the work. Two hundred and eighty-six scales are placed in the spine’s local frame at their own (u, v) and shaded by the local normal, which means the wave carries them instead of sliding underneath them. Fins sample the spine at an earlier time rather than running their own easing curve: that lag is follow-through, and it is why they trail the turn instead of leading it.',
+    bird: 'A gorget has almost no pigment in it. The barbules are stacks of thin films, and the colour you see is light interfering with itself on the way back out, which makes it a function of viewing angle rather than a property of the bird. That is modelled here rather than painted: three hundred barbules each have a normal, the path difference through the film is computed against the viewer, and hue and extinction both fall out of it. The head turn is one number. The flash is the consequence. The wings are integrated rather than posed — twenty-six samples across the stroke, weighted by dwell time, which is longest at the reversals, and that weighting is the difference between motion blur and a fan of copies. Move the pointer to steer the head.'
   };
 
   function render(t) {
     if (subject === 'eye') drawEye(ctx, stage, t);
-    else drawKoi(ctx, stage, t);
+    else if (subject === 'koi') drawKoi(ctx, stage, t);
+    else drawBird(ctx, stage, t);
   }
 
   function setStage(i, quiet) {

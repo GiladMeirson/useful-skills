@@ -196,6 +196,76 @@ window.Render3D = (function () {
     ctx.restore();
   }
 
+  /* Every edge of a solid, including the ones on the far side.
+   *
+   * drawSolid strokes only the silhouette and the front faces, because that is
+   * what an opaque object looks like. This is the other thing: a hidden-line
+   * view, near edges bright and far edges dim, with a tick at each vertex. It
+   * reads as an object that has been *computed* rather than one that has been
+   * lit, which is the whole point of putting it behind a page about renderers.
+   *
+   * Edges are deduplicated by their vertex pair, so a cube draws twelve edges
+   * rather than twenty-four; drawing them twice doubles the alpha on every one
+   * and the mesh comes out looking like it has a seam down every face.
+   */
+  function wireSolid(ctx, mesh, opts) {
+    var scale = opts.scale, cx = opts.x, cy = opts.y;
+    var focal = opts.focal || 620;
+    var sv = new Array(mesh.verts.length);
+    var zmin = Infinity, zmax = -Infinity, i;
+
+    for (i = 0; i < mesh.verts.length; i++) {
+      var p = rotatePoint(mesh.verts[i], opts.rx, opts.ry, opts.rz);
+      p = v3(p.x * scale, p.y * scale, p.z * scale);
+      var f = focal / (focal + p.z);
+      sv[i] = { x: cx + p.x * f, y: cy + p.y * f, z: p.z };
+      if (p.z < zmin) zmin = p.z;
+      if (p.z > zmax) zmax = p.z;
+    }
+    var span = (zmax - zmin) || 1;
+
+    if (!mesh.edges) {
+      var seen = {}, list = [];
+      for (i = 0; i < mesh.faces.length; i++) {
+        var fc = mesh.faces[i];
+        for (var j = 0; j < fc.length; j++) {
+          var a = fc[j], b = fc[(j + 1) % fc.length];
+          var key = Math.min(a, b) + ':' + Math.max(a, b);
+          if (seen[key]) continue;
+          seen[key] = 1;
+          list.push([a, b]);
+        }
+      }
+      mesh.edges = list;
+    }
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (i = 0; i < mesh.edges.length; i++) {
+      var e = mesh.edges[i], p1 = sv[e[0]], p2 = sv[e[1]];
+      // Depth cue by alpha alone. A wireframe with uniform line weight is a
+      // flat pattern; the only thing that makes it read as a volume is the far
+      // half being visibly weaker than the near half.
+      var d = 1 - ((p1.z + p2.z) * 0.5 - zmin) / span;
+      ctx.globalAlpha = opts.alpha * (0.16 + d * 0.84);
+      ctx.strokeStyle = opts.stroke;
+      ctx.lineWidth = opts.width || 0.7;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+    if (opts.vertex) {
+      for (i = 0; i < sv.length; i++) {
+        var s = sv[i];
+        ctx.globalAlpha = opts.alpha * (0.2 + (1 - (s.z - zmin) / span) * 0.8);
+        ctx.fillStyle = opts.vertex;
+        ctx.fillRect(s.x - 1, s.y - 1, 2, 2);
+      }
+    }
+    ctx.restore();
+  }
+
   /* ------------------------------------------------------------ camera ----
    *
    * drawSolid above places an object at a screen coordinate and fakes depth
@@ -249,7 +319,7 @@ window.Render3D = (function () {
   }
 
   return {
-    solids: SOLIDS, drawSolid: drawSolid,
+    solids: SOLIDS, drawSolid: drawSolid, wireSolid: wireSolid,
     camera: camera, project: project, bokehSprite: bokehSprite,
     v3: v3, norm3: norm3, rotatePoint: rotatePoint
   };

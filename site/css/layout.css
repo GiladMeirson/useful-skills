@@ -28,11 +28,11 @@
   height: 100%;
   z-index: var(--z-grid);
   pointer-events: none;
-  opacity: .5;
+  opacity: .78;
 }
-@media (prefers-color-scheme: light) { .depth-field { opacity: .2; mix-blend-mode: multiply; } }
-:root[data-theme="light"] .depth-field { opacity: .2; mix-blend-mode: multiply; }
-:root[data-theme="dark"]  .depth-field { opacity: .5; mix-blend-mode: normal; }
+@media (prefers-color-scheme: light) { .depth-field { opacity: .34; mix-blend-mode: multiply; } }
+:root[data-theme="light"] .depth-field { opacity: .34; mix-blend-mode: multiply; }
+:root[data-theme="dark"]  .depth-field { opacity: .78; mix-blend-mode: normal; }
 @media (max-width: 700px) { .depth-field { display: none; } }
 
 /* Four hairlines behind everything. They are the reason the layout reads as a

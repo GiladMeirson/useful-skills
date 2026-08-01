@@ -255,6 +255,36 @@ Demos.register('atelier-showpiece', function (root) {
     c.lineWidth = 1.1;
     c.stroke();
 
+    /* Contraction furrows: concentric creases in the outer third, left behind by
+     * the sphincter working. They cross the radial fibres, which is exactly why
+     * they matter - an iris built only of spokes reads as a sunburst, and it is
+     * the second, perpendicular family of lines that makes it read as tissue
+     * that has been moving for forty years. Each furrow is a wobbled ring with a
+     * lit upper edge and a dark lower one, because a crease is a groove. */
+    for (var fu = 0; fu < 6; fu++) {
+      var fr = R * (0.58 + fu * 0.068 + rand() * 0.014);
+      var fphase = rand() * Math.PI * 2;
+      var fw = 0.02 + rand() * 0.022;
+      c.beginPath();
+      for (var fk = 0; fk <= 140; fk++) {
+        var fa = (fk / 140) * Math.PI * 2;
+        var rr = fr * (1 + Math.sin(fa * 3 + fphase) * fw + Math.sin(fa * 8 + fphase * 2) * fw * 0.45);
+        var fx = cx + Math.cos(fa) * rr, fy = cy + Math.sin(fa) * rr;
+        fk === 0 ? c.moveTo(fx, fy) : c.lineTo(fx, fy);
+      }
+      c.closePath();
+      c.strokeStyle = 'rgba(26,18,6,' + (0.1 + rand() * 0.12).toFixed(2) + ')';
+      c.lineWidth = 1.6 + rand() * 1.4;
+      c.stroke();
+      // The lit lip of the groove, offset half a pixel outward.
+      c.save();
+      c.translate(0, -1);
+      c.strokeStyle = 'rgba(226,198,128,.07)';
+      c.lineWidth = 1;
+      c.stroke();
+      c.restore();
+    }
+
     // Crypts: the dark pits sitting just inside the collarette.
     for (var q = 0; q < 18; q++) {
       var qa = rand() * Math.PI * 2;
@@ -382,6 +412,71 @@ Demos.register('atelier-showpiece', function (root) {
       c.restore();
     }
 
+    if (st >= 3) {
+      /* Skin. Up to here the lids are gradients, and a gradient is not skin: skin
+       * has pores, and it creases where it folds. Both are baked into the plate,
+       * so this loop of nine hundred marks runs once rather than sixty times a
+       * second. */
+      var sr = rng(556677);
+      c.save();
+      lidBand(c, L.up, 78, true);
+      c.clip();
+      for (var pi = 0; pi < 900; pi++) {
+        var px3 = EYE.inner.x + sr() * (EYE.outer.x - EYE.inner.x);
+        var py3 = L.top - 80 + sr() * 96;
+        var lit3 = sr();
+        c.fillStyle = lit3 > 0.55
+          ? 'rgba(196,158,124,' + (0.03 + sr() * 0.055).toFixed(3) + ')'
+          : 'rgba(44,26,17,' + (0.03 + sr() * 0.06).toFixed(3) + ')';
+        c.beginPath();
+        c.arc(px3, py3, 0.5 + sr() * 1.1, 0, Math.PI * 2);
+        c.fill();
+      }
+      // Crepe: fine creases running parallel to the margin, bunched near it.
+      for (var cr2 = 0; cr2 < 9; cr2++) {
+        offsetCurve(c, L.up, 16 + cr2 * cr2 * 0.95 + sr() * 5, true);
+        c.strokeStyle = 'rgba(38,22,14,' + (0.07 + sr() * 0.08).toFixed(3) + ')';
+        c.lineWidth = 0.8 + sr() * 0.8;
+        c.stroke();
+      }
+      c.restore();
+
+      // Crow's feet, fanning off the temporal canthus. Skin folds where it is
+      // repeatedly compressed, and the outer corner is where an eye does that.
+      c.save();
+      c.lineCap = 'round';
+      for (var cw = 0; cw < 6; cw++) {
+        var ang = -0.5 + cw * 0.2 + sr() * 0.05;
+        var len3 = 46 + sr() * 62;
+        c.beginPath();
+        c.moveTo(EYE.outer.x + 4, EYE.outer.y);
+        c.quadraticCurveTo(
+          EYE.outer.x + len3 * 0.55, EYE.outer.y + Math.sin(ang) * len3 * 0.45,
+          EYE.outer.x + len3, EYE.outer.y + Math.sin(ang) * len3);
+        c.strokeStyle = 'rgba(40,23,15,' + (0.16 + sr() * 0.18).toFixed(3) + ')';
+        c.lineWidth = 1 + sr() * 1.4;
+        c.stroke();
+      }
+      c.restore();
+
+      // The lower lid catches light, so its pores read as highlights rather than
+      // as pits: same texture, inverted.
+      c.save();
+      lidBand(c, L.lo, 30, true);
+      c.clip();
+      for (var pj = 0; pj < 420; pj++) {
+        var qx = EYE.inner.x + sr() * (EYE.outer.x - EYE.inner.x);
+        var qy = L.bot - 4 + sr() * 40;
+        c.fillStyle = sr() > 0.4
+          ? 'rgba(214,176,140,' + (0.03 + sr() * 0.06).toFixed(3) + ')'
+          : 'rgba(52,32,20,' + (0.025 + sr() * 0.05).toFixed(3) + ')';
+        c.beginPath();
+        c.arc(qx, qy, 0.6 + sr() * 1.3, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+    }
+
     c.save();
     aperturePath(c, L);
     c.clip();
@@ -443,6 +538,28 @@ Demos.register('atelier-showpiece', function (root) {
         c.lineWidth = 0.5 + vr() * 1.1;
         c.stroke();
       }
+
+      /* The perilimbal arcade: the fine vessels that run up to the cornea and
+       * stop. Every vessel above ends somewhere arbitrary; these end at the same
+       * radius, because that is where the tissue they feed ends. That shared
+       * boundary is what tells a viewer the cornea is a separate structure
+       * sitting on the eye rather than a colour printed on it. */
+      for (var aa = 0; aa < 40; aa++) {
+        var ang2 = vr() * Math.PI * 2;
+        // Sparse at the top and bottom, where the lids cover the sclera anyway.
+        if (Math.abs(Math.sin(ang2)) > 0.72) continue;
+        var out2 = R * (1.06 + vr() * 0.5);
+        var inn = R * (1.015 + vr() * 0.03);
+        c.beginPath();
+        c.moveTo(icx + Math.cos(ang2) * out2, icy + Math.sin(ang2) * out2 * 0.9);
+        c.quadraticCurveTo(
+          icx + Math.cos(ang2 + 0.05) * (out2 + inn) * 0.5,
+          icy + Math.sin(ang2 + 0.05) * (out2 + inn) * 0.45,
+          icx + Math.cos(ang2) * inn, icy + Math.sin(ang2) * inn * 0.9);
+        c.strokeStyle = 'rgba(172,74,58,' + (0.1 + vr() * 0.2).toFixed(2) + ')';
+        c.lineWidth = 0.5 + vr() * 0.7;
+        c.stroke();
+      }
     }
     c.restore();
   }
@@ -501,8 +618,16 @@ Demos.register('atelier-showpiece', function (root) {
       c.lineCap = 'round';
       // Upper set. Root and direction both come off the margin curve, so a lash
       // grows out of the lid instead of being laid on top of it.
+      /* Lashes grow in clumps of two and three, not on a comb. The root is
+       * quantised to a cluster and then jittered inside it, which is why the
+       * spacing along the margin comes out uneven the way a real lash line is.
+       * An evenly-spaced lash line is the single most common tell in a drawn
+       * eye after the round white catchlight. */
+      var CLUMPS = 30;
       for (var li = 0; li < 76; li++) {
-        var u = 0.07 + (li / 75) * 0.86 + (lr() - 0.5) * 0.008;
+        var clump = Math.floor(li / 76 * CLUMPS);
+        var u = 0.07 + (clump / (CLUMPS - 1)) * 0.86
+          + (lr() - 0.5) * 0.022 + (lr() - 0.5) * 0.006;
         var p = lidAt(L.up, u), n = lidNormal(L.up, u);
         var arch = Math.pow(Math.sin(u * Math.PI), 0.42);
         var len = (20 + lr() * 34) * (0.4 + arch * 0.8) * (1 - blink * 0.7);
@@ -518,8 +643,13 @@ Demos.register('atelier-showpiece', function (root) {
           p.x + dx * len * 0.55, p.y + dy * len * 0.55,
           p.x + dx * len - n.x * curl * len * 0.34 + dy * curl * len * 0.5,
           p.y + dy * len - n.y * curl * len * 0.34 - dx * curl * len * 0.5);
-        c.strokeStyle = 'rgba(12,7,4,' + (0.45 + lr() * 0.5).toFixed(2) + ')';
-        c.lineWidth = 2.5 - arch * 0.5;
+        // Roughly a third sit behind the ones in front of them, so they read
+        // lighter and thinner. Uniform lash value is a flat fringe.
+        var behind = lr() < 0.34;
+        c.strokeStyle = behind
+          ? 'rgba(30,19,12,' + (0.22 + lr() * 0.22).toFixed(2) + ')'
+          : 'rgba(12,7,4,' + (0.5 + lr() * 0.45).toFixed(2) + ')';
+        c.lineWidth = (behind ? 1.5 : 2.6) - arch * 0.5;
         c.stroke();
       }
       // Lower set: shorter, sparser, angled the other way.
@@ -583,6 +713,18 @@ Demos.register('atelier-showpiece', function (root) {
     }
 
     if (st >= 4) {
+      /* The limbal transition. The cornea does not stop at a hard circle: for
+         * a couple of millimetres it thins into the sclera, and that annulus is
+         * neither iris nor white but a cool, slightly translucent grey. Drawing
+       * a crisp edge here is what makes an iris look like a contact lens
+       * sitting on top of an eye rather than part of one. */
+      var lim = c.createRadialGradient(icx, icy, R * 0.9, icx, icy, R * 1.02);
+      lim.addColorStop(0, 'rgba(126,134,146,0)');
+      lim.addColorStop(0.55, 'rgba(120,128,142,.16)');
+      lim.addColorStop(1, 'rgba(96,104,118,.42)');
+      c.fillStyle = lim;
+      c.fillRect(icx - R, icy - R, R * 2, R * 2);
+
       /* The caustic.
        *
        * The cornea is a lens in front of the iris, so light from the key does
@@ -622,9 +764,22 @@ Demos.register('atelier-showpiece', function (root) {
     c.fillStyle = pupg; c.fill();
 
     if (st >= 3) {
-      c.beginPath(); c.arc(icx, icy, pr + 1.5, 0, Math.PI * 2);
-      c.strokeStyle = 'rgba(54,37,12,.55)';
-      c.lineWidth = 3;
+      /* The pupillary ruff: the pigmented frill where the back of the iris wraps
+       * around the pupil margin. It is scalloped, not circular, and it is the
+       * detail that stops the pupil reading as a hole punched through a disc. */
+      c.beginPath();
+      for (var rk = 0; rk <= 120; rk++) {
+        var ra = (rk / 120) * Math.PI * 2;
+        var rr2 = pr + 1.6 + Math.sin(ra * 17) * 1.5 + Math.sin(ra * 29 + 1.1) * 0.8;
+        var rx2 = icx + Math.cos(ra) * rr2, ry2 = icy + Math.sin(ra) * rr2;
+        rk === 0 ? c.moveTo(rx2, ry2) : c.lineTo(rx2, ry2);
+      }
+      c.closePath();
+      c.strokeStyle = 'rgba(48,32,10,.62)';
+      c.lineWidth = 3.2;
+      c.stroke();
+      c.strokeStyle = 'rgba(150,118,58,.24)';
+      c.lineWidth = 1;
       c.stroke();
     }
 
@@ -1187,14 +1342,520 @@ Demos.register('atelier-showpiece', function (root) {
     }
   }
 
+
+  /* ==========================================================================
+   * SUBJECT THREE - the hummingbird
+   *
+   * The hardest of the three, for a reason that has nothing to do with anatomy.
+   *
+   * A gorget is not coloured. It has no pigment worth speaking of: the barbules
+   * are stacks of thin films a few hundred nanometres thick, and what you see is
+   * light interfering with itself on the way back out. Which means the colour is
+   * a function of the angle you are looking from, not a property of the bird -
+   * turn the head fifteen degrees and a throat goes from crimson to black. This
+   * is modelled here rather than faked: every gorget barbule has a normal, the
+   * path difference through its film is computed from that normal against the
+   * viewer, and the hue comes out of the interference. Nothing is keyframed. The
+   * flash happens because the head turns.
+   *
+   * The wings are the other half. A hummingbird beats at fifty hertz and a
+   * screen refreshes at sixty, so there is no honest single position to draw: at
+   * any real shutter speed the wing IS the smear. So it is integrated - twenty-six
+   * samples along the stroke, weighted by how long the wing spends at each, which
+   * is longest at the reversals where it stops to turn around. That weighting is
+   * why the blur has bright ends and a thin middle, and it is the difference
+   * between motion blur and a fan of copies.
+   * ========================================================================== */
+  var BIRD = {
+    tail: { x: 344, y: 300 },     // where the rectrices leave the body
+    head: { x: 452, y: 216 },     // skull centre
+    headR: 35,
+    billTip: { x: 592, y: 152 },
+    shoulder: { x: 424, y: 252 }
+  };
+
+  // hsl to rgb, because interference is naturally expressed as a hue sweep and
+  // nothing else in this file needs a colour wheel.
+  function hsl(h, sat, li) {
+    h = ((h % 360) + 360) % 360 / 60;
+    var cc = (1 - Math.abs(2 * li - 1)) * sat;
+    var x = cc * (1 - Math.abs((h % 2) - 1));
+    var m = li - cc / 2;
+    var r = 0, g = 0, b = 0;
+    if (h < 1) { r = cc; g = x; }
+    else if (h < 2) { r = x; g = cc; }
+    else if (h < 3) { g = cc; b = x; }
+    else if (h < 4) { g = x; b = cc; }
+    else if (h < 5) { r = x; b = cc; }
+    else { r = cc; b = x; }
+    return G.rgb((r + m) * 255, (g + m) * 255, (b + m) * 255);
+  }
+
+  // Body axis, tail to head. u = 0 at the tail base, 1 at the back of the skull.
+  function birdAt(u) {
+    return {
+      x: lerp(BIRD.tail.x, BIRD.head.x, u),
+      y: lerp(BIRD.tail.y, BIRD.head.y, u) + Math.sin(u * Math.PI) * 16
+    };
+  }
+  function birdFrame(u) {
+    var a = birdAt(Math.max(0, u - 0.01)), b = birdAt(Math.min(1, u + 0.01));
+    var l = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    return { tx: (b.x - a.x) / l, ty: (b.y - a.y) / l, nx: -(b.y - a.y) / l, ny: (b.x - a.x) / l };
+  }
+  // Half-width. A hummingbird is a teardrop: widest just behind the shoulder,
+  // narrow at the wrist where the tail leaves.
+  function birdHalf(u) {
+    // Widest at the breast, just behind the shoulder, and it never tapers to a
+    // point: the tail leaves a body that still has width.
+    return 13 + Math.pow(Math.sin(Math.pow(u, 0.7) * Math.PI * 0.9), 0.62) * 33;
+  }
+
+  function birdBody(c) {
+    var i, p, f, h;
+    c.beginPath();
+    for (i = 0; i <= 40; i++) {
+      var u = i / 40; p = birdAt(u); f = birdFrame(u); h = birdHalf(u);
+      var x = p.x + f.nx * h, y = p.y + f.ny * h;
+      i === 0 ? c.moveTo(x, y) : c.lineTo(x, y);
+    }
+    c.arc(BIRD.head.x, BIRD.head.y, BIRD.headR, 0, Math.PI * 2);
+    for (i = 40; i >= 0; i--) {
+      var u2 = i / 40; p = birdAt(u2); f = birdFrame(u2); h = birdHalf(u2);
+      c.lineTo(p.x - f.nx * h, p.y - f.ny * h);
+    }
+    c.closePath();
+  }
+
+  /* One wing, at one instant of the stroke.
+   *
+   * The blade is a long tapered vane hinged at the shoulder. Its chord narrows
+   * as the wing approaches a reversal, because at that moment it is turning over
+   * and presenting its edge to the viewer - which is also why the smear is
+   * brightest there. */
+  function birdWing(c, phase, alpha, st) {
+    var sx = BIRD.shoulder.x, sy = BIRD.shoulder.y;
+    var sweep = Math.sin(phase * Math.PI * 2);
+    // The stroke plane of a hovering hummingbird is almost horizontal, tilted
+    // back along the body: the wing sweeps fore and aft, not up and down. That
+    // is the whole reason the bird can hold station.
+    var ang = -0.62 + sweep * 1.12;
+    var chord = 0.2 + 0.8 * Math.abs(Math.cos(phase * Math.PI * 2));
+    var len = 138;
+
+    c.save();
+    c.translate(sx, sy);
+    c.rotate(ang);
+    c.globalAlpha = alpha;
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.bezierCurveTo(len * 0.36, -30 * chord, len * 0.78, -34 * chord, len, -6 * chord);
+    c.bezierCurveTo(len * 0.74, 12 * chord, len * 0.34, 14 * chord, 0, 0);
+    c.closePath();
+    if (st === 1) {
+      c.strokeStyle = 'rgba(226,214,196,.5)'; c.lineWidth = 1.2; c.stroke();
+    } else {
+      var wg = c.createLinearGradient(0, -20, len, 10);
+      wg.addColorStop(0, 'rgba(52,48,44,.9)');
+      wg.addColorStop(0.5, 'rgba(146,138,126,.72)');
+      wg.addColorStop(1, 'rgba(206,198,184,.34)');
+      c.fillStyle = wg;
+      c.fill();
+      if (st === 3) {
+        // Primaries. Only at the texture stage: inside the finished smear these
+        // are twenty-six overlapping fans of hairlines, which is just noise.
+        for (var k = 1; k <= 9; k++) {
+          var kk = k / 10;
+          c.beginPath();
+          c.moveTo(len * 0.1, 0);
+          c.quadraticCurveTo(len * 0.6, -26 * chord * kk, len * (0.5 + kk * 0.5), -6 * chord * kk);
+          c.strokeStyle = 'rgba(40,36,32,.22)';
+          c.lineWidth = 0.9;
+          c.stroke();
+        }
+      }
+    }
+    c.restore();
+  }
+
+  function drawBird(c, st, t) {
+    var tt = reduce ? 0.6 : t;
+
+    // The head turns. Everything the gorget does is downstream of this one
+    // number, and it is a slow oscillation with a fast flick in it, because a
+    // hummingbird's head does not sweep - it snaps and holds.
+    var turnBase = Math.sin(tt * 0.55) * 0.5;
+    var flick = Math.sin(tt * 2.1) * 0.12 * Math.max(0, Math.sin(tt * 0.37));
+    var turn = pointer.inside ? (pointer.x - 0.5) * 1.5 : turnBase + flick;
+
+    // Ground: an out-of-focus garden. It is a backdrop, so it gets exactly one
+    // idea (warm light behind cool foliage) and no detail that could compete.
+    var bg = c.createLinearGradient(0, 0, VW * 0.6, VH);
+    bg.addColorStop(0, '#1c2418');
+    bg.addColorStop(0.45, '#243021');
+    bg.addColorStop(1, '#12180f');
+    c.fillStyle = st === 0 ? '#0b0a09' : bg;
+    c.fillRect(0, 0, VW, VH);
+
+    if (st === 0) {
+      c.strokeStyle = 'rgba(223,106,65,.55)';
+      c.lineWidth = 1;
+      c.setLineDash([4, 5]);
+      c.beginPath();
+      for (var ai = 0; ai <= 30; ai++) {
+        var ap = birdAt(ai / 30);
+        ai === 0 ? c.moveTo(ap.x, ap.y) : c.lineTo(ap.x, ap.y);
+      }
+      c.stroke();
+      c.beginPath(); c.arc(BIRD.head.x, BIRD.head.y, BIRD.headR, 0, Math.PI * 2); c.stroke();
+      // Bill, and the wing arc it has to balance against.
+      c.beginPath();
+      c.moveTo(BIRD.head.x + 24, BIRD.head.y - 12);
+      c.lineTo(BIRD.billTip.x, BIRD.billTip.y);
+      c.stroke();
+      c.beginPath();
+      c.arc(BIRD.shoulder.x, BIRD.shoulder.y, 138, -1.74, 0.5);
+      c.stroke();
+      c.setLineDash([]);
+      for (var ri = 0; ri <= 10; ri++) {
+        var ru = ri / 10, rp = birdAt(ru), rf = birdFrame(ru), rh = birdHalf(ru);
+        c.strokeStyle = 'rgba(150,142,132,.4)';
+        c.beginPath();
+        c.moveTo(rp.x + rf.nx * rh, rp.y + rf.ny * rh);
+        c.lineTo(rp.x - rf.nx * rh, rp.y - rf.ny * rh);
+        c.stroke();
+        c.fillStyle = '#df6a41';
+        c.fillRect(rp.x - 2, rp.y - 2, 4, 4);
+      }
+      c.font = '500 11px ui-monospace, monospace';
+      c.fillStyle = 'rgba(140,133,124,.7)';
+      c.fillText('bill = 1.5 x skull   body = 2.2 x skull   stroke plane near horizontal, not vertical', 150, VH - 30);
+      return;
+    }
+
+    if (st >= 2) {
+      // Bokeh behind: the backdrop is a long lens wide open, which is the only
+      // honest way to put a garden behind a bird without drawing a garden.
+      for (var bi = 0; bi < 16; bi++) {
+        var bx = ((bi * 197) % 900), by = ((bi * 311) % 420) + 20;
+        var br = 26 + (bi % 5) * 22;
+        var bgl = c.createRadialGradient(bx, by, 1, bx, by, br);
+        var warm = bi % 3 === 0;
+        bgl.addColorStop(0, warm ? 'rgba(214,176,96,.16)' : 'rgba(126,168,110,.13)');
+        bgl.addColorStop(1, 'rgba(0,0,0,0)');
+        c.fillStyle = bgl;
+        c.fillRect(bx - br, by - br, br * 2, br * 2);
+      }
+    }
+
+    /* ------------------------------------------------------------- the flower */
+    if (st >= 2) {
+      var fx = 690, fy = 132;
+      c.save();
+      c.translate(fx, fy);
+      c.rotate(-0.5);
+      for (var pe = 0; pe < 5; pe++) {
+        c.save();
+        c.rotate((pe / 5) * Math.PI * 2 + 0.3);
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.bezierCurveTo(24, -18, 58, -20, 70, 0);
+        c.bezierCurveTo(58, 20, 24, 18, 0, 0);
+        c.closePath();
+        var pg = c.createLinearGradient(0, 0, 70, 0);
+        pg.addColorStop(0, '#8e2440');
+        pg.addColorStop(0.5, '#c94b64');
+        pg.addColorStop(1, '#e8829a');
+        c.fillStyle = pg;
+        c.fill();
+        if (st >= 3) {
+          // Veins run to the petal tip, and they are what makes a petal read as
+          // a surface rather than a swatch.
+          for (var v2 = 0; v2 < 5; v2++) {
+            var vv = (v2 - 2) / 2;
+            c.beginPath();
+            c.moveTo(4, 0);
+            c.quadraticCurveTo(34, vv * 13, 66, vv * 4);
+            c.strokeStyle = 'rgba(255,208,220,.2)';
+            c.lineWidth = 0.8;
+            c.stroke();
+          }
+        }
+        c.restore();
+      }
+      // Throat of the corolla, and the stamens the bird is actually here for.
+      var tg = c.createRadialGradient(0, 0, 2, 0, 0, 26);
+      tg.addColorStop(0, '#3d0c1a');
+      tg.addColorStop(1, '#96304a');
+      c.fillStyle = tg;
+      c.beginPath(); c.arc(0, 0, 20, 0, Math.PI * 2); c.fill();
+      if (st >= 4) {
+        for (var sm = 0; sm < 6; sm++) {
+          var sa = -0.9 + sm * 0.24;
+          c.beginPath();
+          c.moveTo(0, 0);
+          c.quadraticCurveTo(Math.cos(sa) * 30, Math.sin(sa) * 30 - 8, Math.cos(sa) * 46, Math.sin(sa) * 46 - 6);
+          c.strokeStyle = 'rgba(246,226,178,.6)';
+          c.lineWidth = 1.3;
+          c.stroke();
+          c.beginPath();
+          c.arc(Math.cos(sa) * 46, Math.sin(sa) * 46 - 6, 2.6, 0, Math.PI * 2);
+          c.fillStyle = '#f2d78e';
+          c.fill();
+        }
+      }
+      c.restore();
+    }
+
+    /* --------------------------------------------------------- the far wing */
+    // Behind the body, dimmer, a half-beat out of phase: the two wings of a
+    // hovering bird are not synchronised on screen because one is further away.
+    var beat = tt * 3.1;
+    if (st >= 1) {
+      for (var w1 = 0; w1 < 26; w1++) {
+        var ph1 = beat + 0.5 + w1 / 26;
+        // Weighted by dwell: the wing spends longest where it is reversing, so
+        // that is where the smear is dense. A flat weight is a fan of copies.
+        var dwell1 = 0.3 + 0.7 * (1 - Math.abs(Math.cos(ph1 * Math.PI * 2)));
+        birdWing(c, ph1, 0.036 * dwell1 * (st === 1 ? 3 : 1), st);
+      }
+    }
+
+    /* ------------------------------------------------------------- the body */
+    c.save();
+    birdBody(c);
+    if (st === 1) {
+      c.fillStyle = '#4a4740'; c.fill();
+      c.strokeStyle = 'rgba(226,214,196,.7)'; c.lineWidth = 1.4; c.stroke();
+      c.restore();
+    } else {
+      c.clip();
+      // Base mass: a small dark bird under an overhead key, belly bounced from
+      // the leaves below, which is why the underside is green rather than grey.
+      var body = c.createLinearGradient(0, BIRD.head.y - 70, 0, BIRD.tail.y + 40);
+      body.addColorStop(0, '#5c6b3a');
+      body.addColorStop(0.4, '#2f3a22');
+      body.addColorStop(0.75, '#1d2417');
+      body.addColorStop(1, '#2a3320');
+      c.fillStyle = body;
+      c.fillRect(0, 0, VW, VH);
+
+      if (st >= 3) {
+        /* Contour feathers. Each is placed in the body's own frame at its (u, v),
+         * scaled by the local half-width and rotated to lie along the axis, so
+         * the whole coat follows the form instead of being stamped over it. They
+         * are drawn tail-first: a feather overlaps the one behind it, and getting
+         * that order backwards is what makes plumage look like scales. */
+        var fr2 = rng(70707);
+        for (var row = 0; row < 30; row++) {
+          var bu = 0.02 + (row / 30) * 0.99;
+          var bp = birdAt(bu), bf = birdFrame(bu), bh = birdHalf(bu);
+          var cols = 11;
+          for (var cv = 0; cv < cols; cv++) {
+            // Jittered on both axes. A regular lattice of feathers is chain mail;
+            // what makes a coat read as a coat is that no two rows line up and
+            // every feather is a little longer or shorter than its neighbour.
+            var v = ((cv + (row % 2) * 0.5) / (cols - 1)) * 2 - 1 + (fr2() - 0.5) * 0.16;
+            if (Math.abs(v) > 1.04) continue;
+            var jitU = (fr2() - 0.5) * 0.022;
+            var bp2 = birdAt(clamp(bu + jitU, 0, 1));
+            var fx2 = bp2.x + bf.nx * bh * v;
+            var fy2 = bp2.y + bf.ny * bh * v;
+            var lam = Math.sqrt(Math.max(0, 1 - v * v));   // local normal
+            if (Math.abs(v) > 0.88) continue;
+            var size = (3.8 + fr2() * 2.1) * (0.66 + lam * 0.44);
+            // Back is iridescent green, belly is pale. The transition is the
+            // bird's own waterline and it sits low, not at the equator.
+            var backness = clamp((-v + 0.25) / 1.1, 0, 1);
+            var base = backness > 0.5
+              ? hsl(98 + backness * 26, 0.38, 0.12 + lam * 0.13)
+              : hsl(66, 0.1, 0.24 + lam * 0.2);
+            c.save();
+            c.translate(fx2, fy2);
+            // Feathers point back along the body and splay outward from the
+            // midline, which is the direction water would run off them.
+            c.rotate(Math.atan2(bf.ty, bf.tx) + Math.PI + v * 0.5 + (fr2() - 0.5) * 0.24);
+            c.beginPath();
+            c.moveTo(-size * 1.05, 0);
+            c.quadraticCurveTo(-size * 0.1, -size * 0.74, size * 0.95, 0);
+            c.quadraticCurveTo(-size * 0.1, size * 0.74, -size * 1.05, 0);
+            c.closePath();
+            c.fillStyle = base;
+            c.fill();
+            // One hairline of shadow along the trailing edge only. A full
+            // outline turns every feather into a sequin.
+            c.beginPath();
+            c.moveTo(-size * 1.05, 0);
+            c.quadraticCurveTo(-size * 0.1, size * 0.74, size * 0.95, 0);
+            c.strokeStyle = 'rgba(8,12,7,.2)';
+            c.lineWidth = 0.5;
+            c.stroke();
+            c.restore();
+          }
+        }
+      }
+
+      if (st >= 4) {
+        /* The gorget.
+         *
+         * Structural colour, computed. Each barbule sits at an angle on the
+         * throat; the path difference through its thin film goes as the cosine
+         * of that angle against the viewer, and hue follows the path difference.
+         * So a barbule pointing straight at you fires crimson, its neighbour
+         * thirty degrees off fires gold, and the one past that goes black - and
+         * when the head turns, the whole plate sweeps through the sequence.
+         * Nothing here is a keyframe or a gradient: turn is one number, and the
+         * flash is what falls out of it. */
+        var gr = rng(313131);
+        // The throat: an ellipse hung under the chin and running back onto the
+        // breast, tilted to follow the body axis.
+        var thX = BIRD.head.x - 4, thY = BIRD.head.y + 26;
+        for (var gi = 0; gi < 300; gi++) {
+          var ga = gr(), gb = Math.sqrt(gr());       // sqrt: even area, not even radius
+          var gang = ga * Math.PI * 2;
+          var gx = thX + Math.cos(gang) * gb * 34;
+          var gy = thY + Math.sin(gang) * gb * 22 + Math.cos(gang) * gb * 9;
+          // Barbule normal: the throat is a curved plate, so a barbule near its
+          // edge points further off-axis than one at its centre. Then the whole
+          // plate turns with the head.
+          var nAng = Math.cos(gang) * gb * 1.15 + turn;
+          var cosT = Math.cos(nAng);
+          // Thin-film path difference, normalised. Hue sweeps ~140 degrees over
+          // the useful range, which is what a real gorget does.
+          var pathd = clamp(cosT, -1, 1);
+          var hue = 348 - (1 - pathd) * 132;
+          // Off-axis barbules do not just shift hue, they stop returning light
+          // at all. That extinction is the reason a gorget can look black.
+          var amp = Math.pow(clamp(pathd, 0, 1), 2.6);
+          if (amp < 0.02) {
+            c.fillStyle = 'rgba(18,12,10,.55)';
+          } else {
+            c.fillStyle = hsl(hue, 0.72 + amp * 0.24, 0.16 + amp * 0.42);
+          }
+          c.save();
+          c.translate(gx, gy);
+          c.rotate(gang + 1.6);
+          c.beginPath();
+          c.ellipse(0, 0, 4.6, 2.3, 0, 0, Math.PI * 2);
+          c.fill();
+          c.restore();
+        }
+      }
+      c.restore();
+    }
+
+    /* --------------------------------------------------------------- tail */
+    if (st >= 1) {
+      c.save();
+      for (var ti = 0; ti < 5; ti++) {
+        var ta = -0.06 + (ti - 2) * 0.15 + Math.sin(tt * 1.3 + ti) * 0.025;
+        c.save();
+        c.translate(BIRD.tail.x + 6, BIRD.tail.y - 8);
+        c.rotate(Math.PI + 0.5 + ta);
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.quadraticCurveTo(34, -8, 74, -3);
+        c.quadraticCurveTo(36, 7, 0, 0);
+        c.closePath();
+        if (st === 1) {
+          c.strokeStyle = 'rgba(226,214,196,.55)'; c.lineWidth = 1.2; c.stroke();
+        } else {
+          var tg2 = c.createLinearGradient(0, 0, 96, 0);
+          tg2.addColorStop(0, '#232b1c');
+          tg2.addColorStop(0.7, '#39442c');
+          tg2.addColorStop(1, '#1a2015');
+          c.fillStyle = tg2;
+          c.fill();
+          if (st >= 3) {
+            for (var tv = 1; tv < 7; tv++) {
+              c.beginPath();
+              c.moveTo(5, 0);
+              c.quadraticCurveTo(38, -6 * (tv / 7), 70 * (0.5 + tv / 14), -2 * (tv / 7));
+              c.strokeStyle = 'rgba(12,16,10,.3)';
+              c.lineWidth = 0.8;
+              c.stroke();
+            }
+          }
+        }
+        c.restore();
+      }
+      c.restore();
+    }
+
+    /* ---------------------------------------------------------- head detail */
+    if (st >= 2) {
+      // Bill: two mandibles, not one line. The gape between them is the detail
+      // that makes a bill read as a tool rather than a spike.
+      c.save();
+      var bx0 = BIRD.head.x + 24, by0 = BIRD.head.y - 12;
+      var bx1 = BIRD.billTip.x, by1 = BIRD.billTip.y;
+      // Two mandibles with a gape between them, tapering to a point. A bill
+      // drawn as one line is a spike; the gape is what makes it a tool.
+      c.beginPath();
+      c.moveTo(bx0, by0 - 5);
+      c.quadraticCurveTo((bx0 + bx1) / 2, (by0 + by1) / 2 - 5, bx1, by1);
+      c.quadraticCurveTo((bx0 + bx1) / 2, (by0 + by1) / 2 + 3, bx0, by0 + 6);
+      c.closePath();
+      var bill = c.createLinearGradient(bx0, by0, bx1, by1);
+      bill.addColorStop(0, '#100e0c');
+      bill.addColorStop(0.55, '#282320');
+      bill.addColorStop(1, '#0b0a09');
+      c.fillStyle = bill;
+      c.fill();
+      // The culmen catches a thread of the key along its whole length.
+      c.beginPath();
+      c.moveTo(bx0 + 2, by0 - 4);
+      c.quadraticCurveTo((bx0 + bx1) / 2, (by0 + by1) / 2 - 4.5, bx1 - 2, by1 + 0.5);
+      c.strokeStyle = 'rgba(206,198,182,.26)';
+      c.lineWidth = 0.9;
+      c.stroke();
+      c.restore();
+
+      // Eye: black, wet, with one small hard catchlight and a pale crescent
+      // behind it. The white spot behind a hummingbird's eye is diagnostic.
+      c.beginPath();
+      c.arc(BIRD.head.x + 9, BIRD.head.y - 8, 6.4, 0, Math.PI * 2);
+      c.fillStyle = '#080706'; c.fill();
+      if (st >= 4) {
+        c.beginPath();
+        c.arc(BIRD.head.x + 6.8, BIRD.head.y - 10.2, 1.9, 0, Math.PI * 2);
+        c.fillStyle = 'rgba(250,248,242,.92)'; c.fill();
+        // The pale spot behind the eye. It is diagnostic, and leaving it out is
+        // what makes a drawn hummingbird read as a generic small bird.
+        c.beginPath();
+        c.ellipse(BIRD.head.x - 3, BIRD.head.y - 6, 5.5, 2.6, -0.35, 0, Math.PI * 2);
+        c.fillStyle = 'rgba(236,230,214,.55)'; c.fill();
+      }
+    }
+
+    /* --------------------------------------------------------- the near wing */
+    if (st >= 1) {
+      for (var w2 = 0; w2 < 26; w2++) {
+        var ph2 = beat + w2 / 26;
+        var dwell2 = 0.3 + 0.7 * (1 - Math.abs(Math.cos(ph2 * Math.PI * 2)));
+        birdWing(c, ph2, 0.05 * dwell2 * (st === 1 ? 3 : 1), st);
+      }
+    }
+
+    if (st >= 4) {
+      c.save();
+      c.globalAlpha = 0.5;
+      c.drawImage(grain, 0, 0, VW, VH);
+      c.restore();
+    }
+    c.globalAlpha = 1;
+  }
+
   var NOTES = {
     eye: 'Four hundred and sixty iris fibres, each with its own length, bow, width and value, drawn once into a layer and composited. The collarette is a wobbled path rather than a circle, the crypts sit inside it, and the vessels thin as they approach the limbus. The detail almost nobody draws is the caustic: light entering from the key refracts through the cornea and lands as a bright crescent on the far side of the iris, paired with the shadow the corneal overhang throws on the key side. The catchlight is a window with four panes, because a round white dot is what a drawn eye has and a photographed one never does.',
-    koi: 'The body is a spine carrying a travelling wave whose amplitude grows as u^1.6, so the head is nearly still and the tail does the work. Two hundred and eighty-six scales are placed in the spine’s local frame at their own (u, v) and shaded by the local normal, which means the wave carries them instead of sliding underneath them. Fins sample the spine at an earlier time rather than running their own easing curve: that lag is follow-through, and it is why they trail the turn instead of leading it.'
+    koi: 'The body is a spine carrying a travelling wave whose amplitude grows as u^1.6, so the head is nearly still and the tail does the work. Two hundred and eighty-six scales are placed in the spine’s local frame at their own (u, v) and shaded by the local normal, which means the wave carries them instead of sliding underneath them. Fins sample the spine at an earlier time rather than running their own easing curve: that lag is follow-through, and it is why they trail the turn instead of leading it.',
+    bird: 'A gorget has almost no pigment in it. The barbules are stacks of thin films, and the colour you see is light interfering with itself on the way back out, which makes it a function of viewing angle rather than a property of the bird. That is modelled here rather than painted: three hundred barbules each have a normal, the path difference through the film is computed against the viewer, and hue and extinction both fall out of it. The head turn is one number. The flash is the consequence. The wings are integrated rather than posed — twenty-six samples across the stroke, weighted by dwell time, which is longest at the reversals, and that weighting is the difference between motion blur and a fan of copies. Move the pointer to steer the head.'
   };
 
   function render(t) {
     if (subject === 'eye') drawEye(ctx, stage, t);
-    else drawKoi(ctx, stage, t);
+    else if (subject === 'koi') drawKoi(ctx, stage, t);
+    else drawBird(ctx, stage, t);
   }
 
   function setStage(i, quiet) {
