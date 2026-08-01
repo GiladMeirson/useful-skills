@@ -5,15 +5,29 @@
  * survives contact with a subject that has hundreds of parts, none of which can
  * be placed by eye and all of which have to agree with each other.
  *
- * So: two subjects that are genuinely hard. A macro human eye, where the iris is
- * four hundred individually shaded fibres, the sclera is a lit sphere seen
- * through a wet aperture, and the giveaway detail is the caustic - light
- * refracting through the cornea and landing as a bright crescent on the far side
- * of the iris, opposite the key. And a koi, where the body is two hundred
- * overlapping scales that each have to follow a surface travelling down a spine,
- * with translucent fins whose ray structure shows through.
+ * So: three subjects that are genuinely hard, and hard in three different ways.
  *
- * Both are drawn the way the skill argues for and can be stepped through it:
+ * A macro human eye, where the iris is four hundred individually shaded fibres,
+ * the sclera is a lit sphere seen through a wet aperture, and the giveaway
+ * detail is the caustic - light refracting through the cornea and landing as a
+ * bright crescent on the far side of the iris, opposite the key. That one is
+ * about observation: hundreds of small truths, every one of which is only worth
+ * anything because the others are there too.
+ *
+ * A koi, where the body is nearly three hundred overlapping scales that each
+ * have to follow a surface travelling down a spine, with translucent fins whose
+ * ray structure shows through. That one is about form in motion: the wave is
+ * the subject, and everything on the fish is carried by it rather than
+ * animated alongside it.
+ *
+ * And a watch movement, where nothing at all can be placed by eye. Every wheel
+ * centre is the sum of two pitch radii, every tooth is an epicycloid generated
+ * by a rolling circle, and the whole train runs off one number. That one is
+ * about derivation, which is the faculty this skill actually leans on - and it
+ * is the case where guessing a coordinate does not look slightly wrong, it
+ * stops the mechanism meshing.
+ *
+ * All three are drawn the way the skill argues for and can be stepped through it:
  * armature, contour, light, texture, finish. Nothing here is traced and nothing
  * is a texture map. Every coordinate is derived, and the whole file's only
  * source of randomness is a seeded generator, so the piece is identical on every
@@ -1344,502 +1358,1346 @@ Demos.register('atelier-showpiece', function (root) {
 
 
   /* ==========================================================================
-   * SUBJECT THREE - the hummingbird
+   * SUBJECT THREE - the movement
    *
-   * The hardest of the three, for a reason that has nothing to do with anatomy.
+   * A watch movement, seen from the back with the dial side away, running.
    *
-   * A gorget is not coloured. It has no pigment worth speaking of: the barbules
-   * are stacks of thin films a few hundred nanometres thick, and what you see is
-   * light interfering with itself on the way back out. Which means the colour is
-   * a function of the angle you are looking from, not a property of the bird -
-   * turn the head fifteen degrees and a throat goes from crimson to black. This
-   * is modelled here rather than faked: every gorget barbule has a normal, the
-   * path difference through its film is computed from that normal against the
-   * viewer, and the hue comes out of the interference. Nothing is keyframed. The
-   * flash happens because the head turns.
+   * The eye and the koi are soft things: the test they set is whether hundreds
+   * of parts can be placed so they agree with each other. This one sets a
+   * different test, which is the one the skill is really about. A movement is
+   * not observed, it is *specified*. Every distance in it is a consequence of a
+   * tooth count, and a wheel drawn a few pixels off its true centre stops
+   * meshing - visibly, immediately, in a way no amount of shading rescues. You
+   * cannot draw this by eye. You have to derive it.
    *
-   * The wings are the other half. A hummingbird beats at fifty hertz and a
-   * screen refreshes at sixty, so there is no honest single position to draw: at
-   * any real shutter speed the wing IS the smear. So it is integrated - twenty-six
-   * samples along the stroke, weighted by how long the wing spends at each, which
-   * is longest at the reversals where it stops to turn around. That weighting is
-   * why the blur has bright ends and a thin middle, and it is the difference
-   * between motion blur and a fan of copies.
+   * So it is derived. The going train is a real one:
+   *
+   *   balance      18,000 A/h    2.5 Hz, five beats a second
+   *   escape       15 teeth      one tooth per oscillation -> 6 s/rev
+   *   fourth       60 teeth      escape pinion 6  -> 10:1  -> 1 rev/min
+   *   third        60 teeth      fourth pinion 8  -> 7.5:1 -> 1 rev/7.5 min
+   *   centre       64 teeth      third pinion 8   -> 8:1   -> 1 rev/hour
+   *   barrel       72 teeth      centre pinion 12 -> 6:1   -> 1 rev/6 hours
+   *
+   * 7.5 x 8 = 60, which is the whole point of a going train: the minute hand
+   * and the hour hand are the same number, factored. Every wheel centre below
+   * is placed by adding the two meshing pitch radii and stepping off at an
+   * angle, so the train is laid out the way a watchmaker lays it out, and the
+   * one number that drives all of it at runtime is the balance angle.
+   *
+   * The teeth are cycloidal, not involute. Industrial gearing went involute
+   * because it tolerates centre-distance error; horology stayed with cycloidal
+   * because it runs with less friction at the low torque and the high ratios a
+   * watch works at, and because it will still transmit when the pinion has only
+   * six leaves. The addendum flanks here are real epicycloids, generated by
+   * rolling a circle on the pitch circle, and the dedendum flanks are radial.
+   *
+   * And the material idea, which is the reason a movement is worth drawing at
+   * all: metal is anisotropic. A polished sphere reflects a light as a point. A
+   * grained surface reflects it as a *line, perpendicular to the grain* - which
+   * is why the highlight on a circular-grained wheel is a bar sweeping across
+   * it rather than a spot sitting on it, and why Geneva stripes flare in
+   * sequence rather than all at once. That is not a texture, it is a shading
+   * model, and it is the entire difference between metal and grey plastic. Move
+   * the pointer and the grain lights up, because you are moving the lamp.
    * ========================================================================== */
-  var BIRD = {
-    tail: { x: 344, y: 300 },     // where the rectrices leave the body
-    head: { x: 452, y: 216 },     // skull centre
-    headR: 35,
-    billTip: { x: 592, y: 152 },
-    shoulder: { x: 424, y: 252 }
-  };
 
-  // hsl to rgb, because interference is naturally expressed as a hue sweep and
-  // nothing else in this file needs a colour wheel.
-  function hsl(h, sat, li) {
-    h = ((h % 360) + 360) % 360 / 60;
-    var cc = (1 - Math.abs(2 * li - 1)) * sat;
-    var x = cc * (1 - Math.abs((h % 2) - 1));
-    var m = li - cc / 2;
-    var r = 0, g = 0, b = 0;
-    if (h < 1) { r = cc; g = x; }
-    else if (h < 2) { r = x; g = cc; }
-    else if (h < 3) { g = cc; b = x; }
-    else if (h < 4) { g = x; b = cc; }
-    else if (h < 5) { r = x; b = cc; }
-    else { r = cc; b = x; }
-    return G.rgb((r + m) * 255, (g + m) * 255, (b + m) * 255);
+  /* Designed at a plate radius of 218 and drawn at S times that, so every
+   * number below can stay in the units the layout was reasoned in. */
+  var MV_S = 1.43, MV_CX = 448, MV_CY = 236, MV_R = 200;
+
+  // Step off a centre distance at an angle. Canvas y is down, so an angle of 90
+  // degrees points at the bottom of the frame.
+  function step(p, dist, deg) {
+    var a = deg * Math.PI / 180;
+    return { x: p.x + Math.cos(a) * dist, y: p.y + Math.sin(a) * dist };
   }
 
-  // Body axis, tail to head. u = 0 at the tail base, 1 at the back of the skull.
-  function birdAt(u) {
-    return {
-      x: lerp(BIRD.tail.x, BIRD.head.x, u),
-      y: lerp(BIRD.tail.y, BIRD.head.y, u) + Math.sin(u * Math.PI) * 16
-    };
-  }
-  function birdFrame(u) {
-    var a = birdAt(Math.max(0, u - 0.01)), b = birdAt(Math.min(1, u + 0.01));
-    var l = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-    return { tx: (b.x - a.x) / l, ty: (b.y - a.y) / l, nx: -(b.y - a.y) / l, ny: (b.x - a.x) / l };
-  }
-  // Half-width. A hummingbird is a teardrop: widest just behind the shoulder,
-  // narrow at the wrist where the tail leaves.
-  function birdHalf(u) {
-    // Widest at the breast, just behind the shoulder, and it never tapers to a
-    // point: the tail leaves a body that still has width.
-    return 13 + Math.pow(Math.sin(Math.pow(u, 0.7) * Math.PI * 0.9), 0.62) * 33;
-  }
+  /* The train. Pitch radii, tooth counts, and the pinion each wheel drives
+   * through. Centre distances are the sum of the two meshing pitch radii -
+   * asserted here rather than measured off a drawing, because a centre distance
+   * guessed to the nearest pixel is a mesh that does not close. */
+  var MV = {};
+  /* The centre wheel is at the centre of the plate. That is not a composition
+   * choice - it is where the name comes from, and it is the fixed point the
+   * whole layout hangs off, because the minute hand is pressed onto its arbor
+   * and the arbor has to come out through the middle of the dial. Laying the
+   * train out from anywhere else is the first thing that makes a drawn
+   * movement look invented. */
+  MV.centre = { x: 0, y: 0, rw: 58, teeth: 64, rp: 14, leaves: 12, gen: 11 };
+  MV.barrel = { rw: 82, teeth: 72, rp: 0, leaves: 0, gen: 14 };
+  MV.third  = { rw: 48, teeth: 60, rp: 11, leaves: 8, gen: 9 };
+  MV.fourth = { rw: 40, teeth: 60, rp: 9,  leaves: 8, gen: 6 };
+  MV.escape = { rw: 26, teeth: 15, rp: 6,  leaves: 6, gen: 4 };
 
-  function birdBody(c) {
-    var i, p, f, h;
-    c.beginPath();
-    for (i = 0; i <= 40; i++) {
-      var u = i / 40; p = birdAt(u); f = birdFrame(u); h = birdHalf(u);
-      var x = p.x + f.nx * h, y = p.y + f.ny * h;
-      i === 0 ? c.moveTo(x, y) : c.lineTo(x, y);
+  (function layTrain() {
+    var c;
+    // Power flows barrel -> centre -> third -> fourth -> escape, but the layout
+    // is stepped off from the centre outward in both directions, because the
+    // centre is the only wheel whose position is not free.
+    c = step(MV.centre, MV.barrel.rw + MV.centre.rp, -125);
+    MV.barrel.x = c.x; MV.barrel.y = c.y;
+    c = step(MV.centre, MV.centre.rw + MV.third.rp, 25);
+    MV.third.x = c.x; MV.third.y = c.y;
+    c = step(MV.third, MV.third.rw + MV.fourth.rp, 118);
+    MV.fourth.x = c.x; MV.fourth.y = c.y;
+    c = step(MV.fourth, MV.fourth.rw + MV.escape.rp, 190);
+    MV.escape.x = c.x; MV.escape.y = c.y;
+    // The escapement is not part of the going train's arithmetic: the fork sits
+    // where the pallet jewels can reach the escape teeth, and the balance sits
+    // where the roller jewel can reach the fork slot. Both are distances, not
+    // ratios.
+    MV.fork = step(MV.escape, 44, 168);
+    MV.balance = step(MV.fork, 44, 150);
+    MV.balR = 56;            // outer radius of the balance rim
+    MV.rollerR = 10;         // radius the impulse jewel orbits at
+  })();
+
+  /* ------------------------------------------------------------ teeth ----
+   * One epicycloidal tooth flank, from the pitch circle outward. The rolling
+   * circle is the generator: roll a circle of radius rGen on the outside of the
+   * pitch circle and a point on its rim traces the curve a watch tooth's
+   * working face actually has. */
+  function flank(rp, rGen, top) {
+    var pts = [], k = (rp + rGen) / rGen;
+    // Stepped finely and cut at the addendum rather than sampled over a fixed
+    // span: the working height of a watch tooth is about one module, which on
+    // a seventy-two tooth wheel at this scale is under three pixels, and a
+    // parametrisation tuned for a big gear walks straight past it in one step.
+    for (var i = 0; i <= 60; i++) {
+      var th = i * 0.02;
+      var x = (rp + rGen) * Math.cos(th) - rGen * Math.cos(k * th);
+      var y = (rp + rGen) * Math.sin(th) - rGen * Math.sin(k * th);
+      var r = Math.hypot(x, y);
+      pts.push({ a: Math.atan2(y, x), r: Math.min(r, top) });
+      if (r >= top) break;
     }
-    c.arc(BIRD.head.x, BIRD.head.y, BIRD.headR, 0, Math.PI * 2);
-    for (i = 40; i >= 0; i--) {
-      var u2 = i / 40; p = birdAt(u2); f = birdFrame(u2); h = birdHalf(u2);
-      c.lineTo(p.x - f.nx * h, p.y - f.ny * h);
-    }
-    c.closePath();
+    return pts;
   }
 
-  /* One wing, at one instant of the stroke.
+  /* A wheel's outline: N cycloidal teeth around a pitch circle.
    *
-   * The blade is a long tapered vane hinged at the shoulder. Its chord narrows
-   * as the wing approaches a reversal, because at that moment it is turning over
-   * and presenting its edge to the viewer - which is also why the smear is
-   * brightest there. */
-  function birdWing(c, phase, alpha, st) {
-    var sx = BIRD.shoulder.x, sy = BIRD.shoulder.y;
-    var sweep = Math.sin(phase * Math.PI * 2);
-    // The stroke plane of a hovering hummingbird is almost horizontal, tilted
-    // back along the body: the wing sweeps fore and aft, not up and down. That
-    // is the whole reason the bird can hold station.
-    var ang = -0.62 + sweep * 1.12;
-    var chord = 0.2 + 0.8 * Math.abs(Math.cos(phase * Math.PI * 2));
-    var len = 138;
-
-    c.save();
-    c.translate(sx, sy);
-    c.rotate(ang);
-    c.globalAlpha = alpha;
+   * The tooth is symmetric about its own centre line, half a circular pitch
+   * thick at the pitch circle, with radial flanks below it and epicycloid
+   * flanks above. Drawing the whole rim as one path rather than N paths matters
+   * here: a seventy-two tooth wheel stroked tooth by tooth shows a seam at
+   * every join, and at this line weight the seams are the only thing you see.
+   */
+  function gearPath(c, w, N, rp, rGen) {
+    var m = 2 * rp / N;                 // module
+    var top = rp + m * 0.95;            // addendum
+    var root = rp - m * 1.25;           // dedendum
+    var half = Math.PI / N;             // half tooth thickness, in angle
+    // The generating circle is the pitch circle of the pinion this wheel drives
+    // into. That is not a stylistic parameter: it is the condition under which
+    // an epicycloid tooth and a radial pinion leaf roll on each other instead
+    // of sliding, which is the whole reason to use cycloidal teeth.
+    var f = flank(rp, rGen || rp * 0.16, top);
+    var i, j, A, p;
     c.beginPath();
-    c.moveTo(0, 0);
-    c.bezierCurveTo(len * 0.36, -30 * chord, len * 0.78, -34 * chord, len, -6 * chord);
-    c.bezierCurveTo(len * 0.74, 12 * chord, len * 0.34, 14 * chord, 0, 0);
-    c.closePath();
-    if (st === 1) {
-      c.strokeStyle = 'rgba(226,214,196,.5)'; c.lineWidth = 1.2; c.stroke();
-    } else {
-      var wg = c.createLinearGradient(0, -20, len, 10);
-      wg.addColorStop(0, 'rgba(52,48,44,.9)');
-      wg.addColorStop(0.5, 'rgba(146,138,126,.72)');
-      wg.addColorStop(1, 'rgba(206,198,184,.34)');
-      c.fillStyle = wg;
-      c.fill();
-      if (st === 3) {
-        // Primaries. Only at the texture stage: inside the finished smear these
-        // are twenty-six overlapping fans of hairlines, which is just noise.
-        for (var k = 1; k <= 9; k++) {
-          var kk = k / 10;
-          c.beginPath();
-          c.moveTo(len * 0.1, 0);
-          c.quadraticCurveTo(len * 0.6, -26 * chord * kk, len * (0.5 + kk * 0.5), -6 * chord * kk);
-          c.strokeStyle = 'rgba(40,36,32,.22)';
-          c.lineWidth = 0.9;
-          c.stroke();
-        }
+    for (i = 0; i < N; i++) {
+      A = (i / N) * Math.PI * 2;
+      // up the leading flank
+      c.lineTo(w.x + Math.cos(A - half) * root, w.y + Math.sin(A - half) * root);
+      for (j = 0; j < f.length; j++) {
+        p = f[j];
+        c.lineTo(w.x + Math.cos(A - half + p.a) * p.r, w.y + Math.sin(A - half + p.a) * p.r);
       }
+      // down the trailing flank, mirrored
+      for (j = f.length - 1; j >= 0; j--) {
+        p = f[j];
+        c.lineTo(w.x + Math.cos(A + half - p.a) * p.r, w.y + Math.sin(A + half - p.a) * p.r);
+      }
+      c.lineTo(w.x + Math.cos(A + half) * root, w.y + Math.sin(A + half) * root);
+    }
+    c.closePath();
+  }
+
+  /* The escape wheel is the exception. Its teeth are club-toothed: a pointed
+   * locking corner, then a flat impulse face that the pallet slides along. They
+   * are not gear teeth at all - they never mesh with anything, they hand energy
+   * to a jewel - and drawing them as gear teeth is the single most common tell
+   * in a drawn movement. */
+  function escapePath(c, w, N, r) {
+    var i, A, sp = Math.PI * 2 / N;
+    function at(ang, rad) { return { x: w.x + Math.cos(ang) * rad, y: w.y + Math.sin(ang) * rad }; }
+    c.beginPath();
+    for (i = 0; i < N; i++) {
+      A = (i / N) * Math.PI * 2;
+      var a = at(A, r * 0.62);                    // root
+      var b = at(A + sp * 0.06, r);               // locking corner
+      var d = at(A + sp * 0.30, r * 0.985);       // along the impulse face
+      var e = at(A + sp * 0.34, r * 0.80);        // back of the club
+      var g = at(A + sp * 0.62, r * 0.60);        // undercut, into the next root
+      if (i === 0) c.moveTo(a.x, a.y); else c.lineTo(a.x, a.y);
+      c.lineTo(b.x, b.y); c.lineTo(d.x, d.y); c.lineTo(e.x, e.y);
+      c.quadraticCurveTo(w.x + Math.cos(A + sp * 0.5) * r * 0.55,
+                         w.y + Math.sin(A + sp * 0.5) * r * 0.55, g.x, g.y);
+    }
+    c.closePath();
+  }
+
+  /* Crossings - the spokes. A watch wheel is not a disc: it is turned down to
+   * three, four or five arms to lose weight, and the arms have curved fillets
+   * where they meet the rim and the hub. The fillet is the detail; a spoke that
+   * meets a rim at a corner is a stamped part, not a turned one. */
+  function crossings(c, w, arms, rInner, rHub, width) {
+    var i;
+    for (i = 0; i < arms; i++) {
+      var A = (i / arms) * Math.PI * 2 + 0.2;
+      var ca = Math.cos(A), sa = Math.sin(A);
+      var nx = -sa, ny = ca;
+      c.beginPath();
+      c.moveTo(w.x + ca * rHub + nx * width * 1.5, w.y + sa * rHub + ny * width * 1.5);
+      c.quadraticCurveTo(
+        w.x + ca * (rHub + rInner) * 0.5 + nx * width * 0.55,
+        w.y + sa * (rHub + rInner) * 0.5 + ny * width * 0.55,
+        w.x + ca * rInner + nx * width * 1.6, w.y + sa * rInner + ny * width * 1.6);
+      c.lineTo(w.x + ca * rInner - nx * width * 1.6, w.y + sa * rInner - ny * width * 1.6);
+      c.quadraticCurveTo(
+        w.x + ca * (rHub + rInner) * 0.5 - nx * width * 0.55,
+        w.y + sa * (rHub + rInner) * 0.5 - ny * width * 0.55,
+        w.x + ca * rHub - nx * width * 1.5, w.y + sa * rHub - ny * width * 1.5);
+      c.closePath();
+      c.fill();
+    }
+  }
+
+  /* -------------------------------------------------------- the finishes ---
+   *
+   * Perlage: overlapping circular-grained spots, laid in a grid at a pitch
+   * smaller than their own diameter so each one eats the last. Every spot is
+   * ground with a rotating peg, so its grain is circular about its own centre -
+   * which is why a perlaged plate scintillates spot by spot rather than as a
+   * sheet.
+   */
+  function perlage(c, cx, cy, rad, spacing, seed) {
+    var r2 = rng(seed), R = spacing * 0.78;
+    for (var y = -rad - R; y <= rad + R; y += spacing) {
+      for (var x = -rad - R; x <= rad + R; x += spacing) {
+        var px = cx + x + (r2() - 0.5) * 1.4, py = cy + y + (r2() - 0.5) * 1.4;
+        if (Math.hypot(px - cx, py - cy) > rad + R) continue;
+        /* Each spot is painted whole, and the next one paints over it. That
+         * ordering is the finish: what survives of any given spot is the
+         * crescent the following spot did not cover, which is exactly what a
+         * perlaged plate looks like and is not something you can get by
+         * drawing circles. */
+        var g = c.createLinearGradient(px - R, py - R, px + R * 0.8, py + R * 0.8);
+        g.addColorStop(0, 'rgba(238,244,252,.085)');
+        g.addColorStop(0.5, 'rgba(150,158,170,.015)');
+        g.addColorStop(1, 'rgba(14,18,24,.10)');
+        c.fillStyle = g;
+        c.beginPath();
+        c.arc(px, py, R, 0, Math.PI * 2);
+        c.fill();
+        // The lit lip on the key side of the spot's own wall.
+        c.strokeStyle = 'rgba(250,253,255,.075)';
+        c.lineWidth = 0.7;
+        c.beginPath();
+        c.arc(px, py, R, Math.PI * 0.9, Math.PI * 1.9);
+        c.stroke();
+      }
+    }
+  }
+
+  /* Cotes de Geneve: wide parallel bands, each one struck with a rotating
+   * abrasive, so the grain within a band runs along it. Adjacent bands are cut
+   * in opposite directions - that is why a bridge shimmers band by band as it
+   * tilts, and why alternating the gradient here is not a stylistic choice. */
+  function cotes(c, x0, y0, x1, y1, width, band) {
+    var ang = Math.atan2(y1 - y0, x1 - x0);
+    var len = Math.hypot(x1 - x0, y1 - y0);
+    c.save();
+    c.translate(x0, y0);
+    c.rotate(ang);
+    for (var i = -width; i <= width; i += band) {
+      var flip = ((i / band) | 0) % 2 === 0;
+      var g = c.createLinearGradient(0, i, 0, i + band);
+      g.addColorStop(0, flip ? 'rgba(246,249,253,.13)' : 'rgba(18,22,28,.15)');
+      g.addColorStop(0.5, 'rgba(255,255,255,.015)');
+      g.addColorStop(1, flip ? 'rgba(18,22,28,.15)' : 'rgba(246,249,253,.13)');
+      c.fillStyle = g;
+      c.fillRect(0, i, len, band);
+      // The step between bands is a real edge, not a blend.
+      c.strokeStyle = 'rgba(10,13,17,.22)';
+      c.lineWidth = 0.5;
+      c.beginPath(); c.moveTo(0, i); c.lineTo(len, i); c.stroke();
     }
     c.restore();
   }
 
-  function drawBird(c, st, t) {
-    var tt = reduce ? 0.6 : t;
+  /* Black polish, the finish on a pallet fork and a click.
+   *
+   * A flat mirror does not have a colour: it has the *scene* in it. Which for a
+   * part lying on a plate under a lamp is a dark half and a light half with a
+   * hard line between them - the horizon of whatever it is reflecting - and the
+   * line moves with the part rather than with the light. That split is the
+   * whole reason polished steel reads as steel and a grey gradient does not,
+   * and it is why watchmakers call the finish black polish: turn it a few
+   * degrees and it goes from white to nearly black.
+   */
+  function blackPolish(c, ang) {
+    var g = c.createLinearGradient(Math.cos(ang) * -30, Math.sin(ang) * -30,
+                                   Math.cos(ang) * 30, Math.sin(ang) * 30);
+    g.addColorStop(0, 'rgba(244,249,255,.5)');
+    g.addColorStop(0.46, 'rgba(226,234,246,.34)');
+    g.addColorStop(0.5, 'rgba(16,20,26,.42)');
+    g.addColorStop(1, 'rgba(10,13,18,.5)');
+    return g;
+  }
 
-    // The head turns. Everything the gorget does is downstream of this one
-    // number, and it is a slow oscillation with a fast flick in it, because a
-    // hummingbird's head does not sweep - it snaps and holds.
-    var turnBase = Math.sin(tt * 0.55) * 0.5;
-    var flick = Math.sin(tt * 2.1) * 0.12 * Math.max(0, Math.sin(tt * 0.37));
-    var turn = pointer.inside ? (pointer.x - 0.5) * 1.5 : turnBase + flick;
-
-    // Ground: an out-of-focus garden. It is a backdrop, so it gets exactly one
-    // idea (warm light behind cool foliage) and no detail that could compete.
-    var bg = c.createLinearGradient(0, 0, VW * 0.6, VH);
-    bg.addColorStop(0, '#1c2418');
-    bg.addColorStop(0.45, '#243021');
-    bg.addColorStop(1, '#12180f');
-    c.fillStyle = st === 0 ? '#0b0a09' : bg;
-    c.fillRect(0, 0, VW, VH);
-
-    if (st === 0) {
-      c.strokeStyle = 'rgba(223,106,65,.55)';
-      c.lineWidth = 1;
-      c.setLineDash([4, 5]);
+  // Snailing: concentric turning marks, the finish on a barrel and a ratchet.
+  function snail(c, x, y, r, seed) {
+    var r3 = rng(seed);
+    for (var k = 0; k < 46; k++) {
+      var rr = r * (0.12 + (k / 46) * 0.88);
       c.beginPath();
-      for (var ai = 0; ai <= 30; ai++) {
-        var ap = birdAt(ai / 30);
-        ai === 0 ? c.moveTo(ap.x, ap.y) : c.lineTo(ap.x, ap.y);
+      c.arc(x, y, rr, 0, Math.PI * 2);
+      c.strokeStyle = 'rgba(255,244,214,' + (0.03 + r3() * 0.055).toFixed(3) + ')';
+      c.lineWidth = 0.5 + r3() * 0.7;
+      c.stroke();
+    }
+  }
+
+  /* A bridge, as a real fillable outline.
+   *
+   * A bridge is a boss at every bearing it carries, joined by arms - so the
+   * path is the union of a disc at each node and a trapezoid between each pair,
+   * all wound the same way, which canvas's nonzero rule unions for free. The
+   * first version of this stroked a fat polyline instead, which cannot be
+   * clipped to, cannot be filled with its own gradient, and comes out the same
+   * width everywhere: one noodle laid over the train. The difference between a
+   * bridge and a noodle is that a bridge is wide where it has to hold something
+   * and narrow where it only has to get there.
+   */
+  function bridgePath(c, pts) {
+    var i, a, b, ang, nx, ny;
+    c.beginPath();
+    for (i = 0; i < pts.length; i++) {
+      c.moveTo(pts[i].x + pts[i].r, pts[i].y);
+      c.arc(pts[i].x, pts[i].y, pts[i].r, 0, Math.PI * 2);
+    }
+    for (i = 1; i < pts.length; i++) {
+      a = pts[i - 1]; b = pts[i];
+      ang = Math.atan2(b.y - a.y, b.x - a.x);
+      nx = -Math.sin(ang); ny = Math.cos(ang);
+      // The arms taper between the two bosses, because a bridge is milled to
+      // the section it needs and no more.
+      var wa = a.r * 0.66, wb = b.r * 0.66;
+      /* Wound the same way round as the bosses, and that is not a detail.
+       * Nonzero fill counts winding direction: a quadrilateral traversed the
+       * other way scores -1 where it overlaps a disc that scored +1, the two
+       * cancel to zero, and canvas cuts a hole through the union at exactly
+       * every arm-to-boss joint. The bridge came out as a tangle of leaf-shaped
+       * gaps and looked, convincingly, like a stroking bug. */
+      c.moveTo(a.x - nx * wa, a.y - ny * wa);
+      c.lineTo(b.x - nx * wb, b.y - ny * wb);
+      c.lineTo(b.x + nx * wb, b.y + ny * wb);
+      c.lineTo(a.x + nx * wa, a.y + ny * wa);
+      c.closePath();
+    }
+  }
+
+  var BRIDGES = null;
+  function bridgeDefs() {
+    if (BRIDGES) return BRIDGES;
+    /* Skeletonised: the bosses sit on the pivots and the arms are cut back far
+     * enough to leave the train visible. A solid three-quarter plate is the
+     * more common ebauche and it would hide everything worth drawing. */
+    /* Each bridge is broad over the bearing it carries and narrows to its
+     * feet. The boss radii are set against the wheel underneath: a barrel of
+     * eighty-two with a fifty boss over it leaves a thirty-unit ring of teeth
+     * showing all the way round, which is what a movement actually looks like -
+     * you see the rim of every wheel and the middle of none of them. Sizing
+     * them to the pivots instead, as the first pass did, leaves the wheels
+     * fully exposed and the bridges reading as scaffolding laid over the top. */
+    BRIDGES = [
+      { name: 'barrel',
+        pts: [{ x: MV.barrel.x - 100, y: MV.barrel.y + 48, r: 15 },
+              { x: MV.barrel.x - 46, y: MV.barrel.y + 22, r: 26 },
+              { x: MV.barrel.x + 2, y: MV.barrel.y - 6, r: 34 },
+              { x: MV.barrel.x + 58, y: MV.barrel.y - 48, r: 22 },
+              { x: MV.barrel.x + 88, y: MV.barrel.y - 96, r: 16 }] },
+      { name: 'train',
+        pts: [{ x: MV.centre.x + 104, y: MV.centre.y - 50, r: 16 },
+              { x: MV.third.x, y: MV.third.y, r: 24 },
+              { x: MV.fourth.x, y: MV.fourth.y, r: 21 }] },
+      { name: 'pallet',
+        pts: [{ x: MV.fork.x - 38, y: MV.fork.y + 34, r: 13 },
+              { x: MV.fork.x, y: MV.fork.y, r: 14 },
+              { x: MV.escape.x, y: MV.escape.y, r: 13 }] }
+    ];
+    return BRIDGES;
+  }
+
+  /* A jewel. Synthetic ruby, pressed into the plate, with the oil sink turned
+   * around it. It is not a red dot: it is a transparent stone with a hole in
+   * it, so the plate shows through its edge, the sink casts a ring shadow, and
+   * the only saturated red in it is where the stone is thickest. */
+  function jewel(c, x, y, r, st) {
+    if (st < 4) {
+      if (st >= 1) {
+        c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2);
+        c.strokeStyle = 'rgba(180,186,196,.6)'; c.lineWidth = 1; c.stroke();
       }
-      c.stroke();
-      c.beginPath(); c.arc(BIRD.head.x, BIRD.head.y, BIRD.headR, 0, Math.PI * 2); c.stroke();
-      // Bill, and the wing arc it has to balance against.
-      c.beginPath();
-      c.moveTo(BIRD.head.x + 24, BIRD.head.y - 12);
-      c.lineTo(BIRD.billTip.x, BIRD.billTip.y);
-      c.stroke();
-      c.beginPath();
-      c.arc(BIRD.shoulder.x, BIRD.shoulder.y, 138, -1.74, 0.5);
-      c.stroke();
-      c.setLineDash([]);
-      for (var ri = 0; ri <= 10; ri++) {
-        var ru = ri / 10, rp = birdAt(ru), rf = birdFrame(ru), rh = birdHalf(ru);
-        c.strokeStyle = 'rgba(150,142,132,.4)';
-        c.beginPath();
-        c.moveTo(rp.x + rf.nx * rh, rp.y + rf.ny * rh);
-        c.lineTo(rp.x - rf.nx * rh, rp.y - rf.ny * rh);
-        c.stroke();
-        c.fillStyle = '#df6a41';
-        c.fillRect(rp.x - 2, rp.y - 2, 4, 4);
+      return;
+    }
+    // The countersunk oil sink, cut into the plate around the stone.
+    var sk = c.createRadialGradient(x - r * 0.5, y - r * 0.5, r * 0.7, x, y, r * 2.1);
+    sk.addColorStop(0, 'rgba(12,14,18,.55)');
+    sk.addColorStop(1, 'rgba(12,14,18,0)');
+    c.fillStyle = sk;
+    c.beginPath(); c.arc(x, y, r * 2.1, 0, Math.PI * 2); c.fill();
+
+    var g = c.createRadialGradient(x - r * 0.45, y - r * 0.5, r * 0.1, x, y, r);
+    g.addColorStop(0, 'rgba(206,110,114,.92)');
+    g.addColorStop(0.38, 'rgba(140,32,46,.94)');
+    g.addColorStop(0.86, 'rgba(74,14,26,.92)');
+    g.addColorStop(1, 'rgba(36,6,14,.72)');
+    c.fillStyle = g;
+    c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+    // The pivot hole. Black, and off centre toward the key, because you are
+    // looking down a tapered bore.
+    c.fillStyle = 'rgba(8,4,6,.85)';
+    c.beginPath(); c.arc(x + r * 0.06, y + r * 0.06, r * 0.3, 0, Math.PI * 2); c.fill();
+    // Specular off the domed top.
+    c.fillStyle = 'rgba(255,228,226,.4)';
+    c.beginPath(); c.ellipse(x - r * 0.4, y - r * 0.42, r * 0.3, r * 0.18, -0.7, 0, Math.PI * 2); c.fill();
+  }
+
+  /* A screw, heat blued. The colour is not a choice: steel run up to about 290
+   * degrees grows an oxide a few hundred nanometres thick, and the blue is that
+   * film interfering with itself - the same physics as an oil slick, which is
+   * why it goes straw, then purple, then this cornflower, in that order. The
+   * slot is cut across it and polished, so it holds a different value from the
+   * head on either side of the key. */
+  function screw(c, x, y, r, ang, st) {
+    if (st < 2) {
+      if (st >= 1) {
+        c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2);
+        c.strokeStyle = 'rgba(180,186,196,.6)'; c.lineWidth = 1; c.stroke();
       }
-      c.font = '500 11px ui-monospace, monospace';
-      c.fillStyle = 'rgba(140,133,124,.7)';
-      c.fillText('bill = 1.5 x skull   body = 2.2 x skull   stroke plane near horizontal, not vertical', 150, VH - 30);
+      return;
+    }
+    var sunk = c.createRadialGradient(x, y, r * 0.9, x, y, r * 1.7);
+    sunk.addColorStop(0, 'rgba(10,12,16,.5)');
+    sunk.addColorStop(1, 'rgba(10,12,16,0)');
+    c.fillStyle = sunk;
+    c.beginPath(); c.arc(x, y, r * 1.7, 0, Math.PI * 2); c.fill();
+
+    var blued = st >= 4;
+    var g = c.createLinearGradient(x - r, y - r, x + r, y + r);
+    if (blued) {
+      g.addColorStop(0, '#7d9dd4');
+      g.addColorStop(0.32, '#39568f');
+      g.addColorStop(0.7, '#1b2c52');
+      g.addColorStop(1, '#33507f');
+    } else {
+      g.addColorStop(0, '#d3d9e1');
+      g.addColorStop(0.5, '#8d949e');
+      g.addColorStop(1, '#5c626b');
+    }
+    c.fillStyle = g;
+    c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = blued ? 'rgba(150,180,230,.5)' : 'rgba(220,226,234,.4)';
+    c.lineWidth = 0.7;
+    c.stroke();
+
+    c.save();
+    c.translate(x, y);
+    c.rotate(ang);
+    c.fillStyle = 'rgba(8,12,20,.72)';
+    c.fillRect(-r * 0.92, -r * 0.15, r * 1.84, r * 0.3);
+    c.fillStyle = blued ? 'rgba(158,190,240,.55)' : 'rgba(232,238,246,.5)';
+    c.fillRect(-r * 0.92, -r * 0.15, r * 1.84, r * 0.09);
+    c.restore();
+  }
+
+  /* -------------------------------------------------------- baked layers ---
+   * The plate, the bridges and the balance cock do not move. Repainting nine
+   * hundred perlage arcs sixty times a second to composite an identical result
+   * is the kind of cost that only shows up as a number in a profiler, so they
+   * are painted once into three layers and blitted, with the moving parts drawn
+   * between them: plate, then the train, then the bridges over it, then the
+   * balance, then its cock over that. Which is also the order the parts go in.
+   */
+  var mvPlate = { key: '', back: null, mid: null, cock: null };
+
+  function mvSpace(c) {
+    c.translate(MV_CX, MV_CY);
+    c.scale(MV_S, MV_S);
+  }
+
+  function paintPlateBack(c, st) {
+    var R = MV_R;
+    // The mainplate. German silver under rhodium: cool, and lit from upper
+    // left like everything else on this page.
+    /* The plate carries the widest value range in the frame, from the lit edge
+     * to the far side, and it has to be dark enough that the finishing has
+     * somewhere to be bright. The first pass here ran from light grey to mid
+     * grey, which left every highlight - the anglage, the grain band, the
+     * jewels - with nowhere to go, and the whole movement came out looking
+     * moulded. A metal is not a colour, it is a range. */
+    var g = c.createLinearGradient(-R * 1.1, -R * 0.8, R * 0.8, R);
+    g.addColorStop(0, '#9aa2ad');
+    g.addColorStop(0.4, '#666e78');
+    g.addColorStop(0.76, '#3d434b');
+    g.addColorStop(1, '#22262c');
+    c.fillStyle = st === 1 ? 'rgba(0,0,0,0)' : g;
+    // The plate is lying on something. Its own cast shadow is what stops the
+    // disc reading as a sticker on the backdrop.
+    if (st >= 2) {
+      c.save();
+      c.translate(9, 12);
+      var csh = c.createRadialGradient(0, 0, R * 0.9, 0, 0, R * 1.13);
+      csh.addColorStop(0, 'rgba(0,0,0,.72)');
+      csh.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = csh;
+      c.beginPath(); c.arc(0, 0, R * 1.13, 0, Math.PI * 2); c.fill();
+      c.restore();
+      c.fillStyle = g;
+    }
+    c.beginPath(); c.arc(0, 0, R, 0, Math.PI * 2);
+    c.fill();
+    if (st <= 1) {
+      c.strokeStyle = 'rgba(196,202,212,.75)'; c.lineWidth = 1.2; c.stroke();
+    }
+
+    if (st >= 3) {
+      c.save();
+      c.beginPath(); c.arc(0, 0, R - 1, 0, Math.PI * 2); c.clip();
+      perlage(c, 0, 0, R, 6.4, 90210);
+      c.restore();
+    }
+
+    // The edge of the plate is turned, not cut: a bright bevel on the key side
+    // and a dark one opposite, and a fine chamfer all the way round.
+    if (st >= 2) {
+      var e = c.createLinearGradient(-R, -R, R, R);
+      e.addColorStop(0, 'rgba(240,245,252,.55)');
+      e.addColorStop(0.5, 'rgba(120,128,140,0)');
+      e.addColorStop(1, 'rgba(16,20,26,.5)');
+      c.strokeStyle = e; c.lineWidth = 3;
+      c.beginPath(); c.arc(0, 0, R - 1.5, 0, Math.PI * 2); c.stroke();
+    }
+
+    /* The shadow each wheel throws onto the plate. It can be baked in here
+     * rather than drawn per frame for a reason worth stating: a wheel is a body
+     * of revolution, so its shadow is the same shape at every angle it is ever
+     * drawn at. The only moving parts on this movement whose shadows have to be
+     * recomputed are the fork and the balance arms, and neither is drawn with
+     * one. */
+    if (st >= 2) {
+      ['barrel', 'centre', 'third', 'fourth', 'escape'].forEach(function (k) {
+        var w = MV[k];
+        var rg = c.createRadialGradient(w.x + 5, w.y + 6, w.rw * 0.55,
+                                        w.x + 5, w.y + 6, w.rw * 1.12);
+        rg.addColorStop(0, 'rgba(4,6,9,.62)');
+        rg.addColorStop(0.7, 'rgba(4,6,9,.3)');
+        rg.addColorStop(1, 'rgba(4,6,9,0)');
+        c.fillStyle = rg;
+        c.beginPath(); c.arc(w.x + 5, w.y + 6, w.rw * 1.12, 0, Math.PI * 2); c.fill();
+      });
+    }
+
+    // Engraving. Cut into the plate, so it is a dark stroke with a bright one
+    // half a pixel above it - the same trick as every other groove here.
+    if (st >= 3) {
+      c.save();
+      c.font = '600 9px ui-monospace, SFMono-Regular, monospace';
+      c.textAlign = 'center';
+      // Cut into the plate: a dark stroke with a bright one half a pixel above
+      // it, which is the same groove the perlage and the crossings are drawn
+      // with. Engraving that is only dark reads as printing.
+      c.fillStyle = 'rgba(20,24,30,.6)';
+      c.fillText('SEVENTEEN JEWELS', 104, -126);
+      c.fillText('ADJUSTED TO 5 POSITIONS', 104, -112);
+      c.fillText('No 41 208', 104, -98);
+      c.fillStyle = 'rgba(232,238,248,.17)';
+      c.fillText('SEVENTEEN JEWELS', 104, -126.8);
+      c.fillText('ADJUSTED TO 5 POSITIONS', 104, -112.8);
+      c.fillText('No 41 208', 104, -98.8);
+      c.restore();
+    }
+  }
+
+  /* Fill, bevel and finish one bridge outline.
+   *
+   * The outline cannot be stroked, and finding that out cost a rewrite. The
+   * path is a union of overlapping subpaths - a disc at every bearing, a
+   * trapezoid between every pair - which canvas's nonzero rule fills correctly
+   * as one shape, but strokes as what it literally is: every subpath's own
+   * boundary, including all the ones buried inside the union. Stroking it drew
+   * the bridge as a tangle of overlapping rings.
+   *
+   * So both edges here are made of fills. Fill the shape once offset toward the
+   * key and once away from it, then fill it again at rest on top: what survives
+   * is a bright sliver along the upper left and a dark one along the lower
+   * right, and that is anglage - the polished chamfer a finisher files and
+   * burnishes along every edge of a bridge by hand. It changes value as it
+   * turns a corner, which is exactly the thing you look for to tell whether a
+   * movement was finished or merely made.
+   */
+  function dressBridge(c, pts, st, grad, stripeAng) {
+    var i;
+    if (st <= 1) {
+      /* Contour: the same idea used as a morphological outline. Fill eight
+       * copies on a small circle, then punch the shape back out - which leaves
+       * a closed line around the union and nothing inside it. The layer is its
+       * own canvas, so destination-out here cannot reach the plate. */
+      c.fillStyle = 'rgba(200,206,216,.75)';
+      for (i = 0; i < 8; i++) {
+        var a = (i / 8) * Math.PI * 2;
+        c.save();
+        c.translate(Math.cos(a) * 1.3, Math.sin(a) * 1.3);
+        bridgePath(c, pts);
+        c.fill();
+        c.restore();
+      }
+      c.save();
+      c.globalCompositeOperation = 'destination-out';
+      bridgePath(c, pts);
+      c.fillStyle = '#000';
+      c.fill();
+      c.restore();
       return;
     }
 
-    if (st >= 2) {
-      // Bokeh behind: the backdrop is a long lens wide open, which is the only
-      // honest way to put a garden behind a bird without drawing a garden.
-      for (var bi = 0; bi < 16; bi++) {
-        var bx = ((bi * 197) % 900), by = ((bi * 311) % 420) + 20;
-        var br = 26 + (bi % 5) * 22;
-        var bgl = c.createRadialGradient(bx, by, 1, bx, by, br);
-        var warm = bi % 3 === 0;
-        bgl.addColorStop(0, warm ? 'rgba(214,176,96,.16)' : 'rgba(126,168,110,.13)');
-        bgl.addColorStop(1, 'rgba(0,0,0,0)');
-        c.fillStyle = bgl;
-        c.fillRect(bx - br, by - br, br * 2, br * 2);
-      }
-    }
-
-    /* ------------------------------------------------------------- the flower */
-    if (st >= 2) {
-      var fx = 690, fy = 132;
-      c.save();
-      c.translate(fx, fy);
-      c.rotate(-0.5);
-      for (var pe = 0; pe < 5; pe++) {
-        c.save();
-        c.rotate((pe / 5) * Math.PI * 2 + 0.3);
-        c.beginPath();
-        c.moveTo(0, 0);
-        c.bezierCurveTo(24, -18, 58, -20, 70, 0);
-        c.bezierCurveTo(58, 20, 24, 18, 0, 0);
-        c.closePath();
-        var pg = c.createLinearGradient(0, 0, 70, 0);
-        pg.addColorStop(0, '#8e2440');
-        pg.addColorStop(0.5, '#c94b64');
-        pg.addColorStop(1, '#e8829a');
-        c.fillStyle = pg;
-        c.fill();
-        if (st >= 3) {
-          // Veins run to the petal tip, and they are what makes a petal read as
-          // a surface rather than a swatch.
-          for (var v2 = 0; v2 < 5; v2++) {
-            var vv = (v2 - 2) / 2;
-            c.beginPath();
-            c.moveTo(4, 0);
-            c.quadraticCurveTo(34, vv * 13, 66, vv * 4);
-            c.strokeStyle = 'rgba(255,208,220,.2)';
-            c.lineWidth = 0.8;
-            c.stroke();
-          }
-        }
-        c.restore();
-      }
-      // Throat of the corolla, and the stamens the bird is actually here for.
-      var tg = c.createRadialGradient(0, 0, 2, 0, 0, 26);
-      tg.addColorStop(0, '#3d0c1a');
-      tg.addColorStop(1, '#96304a');
-      c.fillStyle = tg;
-      c.beginPath(); c.arc(0, 0, 20, 0, Math.PI * 2); c.fill();
-      if (st >= 4) {
-        for (var sm = 0; sm < 6; sm++) {
-          var sa = -0.9 + sm * 0.24;
-          c.beginPath();
-          c.moveTo(0, 0);
-          c.quadraticCurveTo(Math.cos(sa) * 30, Math.sin(sa) * 30 - 8, Math.cos(sa) * 46, Math.sin(sa) * 46 - 6);
-          c.strokeStyle = 'rgba(246,226,178,.6)';
-          c.lineWidth = 1.3;
-          c.stroke();
-          c.beginPath();
-          c.arc(Math.cos(sa) * 46, Math.sin(sa) * 46 - 6, 2.6, 0, Math.PI * 2);
-          c.fillStyle = '#f2d78e';
-          c.fill();
-        }
-      }
-      c.restore();
-    }
-
-    /* --------------------------------------------------------- the far wing */
-    // Behind the body, dimmer, a half-beat out of phase: the two wings of a
-    // hovering bird are not synchronised on screen because one is further away.
-    var beat = tt * 3.1;
-    if (st >= 1) {
-      for (var w1 = 0; w1 < 26; w1++) {
-        var ph1 = beat + 0.5 + w1 / 26;
-        // Weighted by dwell: the wing spends longest where it is reversing, so
-        // that is where the smear is dense. A flat weight is a fan of copies.
-        var dwell1 = 0.3 + 0.7 * (1 - Math.abs(Math.cos(ph1 * Math.PI * 2)));
-        birdWing(c, ph1, 0.036 * dwell1 * (st === 1 ? 3 : 1), st);
-      }
-    }
-
-    /* ------------------------------------------------------------- the body */
+    // A bridge stands a third of a millimetre off the plate. Without its own
+    // shadow it reads as paint.
     c.save();
-    birdBody(c);
-    if (st === 1) {
-      c.fillStyle = '#4a4740'; c.fill();
-      c.strokeStyle = 'rgba(226,214,196,.7)'; c.lineWidth = 1.4; c.stroke();
-      c.restore();
-    } else {
+    c.translate(4, 5);
+    bridgePath(c, pts);
+    c.fillStyle = 'rgba(4,6,10,.5)';
+    c.fill();
+    c.restore();
+
+    // The lit chamfer, and the one in shadow opposite it.
+    c.save();
+    c.translate(-1.6, -1.9);
+    bridgePath(c, pts);
+    c.fillStyle = 'rgba(250,253,255,.62)';
+    c.fill();
+    c.restore();
+    c.save();
+    c.translate(1.6, 1.9);
+    bridgePath(c, pts);
+    c.fillStyle = 'rgba(10,13,18,.72)';
+    c.fill();
+    c.restore();
+
+    bridgePath(c, pts);
+    c.fillStyle = grad;
+    c.fill();
+
+    if (st >= 3) {
+      c.save();
+      bridgePath(c, pts);
       c.clip();
-      // Base mass: a small dark bird under an overhead key, belly bounced from
-      // the leaves below, which is why the underside is green rather than grey.
-      var body = c.createLinearGradient(0, BIRD.head.y - 70, 0, BIRD.tail.y + 40);
-      body.addColorStop(0, '#5c6b3a');
-      body.addColorStop(0.4, '#2f3a22');
-      body.addColorStop(0.75, '#1d2417');
-      body.addColorStop(1, '#2a3320');
-      c.fillStyle = body;
-      c.fillRect(0, 0, VW, VH);
-
-      if (st >= 3) {
-        /* Contour feathers. Each is placed in the body's own frame at its (u, v),
-         * scaled by the local half-width and rotated to lie along the axis, so
-         * the whole coat follows the form instead of being stamped over it. They
-         * are drawn tail-first: a feather overlaps the one behind it, and getting
-         * that order backwards is what makes plumage look like scales. */
-        var fr2 = rng(70707);
-        for (var row = 0; row < 30; row++) {
-          var bu = 0.02 + (row / 30) * 0.99;
-          var bp = birdAt(bu), bf = birdFrame(bu), bh = birdHalf(bu);
-          var cols = 11;
-          for (var cv = 0; cv < cols; cv++) {
-            // Jittered on both axes. A regular lattice of feathers is chain mail;
-            // what makes a coat read as a coat is that no two rows line up and
-            // every feather is a little longer or shorter than its neighbour.
-            var v = ((cv + (row % 2) * 0.5) / (cols - 1)) * 2 - 1 + (fr2() - 0.5) * 0.16;
-            if (Math.abs(v) > 1.04) continue;
-            var jitU = (fr2() - 0.5) * 0.022;
-            var bp2 = birdAt(clamp(bu + jitU, 0, 1));
-            var fx2 = bp2.x + bf.nx * bh * v;
-            var fy2 = bp2.y + bf.ny * bh * v;
-            var lam = Math.sqrt(Math.max(0, 1 - v * v));   // local normal
-            if (Math.abs(v) > 0.88) continue;
-            var size = (3.8 + fr2() * 2.1) * (0.66 + lam * 0.44);
-            // Back is iridescent green, belly is pale. The transition is the
-            // bird's own waterline and it sits low, not at the equator.
-            var backness = clamp((-v + 0.25) / 1.1, 0, 1);
-            var base = backness > 0.5
-              ? hsl(98 + backness * 26, 0.38, 0.12 + lam * 0.13)
-              : hsl(66, 0.1, 0.24 + lam * 0.2);
-            c.save();
-            c.translate(fx2, fy2);
-            // Feathers point back along the body and splay outward from the
-            // midline, which is the direction water would run off them.
-            c.rotate(Math.atan2(bf.ty, bf.tx) + Math.PI + v * 0.5 + (fr2() - 0.5) * 0.24);
-            c.beginPath();
-            c.moveTo(-size * 1.05, 0);
-            c.quadraticCurveTo(-size * 0.1, -size * 0.74, size * 0.95, 0);
-            c.quadraticCurveTo(-size * 0.1, size * 0.74, -size * 1.05, 0);
-            c.closePath();
-            c.fillStyle = base;
-            c.fill();
-            // One hairline of shadow along the trailing edge only. A full
-            // outline turns every feather into a sequin.
-            c.beginPath();
-            c.moveTo(-size * 1.05, 0);
-            c.quadraticCurveTo(-size * 0.1, size * 0.74, size * 0.95, 0);
-            c.strokeStyle = 'rgba(8,12,7,.2)';
-            c.lineWidth = 0.5;
-            c.stroke();
-            c.restore();
-          }
-        }
-      }
-
-      if (st >= 4) {
-        /* The gorget.
-         *
-         * Structural colour, computed. Each barbule sits at an angle on the
-         * throat; the path difference through its thin film goes as the cosine
-         * of that angle against the viewer, and hue follows the path difference.
-         * So a barbule pointing straight at you fires crimson, its neighbour
-         * thirty degrees off fires gold, and the one past that goes black - and
-         * when the head turns, the whole plate sweeps through the sequence.
-         * Nothing here is a keyframe or a gradient: turn is one number, and the
-         * flash is what falls out of it. */
-        var gr = rng(313131);
-        // The throat: an ellipse hung under the chin and running back onto the
-        // breast, tilted to follow the body axis.
-        var thX = BIRD.head.x - 4, thY = BIRD.head.y + 26;
-        for (var gi = 0; gi < 300; gi++) {
-          var ga = gr(), gb = Math.sqrt(gr());       // sqrt: even area, not even radius
-          var gang = ga * Math.PI * 2;
-          var gx = thX + Math.cos(gang) * gb * 34;
-          var gy = thY + Math.sin(gang) * gb * 22 + Math.cos(gang) * gb * 9;
-          // Barbule normal: the throat is a curved plate, so a barbule near its
-          // edge points further off-axis than one at its centre. Then the whole
-          // plate turns with the head.
-          var nAng = Math.cos(gang) * gb * 1.15 + turn;
-          var cosT = Math.cos(nAng);
-          // Thin-film path difference, normalised. Hue sweeps ~140 degrees over
-          // the useful range, which is what a real gorget does.
-          var pathd = clamp(cosT, -1, 1);
-          var hue = 348 - (1 - pathd) * 132;
-          // Off-axis barbules do not just shift hue, they stop returning light
-          // at all. That extinction is the reason a gorget can look black.
-          var amp = Math.pow(clamp(pathd, 0, 1), 2.6);
-          if (amp < 0.02) {
-            c.fillStyle = 'rgba(18,12,10,.55)';
-          } else {
-            c.fillStyle = hsl(hue, 0.72 + amp * 0.24, 0.16 + amp * 0.42);
-          }
-          c.save();
-          c.translate(gx, gy);
-          c.rotate(gang + 1.6);
-          c.beginPath();
-          c.ellipse(0, 0, 4.6, 2.3, 0, 0, Math.PI * 2);
-          c.fill();
-          c.restore();
-        }
-      }
+      cotes(c, pts[0].x - 220, pts[0].y - 40,
+            pts[0].x - 220 + Math.cos(stripeAng) * 460,
+            pts[0].y - 40 + Math.sin(stripeAng) * 460, 200, 10);
       c.restore();
     }
+  }
 
-    /* --------------------------------------------------------------- tail */
-    if (st >= 1) {
-      c.save();
-      for (var ti = 0; ti < 5; ti++) {
-        var ta = -0.06 + (ti - 2) * 0.15 + Math.sin(tt * 1.3 + ti) * 0.025;
+  function paintPlateMid(c, st) {
+    var i, br, defs = bridgeDefs();
+    var stripe = [0.16, -0.1, 0.3];
+
+    for (i = 0; i < defs.length; i++) {
+      br = defs[i];
+      var p0 = br.pts[0], pn = br.pts[br.pts.length - 1];
+      var bg = c.createLinearGradient(p0.x - 70, p0.y - 70, pn.x + 50, pn.y + 70);
+      bg.addColorStop(0, '#b3bbc6');
+      bg.addColorStop(0.38, '#6e7680');
+      bg.addColorStop(0.76, '#454b54');
+      bg.addColorStop(1, '#2a2f36');
+      dressBridge(c, br.pts, st, bg, stripe[i]);
+    }
+
+    if (st >= 2) {
+      /* The ratchet wheel and the click, over the barrel arbor. The click is a
+       * steel pawl on a spring that drops into the ratchet teeth and holds the
+       * mainspring wound - the one part of a movement whose entire job is to
+       * move in only one direction, and always the part left out. */
+      var bx = MV.barrel.x, by = MV.barrel.y;
+      // Ratchet teeth are asymmetric: a steep locking face and a long ramp,
+      // because the click has to climb one side and catch on the other.
+      c.beginPath();
+      for (var rt = 0; rt < 24; rt++) {
+        var a0 = (rt / 24) * Math.PI * 2, a1 = ((rt + 0.66) / 24) * Math.PI * 2;
+        c.lineTo(bx + Math.cos(a0) * 24, by + Math.sin(a0) * 24);
+        c.lineTo(bx + Math.cos(a1) * 28, by + Math.sin(a1) * 28);
+      }
+      c.closePath();
+      var rg = c.createLinearGradient(bx - 28, by - 28, bx + 28, by + 28);
+      rg.addColorStop(0, '#c8d0da');
+      rg.addColorStop(0.45, '#767e89');
+      rg.addColorStop(1, '#3b414a');
+      c.fillStyle = rg; c.fill();
+      c.strokeStyle = 'rgba(232,238,248,.35)'; c.lineWidth = 0.8; c.stroke();
+      if (st >= 3) {
         c.save();
-        c.translate(BIRD.tail.x + 6, BIRD.tail.y - 8);
-        c.rotate(Math.PI + 0.5 + ta);
-        c.beginPath();
-        c.moveTo(0, 0);
-        c.quadraticCurveTo(34, -8, 74, -3);
-        c.quadraticCurveTo(36, 7, 0, 0);
-        c.closePath();
-        if (st === 1) {
-          c.strokeStyle = 'rgba(226,214,196,.55)'; c.lineWidth = 1.2; c.stroke();
-        } else {
-          var tg2 = c.createLinearGradient(0, 0, 96, 0);
-          tg2.addColorStop(0, '#232b1c');
-          tg2.addColorStop(0.7, '#39442c');
-          tg2.addColorStop(1, '#1a2015');
-          c.fillStyle = tg2;
-          c.fill();
-          if (st >= 3) {
-            for (var tv = 1; tv < 7; tv++) {
-              c.beginPath();
-              c.moveTo(5, 0);
-              c.quadraticCurveTo(38, -6 * (tv / 7), 70 * (0.5 + tv / 14), -2 * (tv / 7));
-              c.strokeStyle = 'rgba(12,16,10,.3)';
-              c.lineWidth = 0.8;
-              c.stroke();
-            }
-          }
-        }
+        c.beginPath(); c.arc(bx, by, 24, 0, Math.PI * 2); c.clip();
+        snail(c, bx, by, 24, 4242);
         c.restore();
       }
-      c.restore();
-    }
 
-    /* ---------------------------------------------------------- head detail */
-    if (st >= 2) {
-      // Bill: two mandibles, not one line. The gape between them is the detail
-      // that makes a bill read as a tool rather than a spike.
+      // The click and its spring.
       c.save();
-      var bx0 = BIRD.head.x + 24, by0 = BIRD.head.y - 12;
-      var bx1 = BIRD.billTip.x, by1 = BIRD.billTip.y;
-      // Two mandibles with a gape between them, tapering to a point. A bill
-      // drawn as one line is a spike; the gape is what makes it a tool.
+      c.lineCap = 'round';
+      c.strokeStyle = 'rgba(206,214,226,.8)';
+      c.lineWidth = 6;
       c.beginPath();
-      c.moveTo(bx0, by0 - 5);
-      c.quadraticCurveTo((bx0 + bx1) / 2, (by0 + by1) / 2 - 5, bx1, by1);
-      c.quadraticCurveTo((bx0 + bx1) / 2, (by0 + by1) / 2 + 3, bx0, by0 + 6);
-      c.closePath();
-      var bill = c.createLinearGradient(bx0, by0, bx1, by1);
-      bill.addColorStop(0, '#100e0c');
-      bill.addColorStop(0.55, '#282320');
-      bill.addColorStop(1, '#0b0a09');
-      c.fillStyle = bill;
-      c.fill();
-      // The culmen catches a thread of the key along its whole length.
+      c.moveTo(bx + 52, by + 24);
+      c.quadraticCurveTo(bx + 46, by + 2, bx + 28, by - 6);
+      c.stroke();
+      c.lineWidth = 1.7;
+      c.strokeStyle = 'rgba(190,198,212,.7)';
       c.beginPath();
-      c.moveTo(bx0 + 2, by0 - 4);
-      c.quadraticCurveTo((bx0 + bx1) / 2, (by0 + by1) / 2 - 4.5, bx1 - 2, by1 + 0.5);
-      c.strokeStyle = 'rgba(206,198,182,.26)';
-      c.lineWidth = 0.9;
+      c.moveTo(bx + 66, by + 16);
+      c.quadraticCurveTo(bx + 70, by - 12, bx + 50, by - 28);
       c.stroke();
       c.restore();
-
-      // Eye: black, wet, with one small hard catchlight and a pale crescent
-      // behind it. The white spot behind a hummingbird's eye is diagnostic.
-      c.beginPath();
-      c.arc(BIRD.head.x + 9, BIRD.head.y - 8, 6.4, 0, Math.PI * 2);
-      c.fillStyle = '#080706'; c.fill();
-      if (st >= 4) {
-        c.beginPath();
-        c.arc(BIRD.head.x + 6.8, BIRD.head.y - 10.2, 1.9, 0, Math.PI * 2);
-        c.fillStyle = 'rgba(250,248,242,.92)'; c.fill();
-        // The pale spot behind the eye. It is diagnostic, and leaving it out is
-        // what makes a drawn hummingbird read as a generic small bird.
-        c.beginPath();
-        c.ellipse(BIRD.head.x - 3, BIRD.head.y - 6, 5.5, 2.6, -0.35, 0, Math.PI * 2);
-        c.fillStyle = 'rgba(236,230,214,.55)'; c.fill();
-      }
+      screw(c, bx + 52, by + 24, 4.6, 0.7, st);
+      screw(c, bx, by, 6, 1.2, st);
     }
 
-    /* --------------------------------------------------------- the near wing */
-    if (st >= 1) {
-      for (var w2 = 0; w2 < 26; w2++) {
-        var ph2 = beat + w2 / 26;
-        var dwell2 = 0.3 + 0.7 * (1 - Math.abs(Math.cos(ph2 * Math.PI * 2)));
-        birdWing(c, ph2, 0.05 * dwell2 * (st === 1 ? 3 : 1), st);
+    if (st >= 2) {
+      // Bridge screws go on the feet, which is where a bridge is actually held
+      // down - not wherever there happens to be room left over.
+      var d0 = defs[0].pts, d1 = defs[1].pts, d2 = defs[2].pts;
+      screw(c, d0[0].x, d0[0].y, 5.4, 0.4, st);
+      screw(c, d0[4].x, d0[4].y, 5.4, 1.9, st);
+      screw(c, d1[0].x, d1[0].y, 5.4, 0.9, st);
+      screw(c, d1[2].x + 22, d1[2].y + 16, 5, 1.4, st);
+      screw(c, d2[0].x, d2[0].y, 4.8, 2.4, st);
+    }
+
+    // Jewels, sitting in the bridges over the pivots they carry.
+    jewel(c, MV.third.x, MV.third.y, 5.8, st);
+    jewel(c, MV.fourth.x, MV.fourth.y, 5.4, st);
+    jewel(c, MV.escape.x, MV.escape.y, 5, st);
+    jewel(c, MV.fork.x, MV.fork.y, 4.6, st);
+  }
+
+  function paintCock(c, st) {
+    var b = MV.balance;
+    /* The cock: one arm, cantilevered from a foot screwed to the plate, with
+     * the balance hanging off its free end. It is the only bridge on a movement
+     * held by a single screw, which is why it is the one that gets engraved and
+     * the one whose bevel gets looked at first. */
+    var pts = [{ x: b.x + 96, y: b.y - 44, r: 15 }, { x: b.x + 44, y: b.y - 24, r: 15 },
+               { x: b.x, y: b.y, r: 20 }];
+    var g = c.createLinearGradient(b.x + 96, b.y - 60, b.x - 20, b.y + 24);
+    g.addColorStop(0, '#b8c0cb');
+    g.addColorStop(0.4, '#727a85');
+    g.addColorStop(1, '#2d323a');
+    dressBridge(c, pts, st, g, -0.06);
+
+    if (st >= 3) {
+      /* The regulator. An index arm pivoting about the balance jewel carries
+       * two curb pins that straddle the outer coil of the hairspring: moving it
+       * shortens the spring's working length, which is the only adjustment on a
+       * watch that changes its rate. The swan neck above it - a flattened S of
+       * spring steel bearing on an eccentric screw - is there so the index can
+       * be nudged by a thousandth of a turn instead of shoved. */
+      c.save();
+      c.lineCap = 'round';
+      c.strokeStyle = 'rgba(202,210,222,.9)';
+      c.lineWidth = 4.5;
+      c.beginPath();
+      c.arc(b.x, b.y, 30, -2.1, -0.95);
+      c.stroke();
+      c.lineWidth = 1.9;
+      c.strokeStyle = 'rgba(216,224,236,.85)';
+      c.beginPath();
+      c.moveTo(b.x + 2, b.y - 40);
+      c.bezierCurveTo(b.x + 24, b.y - 56, b.x + 44, b.y - 34, b.x + 66, b.y - 44);
+      c.stroke();
+      c.restore();
+      // The two curb pins, seen end on, straddling the outer coil.
+      c.fillStyle = 'rgba(232,238,248,.95)';
+      c.beginPath(); c.arc(b.x + 4, b.y - 30, 1.8, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.arc(b.x + 10, b.y - 29, 1.8, 0, Math.PI * 2); c.fill();
+      c.font = '600 9px ui-monospace, monospace';
+      c.fillStyle = 'rgba(232,238,248,.55)';
+      c.fillText('F', b.x + 26, b.y - 30);
+      c.fillText('S', b.x - 12, b.y - 38);
+    }
+
+    if (st >= 2) screw(c, pts[0].x, pts[0].y, 6.2, 2.1, st);
+
+    /* The balance jewel and the cap stone over it. A cap closes the bearing at
+     * the top so the pivot cannot climb out of it under shock, and it is the
+     * reason a balance jewel reads as two circles rather than one. */
+    jewel(c, b.x, b.y, 6.6, st);
+    if (st >= 4) {
+      c.strokeStyle = 'rgba(232,238,248,.34)';
+      c.lineWidth = 1;
+      c.beginPath(); c.arc(b.x, b.y, 11.5, 0, Math.PI * 2); c.stroke();
+      c.strokeStyle = 'rgba(232,238,248,.14)';
+      c.beginPath(); c.arc(b.x, b.y, 14, 0, Math.PI * 2); c.stroke();
+    }
+  }
+
+  function mvLayer(paint, st) {
+    var L = newLayer();
+    L.ctx.save();
+    mvSpace(L.ctx);
+    paint(L.ctx, st);
+    L.ctx.restore();
+    return L.canvas;
+  }
+
+  /* ---------------------------------------------------------- the wheels ---
+   * Each wheel is rigid, so it is baked once at build time and blitted with a
+   * rotation. Redrawing seventy-two epicycloidal teeth every frame to arrive at
+   * the same pixels turned by a degree is work with a known answer. */
+  var mvWheels = { key: '' };
+
+  function wheelSprite(spec, st, gilt, arms) {
+    var pad = 14, size = Math.ceil((spec.rw + pad) * 2 * MV_S * (canvas.width / VW));
+    var lc = document.createElement('canvas');
+    lc.width = lc.height = size;
+    var c = lc.getContext('2d');
+    var s = size / ((spec.rw + pad) * 2);
+    c.setTransform(s, 0, 0, s, size / 2, size / 2);
+    var w = { x: 0, y: 0 };
+
+    if (spec.teeth === 15) escapePath(c, w, 15, spec.rw);
+    else gearPath(c, w, spec.teeth, spec.rw, spec.gen);
+
+    if (st <= 1) {
+      c.strokeStyle = gilt ? 'rgba(226,196,132,.8)' : 'rgba(206,214,226,.8)';
+      c.lineWidth = 0.9;
+      c.stroke();
+    } else {
+      var g = c.createLinearGradient(-spec.rw, -spec.rw, spec.rw, spec.rw);
+      // Gilt brass, not gold leaf. The first pass ran to a saturated yellow at
+      // the lit end and the whole train came out looking like a toy: real
+      // gilding is a thin wash over brass, so it stays close to the metal
+      // underneath and only goes bright at the very edge of the highlight.
+      if (gilt) {
+        g.addColorStop(0, '#d3ac6e'); g.addColorStop(0.36, '#9c7739');
+        g.addColorStop(0.74, '#66491f'); g.addColorStop(1, '#33240f');
+      } else {
+        g.addColorStop(0, '#c9d1db'); g.addColorStop(0.42, '#7d858f');
+        g.addColorStop(1, '#363c45');
       }
+      c.fillStyle = g;
+      c.fill();
+      // The tooth tips are the only part of a wheel that is a sharp edge, so
+      // they are the only part that throws a real specular. Everything else on
+      // a wheel is a broad, soft, turned surface.
+      c.strokeStyle = gilt ? 'rgba(250,226,172,.34)' : 'rgba(236,242,252,.34)';
+      c.lineWidth = 0.7;
+      c.stroke();
+      if (arms) {
+        // Cut the crossings out, then put the arms back with their own
+        // shading. A watch wheel is turned down to three or four arms to lose
+        // weight, and the arms are why a train reads as machined rather than
+        // stamped: the light passes through it.
+        var cut = spec.rw * (spec.teeth === 15 ? 0.58 : 0.84);
+        c.save();
+        c.globalCompositeOperation = 'destination-out';
+        c.beginPath();
+        c.arc(0, 0, cut, 0, Math.PI * 2);
+        c.fillStyle = '#000';
+        c.fill();
+        c.restore();
+        c.fillStyle = g;
+        crossings(c, w, arms, cut + 1, spec.rp + 4, Math.max(2.4, spec.rw * 0.05));
+      } else if (!arms) {
+        /* The barrel is a closed drum with the mainspring coiled inside it, so
+         * it is not crossed at all. What it has instead is a lid, pressed in
+         * and turned: a raised step at about four fifths of the radius with its
+         * own lit edge, and a snailed face inside that. Leaving the step out is
+         * what makes a barrel read as a plain gold disc, which is the note
+         * every version of this drawing failed on before this one. */
+        var lid = spec.rw * 0.82;
+        var lg = c.createLinearGradient(-lid, -lid, lid, lid);
+        lg.addColorStop(0, '#c9a466');
+        lg.addColorStop(0.44, '#8f6c33');
+        lg.addColorStop(1, '#3d2c12');
+        c.beginPath(); c.arc(0, 0, lid, 0, Math.PI * 2);
+        c.fillStyle = lg; c.fill();
+        if (st >= 3) {
+          c.save();
+          c.beginPath(); c.arc(0, 0, lid - 1, 0, Math.PI * 2); c.clip();
+          snail(c, 0, 0, lid, 8123);
+          c.restore();
+        }
+        // The step itself: bright where it faces the key, dark opposite.
+        var eg = c.createLinearGradient(-lid, -lid, lid, lid);
+        eg.addColorStop(0, 'rgba(255,238,196,.5)');
+        eg.addColorStop(0.5, 'rgba(120,96,52,0)');
+        eg.addColorStop(1, 'rgba(18,12,4,.5)');
+        c.strokeStyle = eg; c.lineWidth = 2.4;
+        c.beginPath(); c.arc(0, 0, lid, 0, Math.PI * 2); c.stroke();
+      }
+      // Hub and pinion.
+      c.beginPath(); c.arc(0, 0, spec.rp + 4, 0, Math.PI * 2);
+      c.fillStyle = g; c.fill();
+      c.beginPath(); c.arc(0, 0, Math.max(2, spec.rp * 0.42), 0, Math.PI * 2);
+      c.fillStyle = 'rgba(24,20,14,.7)'; c.fill();
+    }
+    return { canvas: lc, half: (spec.rw + pad) };
+  }
+
+  function buildWheels(st) {
+    var key = st + '|' + canvas.width;
+    if (mvWheels.key === key) return;
+    mvWheels.key = key;
+    mvWheels.barrel = wheelSprite(MV.barrel, st, true, 0);
+    mvWheels.centre = wheelSprite(MV.centre, st, true, 4);
+    mvWheels.third  = wheelSprite(MV.third, st, true, 4);
+    mvWheels.fourth = wheelSprite(MV.fourth, st, true, 3);
+    mvWheels.escape = wheelSprite(MV.escape, st, false, 3);
+  }
+
+  function blitWheel(c, name, spec, ang) {
+    var sp = mvWheels[name];
+    if (!sp) return;
+    c.save();
+    c.translate(spec.x, spec.y);
+    c.rotate(ang);
+    c.drawImage(sp.canvas, -sp.half, -sp.half, sp.half * 2, sp.half * 2);
+    c.restore();
+  }
+
+  /* ------------------------------------------------------- the escapement --- */
+  function palletFork(c, ang, st) {
+    var f = MV.fork;
+    c.save();
+    c.translate(f.x, f.y);
+    c.rotate(ang);
+    // Two arms out toward the escape wheel, a slotted end toward the balance.
+    var toEsc = Math.atan2(MV.escape.y - f.y, MV.escape.x - f.x);
+    var toBal = Math.atan2(MV.balance.y - f.y, MV.balance.x - f.x);
+    c.beginPath();
+    c.moveTo(Math.cos(toEsc - 0.42) * 30, Math.sin(toEsc - 0.42) * 30);
+    c.quadraticCurveTo(0, 0, Math.cos(toEsc + 0.42) * 30, Math.sin(toEsc + 0.42) * 30);
+    c.lineTo(Math.cos(toEsc + 0.42) * 22, Math.sin(toEsc + 0.42) * 22);
+    c.quadraticCurveTo(0, 0, Math.cos(toEsc - 0.42) * 22, Math.sin(toEsc - 0.42) * 22);
+    c.closePath();
+    var g = c.createLinearGradient(-24, -24, 24, 24);
+    g.addColorStop(0, st <= 1 ? 'rgba(0,0,0,0)' : '#cdd5e0');
+    g.addColorStop(0.45, st <= 1 ? 'rgba(0,0,0,0)' : '#767e89');
+    g.addColorStop(1, st <= 1 ? 'rgba(0,0,0,0)' : '#333941');
+    c.fillStyle = g;
+    c.fill();
+    if (st >= 3) { c.fillStyle = blackPolish(c, -0.9 - ang * 3); c.fill(); }
+    c.strokeStyle = st <= 1 ? 'rgba(206,214,226,.8)' : 'rgba(238,244,252,.35)';
+    c.lineWidth = st <= 1 ? 1 : 0.8;
+    c.stroke();
+
+    // The lever itself, out to the horns and the notch.
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.lineTo(Math.cos(toBal) * 30 - Math.sin(toBal) * 3.4, Math.sin(toBal) * 30 + Math.cos(toBal) * 3.4);
+    c.lineTo(Math.cos(toBal) * 30 + Math.sin(toBal) * 3.4, Math.sin(toBal) * 30 - Math.cos(toBal) * 3.4);
+    c.closePath();
+    c.fillStyle = g; c.fill();
+    if (st >= 3) { c.fillStyle = blackPolish(c, -0.9 - ang * 3); c.fill(); }
+    c.stroke();
+    // Horns, either side of the slot the roller jewel enters.
+    c.lineCap = 'round';
+    c.lineWidth = st <= 1 ? 1 : 2.6;
+    c.strokeStyle = st <= 1 ? 'rgba(206,214,226,.8)' : 'rgba(190,198,210,.9)';
+    [-1, 1].forEach(function (s) {
+      c.beginPath();
+      c.moveTo(Math.cos(toBal) * 26 + Math.sin(toBal) * 4.5 * s, Math.sin(toBal) * 26 - Math.cos(toBal) * 4.5 * s);
+      c.lineTo(Math.cos(toBal) * 34 + Math.sin(toBal) * 6.5 * s, Math.sin(toBal) * 34 - Math.cos(toBal) * 6.5 * s);
+      c.stroke();
+    });
+
+    if (st >= 4) {
+      // The pallet jewels. Rectangles, not dots: the whole escapement is two
+      // flat ruby faces at a computed angle to each other, and that angle is
+      // the escapement.
+      [-1, 1].forEach(function (s) {
+        var a = toEsc + 0.42 * s;
+        c.save();
+        c.translate(Math.cos(a) * 27, Math.sin(a) * 27);
+        c.rotate(a + Math.PI / 2 - 0.3 * s);
+        var jg = c.createLinearGradient(-5, -2, 5, 2);
+        jg.addColorStop(0, '#e07a80');
+        jg.addColorStop(0.5, '#a8283a');
+        jg.addColorStop(1, '#5e1020');
+        c.fillStyle = jg;
+        c.fillRect(-5, -2.6, 10, 5.2);
+        c.fillStyle = 'rgba(255,222,222,.45)';
+        c.fillRect(-5, -2.6, 10, 1.2);
+        c.restore();
+      });
+    }
+    c.restore();
+  }
+
+  /* The balance, in two pieces - because only one of them blurs.
+   *
+   * The rim is a circle of revolution: it occupies exactly the same pixels at
+   * every angle, so integrating it over the exposure is eleven identical draws
+   * arriving at one image, at a tenth of the alpha each, which is how you turn
+   * a solid rim into a ghost. Only the parts whose position actually changes -
+   * the arms, the timing screws, the roller - are worth smearing. Getting this
+   * backwards is why most drawn balance wheels look like they are fading out.
+   */
+  function balanceRim(c, st) {
+    var b = MV.balance, R = MV.balR;
+    c.save();
+    c.translate(b.x, b.y);
+    var g = c.createLinearGradient(-R, -R, R, R);
+    g.addColorStop(0, '#efd196');
+    g.addColorStop(0.4, '#b78d47');
+    g.addColorStop(0.78, '#775623');
+    g.addColorStop(1, '#38270f');
+    c.beginPath();
+    c.arc(0, 0, R, 0, Math.PI * 2);
+    c.arc(0, 0, R - 10, 0, Math.PI * 2, true);
+    if (st <= 1) {
+      c.strokeStyle = 'rgba(226,196,132,.8)'; c.lineWidth = 1; c.stroke();
+    } else {
+      c.fillStyle = g; c.fill('evenodd');
+      c.strokeStyle = 'rgba(252,232,190,.4)'; c.lineWidth = 0.8; c.stroke();
+      // The inner wall of the rim is in its own shadow on the key side, which
+      // is the only cue that the rim has depth rather than being a painted ring.
+      c.beginPath();
+      c.arc(0, 0, R - 10, 0, Math.PI * 2);
+      c.strokeStyle = 'rgba(40,28,12,.5)'; c.lineWidth = 1.6; c.stroke();
+    }
+    c.restore();
+  }
+
+  function balanceSpokes(c, ang, st) {
+    var b = MV.balance, R = MV.balR;
+    c.save();
+    c.translate(b.x, b.y);
+    c.rotate(ang);
+    var g = c.createLinearGradient(-R, -R, R, R);
+    g.addColorStop(0, '#dcb87b');
+    g.addColorStop(0.44, '#a17b3c');
+    g.addColorStop(1, '#38270f');
+    // Two arms and a hub.
+    c.beginPath();
+    c.rect(-R + 6, -2.8, R * 2 - 12, 5.6);
+    if (st <= 1) {
+      c.strokeStyle = 'rgba(226,196,132,.8)'; c.lineWidth = 1; c.stroke();
+    } else {
+      c.fillStyle = g; c.fill();
+      c.strokeStyle = 'rgba(252,232,190,.3)'; c.lineWidth = 0.6; c.stroke();
+    }
+    c.beginPath(); c.arc(0, 0, 8.5, 0, Math.PI * 2);
+    if (st <= 1) { c.stroke(); } else { c.fillStyle = g; c.fill(); }
+
+    if (st >= 2) {
+      /* Timing screws. Sixteen of them through the rim, and they are not
+       * decoration: they are the mass you move to make the watch keep time.
+       * They come in opposed pairs because a balance that is out of poise runs
+       * at one rate lying on its back and another standing on its edge, and
+       * removing weight from one side alone is how you cause that. */
+      for (var i = 0; i < 16; i++) {
+        var a = (i / 16) * Math.PI * 2 + Math.PI / 16;
+        var sx = Math.cos(a) * (R - 4.6), sy = Math.sin(a) * (R - 4.6);
+        var sg = c.createRadialGradient(sx - 1.6, sy - 1.6, 0.3, sx, sy, 5);
+        sg.addColorStop(0, '#efdcb0');
+        sg.addColorStop(0.55, '#a67f40');
+        sg.addColorStop(1, '#3a2911');
+        c.fillStyle = sg;
+        c.beginPath(); c.arc(sx, sy, 5, 0, Math.PI * 2); c.fill();
+      }
+    }
+    if (st >= 4) {
+      /* The roller table under the rim, and the impulse jewel standing up out
+       * of it - one pin, and the only thing the escapement is allowed to touch
+       * the balance with. Everything else about a lever escapement exists to
+       * keep away from the balance between beats, which is what "detached"
+       * means and why it keeps better time than anything that does not. */
+      c.fillStyle = 'rgba(158,166,178,.92)';
+      c.beginPath(); c.arc(0, 0, 13, 0, Math.PI * 2); c.fill();
+      c.fillStyle = 'rgba(66,72,82,.75)';
+      c.beginPath(); c.arc(0, 0, 13, 0.6, 2.54); c.fill();
+      // The passing hollow, cut in the roller so the guard pin can cross it.
+      c.fillStyle = 'rgba(24,28,34,.8)';
+      c.beginPath(); c.arc(0, MV.rollerR - 2, 4, 0, Math.PI * 2); c.fill();
+      c.save();
+      c.translate(0, MV.rollerR);
+      var jg = c.createLinearGradient(-2.6, 0, 2.6, 0);
+      jg.addColorStop(0, '#ee979c'); jg.addColorStop(0.5, '#ac2c3e'); jg.addColorStop(1, '#5e1020');
+      c.fillStyle = jg;
+      c.beginPath(); c.ellipse(0, 0, 2.6, 3.6, 0, 0, Math.PI * 2); c.fill();
+      c.restore();
+    }
+    c.restore();
+  }
+
+  /* The hairspring. An Archimedean spiral from the collet on the balance staff
+   * to the stud on the cock: the inner end turns with the balance and the outer
+   * end cannot move, so the coils wind up and unwind twice per oscillation.
+   * That breathing is the animation - a spring drawn at a fixed shape and
+   * rotated bodily is the commonest mistake in a drawn movement, and it is
+   * instantly wrong, because then nothing is storing any energy. */
+  function hairspring(c, ang, st) {
+    var b = MV.balance;
+    // The outer coil ends where the curb pins are, at thirty: a hairspring
+    // drawn out past its own regulator is a spring nothing is regulating.
+    var TURNS = 11, rIn = 8, rOut = 30;
+    c.save();
+    c.translate(b.x, b.y);
+    c.beginPath();
+    for (var i = 0; i <= 320; i++) {
+      var s = i / 320;
+      var phi = ang * (1 - s) + s * TURNS * Math.PI * 2 - Math.PI * 0.5;
+      var r = rIn + (rOut - rIn) * s;
+      var x = Math.cos(phi) * r, y = Math.sin(phi) * r;
+      i === 0 ? c.moveTo(x, y) : c.lineTo(x, y);
+    }
+    c.strokeStyle = st <= 1 ? 'rgba(200,208,220,.6)' : 'rgba(216,224,238,.72)';
+    c.lineWidth = st <= 1 ? 0.6 : 0.9;
+    c.stroke();
+    if (st >= 3) {
+      // A second pass a hair below, because spring steel this thin is a
+      // cylinder and catches the key along its top edge only.
+      c.save();
+      c.translate(-0.5, -0.6);
+      c.strokeStyle = 'rgba(255,255,255,.22)';
+      c.lineWidth = 0.5;
+      c.stroke();
+      c.restore();
+    }
+    c.restore();
+  }
+
+  function drawMovement(c, st, t) {
+    var tt = reduce ? 0.42 : t;
+
+    /* --------------------------------------------------------------- timing
+     * Everything below comes from one number.
+     *
+     * 18,000 A/h is five beats a second, so the balance is a 2.5 Hz sine with
+     * its zero crossings on the beats. A lever escapement lets one tooth go per
+     * full oscillation, which is half a tooth per beat, and the wheel does not
+     * ease into it - it is dead locked, then released, then dead locked again,
+     * which is why the step below is a fast smoothstep inside a tenth of a beat
+     * and a flat hold for the rest of it. The small backward kick at the end of
+     * the step is draw: the locking faces are cut at an angle that pulls the
+     * tooth further in rather than letting it sit, and it is the reason a lever
+     * escapement stays safe when the watch is knocked. */
+    var beat = tt * 5;                            // five beats a second
+    var b = Math.floor(beat), p = beat - b;
+    var theta = 2.356 * Math.sin(Math.PI * beat); // +/- 135 degrees
+
+    function ease(u) { u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
+    var stepU = ease(p / 0.11);
+    var drawback = p > 0.11 && p < 0.2 ? Math.sin((p - 0.11) / 0.09 * Math.PI) * 0.16 : 0;
+    var escAng = (b + stepU - drawback) * (Math.PI * 2 / 15 / 2);
+
+    var fourthAng = -escAng / 10;
+    var thirdAng = fourthAng / 7.5;
+    var centreAng = -thirdAng / 8;
+    var barrelAng = centreAng / 6;
+
+    var side = b % 2 === 0 ? 1 : -1;
+    var forkAng = (-side + 2 * side * ease(p / 0.10)) * 0.135;
+
+    // The lamp. It is a real azimuth, and the pointer moves it - which is the
+    // only honest way to show an anisotropic finish, because the whole claim is
+    // that what you see depends on where the light is.
+    var keyAng = pointer.inside
+      ? Math.atan2(pointer.y - 0.5, pointer.x - 0.5)
+      : -2.2 + Math.sin(tt * 0.4) * 0.5;
+
+    /* ------------------------------------------------------------- backdrop */
+    var bg = c.createRadialGradient(VW * 0.36, VH * 0.3, 60, VW * 0.5, VH * 0.5, VW * 0.78);
+    bg.addColorStop(0, '#15181d');
+    bg.addColorStop(0.55, '#0d0f12');
+    bg.addColorStop(1, '#050607');
+    c.fillStyle = st === 0 ? '#0b0a09' : bg;
+    c.fillRect(0, 0, VW, VH);
+    if (st >= 2) {
+      // The plate is lying on something, under a lens, and the something
+      // catches a little of the key at the edges of the frame. Two very soft
+      // reflections are enough to stop the margins reading as a cut-out.
+      [[92, 132, 140], [812, 356, 170]].forEach(function (q) {
+        var sp = c.createRadialGradient(q[0], q[1], 4, q[0], q[1], q[2]);
+        sp.addColorStop(0, 'rgba(150,162,182,.10)');
+        sp.addColorStop(1, 'rgba(150,162,182,0)');
+        c.fillStyle = sp;
+        c.fillRect(q[0] - q[2], q[1] - q[2], q[2] * 2, q[2] * 2);
+      });
+    }
+
+    /* ------------------------------------------------------ stage 1: rig */
+    if (st === 0) {
+      c.save();
+      mvSpace(c);
+      c.lineWidth = 1 / MV_S;
+      c.strokeStyle = 'rgba(223,106,65,.5)';
+      c.setLineDash([4, 5]);
+      c.beginPath(); c.arc(0, 0, MV_R, 0, Math.PI * 2); c.stroke();
+      // Every pitch circle, and the line joining each pair of meshing centres.
+      var chain = ['barrel', 'centre', 'third', 'fourth', 'escape'];
+      var i, w, pw;
+      for (i = 0; i < chain.length; i++) {
+        w = MV[chain[i]];
+        c.strokeStyle = 'rgba(223,106,65,.62)';
+        c.beginPath(); c.arc(w.x, w.y, w.rw, 0, Math.PI * 2); c.stroke();
+        if (w.rp) {
+          c.strokeStyle = 'rgba(139,156,184,.6)';
+          c.beginPath(); c.arc(w.x, w.y, w.rp, 0, Math.PI * 2); c.stroke();
+        }
+        if (i) {
+          pw = MV[chain[i - 1]];
+          c.setLineDash([]);
+          c.strokeStyle = 'rgba(151,177,132,.7)';
+          c.beginPath(); c.moveTo(pw.x, pw.y); c.lineTo(w.x, w.y); c.stroke();
+          c.setLineDash([4, 5]);
+        }
+        c.setLineDash([]);
+        c.fillStyle = '#df6a41';
+        c.fillRect(w.x - 2.5, w.y - 2.5, 5, 5);
+        c.setLineDash([4, 5]);
+      }
+      c.strokeStyle = 'rgba(139,156,184,.6)';
+      c.beginPath(); c.arc(MV.balance.x, MV.balance.y, MV.balR, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.arc(MV.balance.x, MV.balance.y, MV.rollerR, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.moveTo(MV.escape.x, MV.escape.y); c.lineTo(MV.fork.x, MV.fork.y);
+      c.lineTo(MV.balance.x, MV.balance.y); c.stroke();
+      c.setLineDash([]);
+      c.restore();
+
+      c.font = '500 11px ui-monospace, monospace';
+      c.fillStyle = 'rgba(140,133,124,.75)';
+      c.fillText('barrel 72 -> centre 12/64 -> third 8/60 -> fourth 8/60 -> escape 6/15', 60, VH - 46);
+      c.fillText('centre distance = pitch radius + pitch radius, every time. 7.5 x 8 = 60.', 60, VH - 28);
+      return;
+    }
+
+    buildWheels(st);
+    var key = st + '|' + canvas.width;
+    if (mvPlate.key !== key) {
+      mvPlate.key = key;
+      mvPlate.back = mvLayer(paintPlateBack, st);
+      mvPlate.mid = mvLayer(paintPlateMid, st);
+      mvPlate.cock = mvLayer(paintCock, st);
+    }
+
+    c.drawImage(mvPlate.back, 0, 0, VW, VH);
+
+    c.save();
+    mvSpace(c);
+    blitWheel(c, 'barrel', MV.barrel, barrelAng);
+    blitWheel(c, 'centre', MV.centre, centreAng);
+    blitWheel(c, 'third', MV.third, thirdAng);
+    blitWheel(c, 'fourth', MV.fourth, fourthAng);
+    blitWheel(c, 'escape', MV.escape, escAng);
+    c.restore();
+
+    c.drawImage(mvPlate.mid, 0, 0, VW, VH);
+
+    c.save();
+    mvSpace(c);
+    palletFork(c, forkAng, st);
+
+    /* The balance, integrated rather than posed.
+     *
+     * At 2.5 Hz and 135 degrees the rim is crossing thirty-five degrees in a
+     * single frame at mid-swing, so there is no honest single position to draw:
+     * at any real shutter the balance IS the smear. Eleven samples across the
+     * frame's own exposure, weighted by how long the wheel spends at each -
+     * which is longest at the ends, where it stops to turn around. That
+     * weighting is why the blur has bright ends and a thin middle, and it is
+     * the difference between motion blur and a fan of copies. */
+    if (st >= 2 && !reduce) {
+      var N = 11, k, acc = 0, wts = [];
+      for (k = 0; k < N; k++) {
+        var tk = tt + (k / (N - 1) - 0.5) * (1 / 60);
+        wts.push({
+          th: 2.356 * Math.sin(Math.PI * tk * 5),
+          // Dwell: the wheel is slowest where the cosine of its phase is,
+          // which is at the two extremes of the swing. That weighting is why
+          // the smear has bright ends and a thin middle, and it is the
+          // difference between motion blur and a fan of copies.
+          w: 1 / (0.16 + Math.abs(Math.cos(Math.PI * tk * 5)))
+        });
+        acc += wts[k].w;
+      }
+      balanceRim(c, st);
+      for (k = 0; k < N; k++) {
+        c.globalAlpha = wts[k].w / acc;
+        balanceSpokes(c, wts[k].th, st);
+      }
+      c.globalAlpha = 1;
+    } else {
+      balanceRim(c, st);
+      balanceSpokes(c, theta, st);
+    }
+    hairspring(c, theta, st);
+    c.restore();
+
+    c.drawImage(mvPlate.cock, 0, 0, VW, VH);
+
+    /* --------------------------------------------------- the grain highlight
+     *
+     * The one idea. Every finished surface here has a grain direction, and a
+     * grained surface reflects a light as a line perpendicular to that grain
+     * rather than as a point. Both finishes on this plate - circular perlage
+     * and straight cotes - therefore throw their highlight as a band running
+     * across the grain, so one band, oriented by the lamp, is the correct
+     * answer for the whole movement.
+     *
+     * It is composited in 'overlay' rather than painted on: overlay lifts what
+     * is already light and deepens what is already dark, which means the band
+     * exaggerates the texture underneath it instead of covering it. That is
+     * exactly what a grain highlight does, and it is why the perlage
+     * scintillates spot by spot and the cotes flare band by band as the band
+     * crosses them, from pixels that were baked once and never touched again. */
+    if (st >= 3) {
+      c.save();
+      c.beginPath();
+      c.arc(MV_CX, MV_CY, MV_R * MV_S, 0, Math.PI * 2);
+      c.clip();
+      c.globalCompositeOperation = 'overlay';
+      var bandDir = keyAng + Math.PI / 2;
+      var L = MV_R * MV_S;
+      var gx = Math.cos(bandDir) * L, gy = Math.sin(bandDir) * L;
+      var sw = c.createLinearGradient(MV_CX - gx, MV_CY - gy, MV_CX + gx, MV_CY + gy);
+      // The band has a dark shoulder either side of it as well as a bright
+      // core. A grained surface does not just get brighter where the reflection
+      // lands: it gets darker beside it, because the same grooves that throw
+      // the light at you there are throwing it away from you here.
+      sw.addColorStop(0, 'rgba(0,0,0,0)');
+      sw.addColorStop(0.2, 'rgba(30,36,46,.30)');
+      sw.addColorStop(0.38, 'rgba(160,170,188,.18)');
+      sw.addColorStop(0.5, 'rgba(255,253,247,.62)');
+      sw.addColorStop(0.62, 'rgba(160,170,188,.18)');
+      sw.addColorStop(0.8, 'rgba(30,36,46,.30)');
+      sw.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = sw;
+      c.fillRect(MV_CX - L, MV_CY - L, L * 2, L * 2);
+      c.restore();
     }
 
     if (st >= 4) {
+      // The plate is a disc lying under a lens: the far edge goes soft, and the
+      // corners of the frame fall away.
+      /* A macro lens at this magnification has a plane of focus a couple of
+       * millimetres deep, and the plate is wider than that. The focus is on the
+       * escapement - which is the subject - so the far corners go down rather
+       * than staying sharp and dim. The gradient is centred on the balance
+       * rather than on the frame, which is the difference between a depth cue
+       * and a vignette. */
+      var fx = MV_CX + MV.balance.x * MV_S * 0.5, fy = MV_CY + MV.balance.y * MV_S * 0.5;
+      var vg = c.createRadialGradient(fx, fy, VH * 0.28, fx, fy, VW * 0.66);
+      vg.addColorStop(0, 'rgba(2,3,4,0)');
+      vg.addColorStop(0.6, 'rgba(2,3,4,.3)');
+      vg.addColorStop(1, 'rgba(2,3,4,.74)');
+      c.fillStyle = vg;
+      c.fillRect(0, 0, VW, VH);
       c.save();
-      c.globalAlpha = 0.5;
+      c.globalAlpha = 0.42;
       c.drawImage(grain, 0, 0, VW, VH);
       c.restore();
     }
@@ -1849,13 +2707,13 @@ Demos.register('atelier-showpiece', function (root) {
   var NOTES = {
     eye: 'Four hundred and sixty iris fibres, each with its own length, bow, width and value, drawn once into a layer and composited. The collarette is a wobbled path rather than a circle, the crypts sit inside it, and the vessels thin as they approach the limbus. The detail almost nobody draws is the caustic: light entering from the key refracts through the cornea and lands as a bright crescent on the far side of the iris, paired with the shadow the corneal overhang throws on the key side. The catchlight is a window with four panes, because a round white dot is what a drawn eye has and a photographed one never does.',
     koi: 'The body is a spine carrying a travelling wave whose amplitude grows as u^1.6, so the head is nearly still and the tail does the work. Two hundred and eighty-six scales are placed in the spine’s local frame at their own (u, v) and shaded by the local normal, which means the wave carries them instead of sliding underneath them. Fins sample the spine at an earlier time rather than running their own easing curve: that lag is follow-through, and it is why they trail the turn instead of leading it.',
-    bird: 'A gorget has almost no pigment in it. The barbules are stacks of thin films, and the colour you see is light interfering with itself on the way back out, which makes it a function of viewing angle rather than a property of the bird. That is modelled here rather than painted: three hundred barbules each have a normal, the path difference through the film is computed against the viewer, and hue and extinction both fall out of it. The head turn is one number. The flash is the consequence. The wings are integrated rather than posed — twenty-six samples across the stroke, weighted by dwell time, which is longest at the reversals, and that weighting is the difference between motion blur and a fan of copies. Move the pointer to steer the head.'
+    movement: 'A watch movement, running. The other two subjects test whether hundreds of parts can be placed so they agree with each other; this one cannot be placed by eye at all. Every wheel centre is the sum of two pitch radii, the teeth are real epicycloids generated by rolling a circle on the pitch circle — cycloidal, as horology uses, not the involute of industrial gearing — and the going train is arithmetic: 18,000 A/h is five beats a second, a lever escapement releases one tooth per oscillation, so a fifteen-tooth escape wheel turns once every six seconds and 10 × 7.5 × 8 gets you from there to the hour. One number drives all of it at runtime: the balance angle. The finishing is the other half. Metal is anisotropic — a polished sphere reflects a light as a point, a grained surface reflects it as a line perpendicular to the grain — so the highlight here is a band, not a spot, and the perlage scintillates spot by spot while the Geneva stripes flare in sequence underneath it. Move the pointer to move the lamp.',
   };
 
   function render(t) {
     if (subject === 'eye') drawEye(ctx, stage, t);
     else if (subject === 'koi') drawKoi(ctx, stage, t);
-    else drawBird(ctx, stage, t);
+    else drawMovement(ctx, stage, t);
   }
 
   function setStage(i, quiet) {
@@ -1893,6 +2751,8 @@ Demos.register('atelier-showpiece', function (root) {
   window.addEventListener('resize', function () {
     ctx = G.fitCanvas(canvas, VW, VH);
     plate.key = '';                  // the plates are sized to the backing store
+    mvPlate.key = '';
+    mvWheels.key = '';
     if (reduce) render(1.2);
   }, { passive: true });
 

@@ -163,19 +163,28 @@ window.Render3D = (function () {
       }
       ctx.closePath();
 
-      // Gradient across the face along the light direction, not a flat fill.
-      var gx = light.x, gy = light.y;
-      var gl = Math.hypot(gx, gy) || 1;
-      gx /= gl; gy /= gl;
-      var mx = (minX + maxX) / 2, my = (minY + maxY) / 2;
-      var rad = Math.max(maxX - minX, maxY - minY) * 0.75 + 1;
-      var grad = ctx.createLinearGradient(mx - gx * rad, my - gy * rad, mx + gx * rad, my + gy * rad);
+      var hi = Math.min(1, lambert + 0.26), lo = Math.max(0.06, lambert - 0.22);
       // Ambient floor keeps a face turned away from the light as a dark, cool
       // version of the metal instead of a hole in the silhouette.
       var sOpts = { light: opts.highlight, shadow: opts.shadow, ambient: 0.34 };
-      grad.addColorStop(0, G.shade(opts.base, Math.min(1, lambert + 0.26), sOpts));
-      grad.addColorStop(1, G.shade(opts.base, Math.max(0.06, lambert - 0.22), sOpts));
-      ctx.fillStyle = grad;
+      var ramp = opts.ramp;
+      var cHi = ramp ? ramp[(hi * (ramp.length - 1)) | 0] : G.shade(opts.base, hi, sOpts);
+      var cLo = ramp ? ramp[(lo * (ramp.length - 1)) | 0] : G.shade(opts.base, lo, sOpts);
+
+      if (opts.flat) {
+        ctx.fillStyle = cHi;
+      } else {
+        // Gradient across the face along the light direction, not a flat fill.
+        var gx = light.x, gy = light.y;
+        var gl = Math.hypot(gx, gy) || 1;
+        gx /= gl; gy /= gl;
+        var mx = (minX + maxX) / 2, my = (minY + maxY) / 2;
+        var rad = Math.max(maxX - minX, maxY - minY) * 0.75 + 1;
+        var grad = ctx.createLinearGradient(mx - gx * rad, my - gy * rad, mx + gx * rad, my + gy * rad);
+        grad.addColorStop(0, cHi);
+        grad.addColorStop(1, cLo);
+        ctx.fillStyle = grad;
+      }
       ctx.fill();
 
       if (spec > 0.01) {
@@ -194,6 +203,25 @@ window.Render3D = (function () {
       }
     }
     ctx.restore();
+  }
+
+  /* A shading ramp, baked.
+   *
+   * G.shade parses three colour strings with a regex on every call, and
+   * drawSolid calls it twice a face. That is fine for the five solids in the
+   * hero and it is not fine for a field of twenty running behind the whole
+   * document — the parsing alone was costing more than the rasterising. When
+   * the palette is fixed, the whole function is a lookup: sample it once at
+   * build time and index it by lambert.
+   *
+   * Thirty-two steps. Fewer and the terminator on a large face bands visibly;
+   * more and you are storing values the eight-bit output cannot tell apart.
+   */
+  function shadeRamp(base, opts, steps) {
+    steps = steps || 32;
+    var out = new Array(steps);
+    for (var i = 0; i < steps; i++) out[i] = G.shade(base, i / (steps - 1), opts);
+    return out;
   }
 
   /* Every edge of a solid, including the ones on the far side.
@@ -239,29 +267,43 @@ window.Render3D = (function () {
       mesh.edges = list;
     }
 
-    ctx.save();
-    ctx.lineCap = 'round';
+    /* Bucketed by depth, five bands. The obvious loop - set the alpha, stroke
+     * one edge, repeat - costs a path setup and a rasteriser flush per edge,
+     * and with twenty solids on screen that is six hundred of them a frame.
+     * Sorting the edges into five alpha bands first means five strokes per
+     * solid instead of thirty, for a difference the eye cannot find and the
+     * frame budget very much can.
+     */
+    var BANDS = 5, band = [[], [], [], [], []];
     for (i = 0; i < mesh.edges.length; i++) {
       var e = mesh.edges[i], p1 = sv[e[0]], p2 = sv[e[1]];
       // Depth cue by alpha alone. A wireframe with uniform line weight is a
       // flat pattern; the only thing that makes it read as a volume is the far
       // half being visibly weaker than the near half.
       var d = 1 - ((p1.z + p2.z) * 0.5 - zmin) / span;
-      ctx.globalAlpha = opts.alpha * (0.16 + d * 0.84);
-      ctx.strokeStyle = opts.stroke;
-      ctx.lineWidth = opts.width || 0.7;
+      var bi = Math.min(BANDS - 1, (d * BANDS) | 0);
+      band[bi].push(p1.x, p1.y, p2.x, p2.y);
+    }
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = opts.stroke;
+    ctx.lineWidth = opts.width || 0.7;
+    for (var b = 0; b < BANDS; b++) {
+      var pts = band[b];
+      if (!pts.length) continue;
+      ctx.globalAlpha = opts.alpha * (0.16 + ((b + 0.5) / BANDS) * 0.84);
       ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
+      for (var k = 0; k < pts.length; k += 4) {
+        ctx.moveTo(pts[k], pts[k + 1]);
+        ctx.lineTo(pts[k + 2], pts[k + 3]);
+      }
       ctx.stroke();
     }
     if (opts.vertex) {
-      for (i = 0; i < sv.length; i++) {
-        var s = sv[i];
-        ctx.globalAlpha = opts.alpha * (0.2 + (1 - (s.z - zmin) / span) * 0.8);
-        ctx.fillStyle = opts.vertex;
-        ctx.fillRect(s.x - 1, s.y - 1, 2, 2);
-      }
+      ctx.fillStyle = opts.vertex;
+      ctx.globalAlpha = opts.alpha * 0.7;
+      for (i = 0; i < sv.length; i++) ctx.fillRect(sv[i].x - 1, sv[i].y - 1, 2, 2);
     }
     ctx.restore();
   }
@@ -319,7 +361,7 @@ window.Render3D = (function () {
   }
 
   return {
-    solids: SOLIDS, drawSolid: drawSolid, wireSolid: wireSolid,
+    solids: SOLIDS, drawSolid: drawSolid, wireSolid: wireSolid, shadeRamp: shadeRamp,
     camera: camera, project: project, bokehSprite: bokehSprite,
     v3: v3, norm3: norm3, rotatePoint: rotatePoint
   };

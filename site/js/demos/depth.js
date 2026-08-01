@@ -107,11 +107,11 @@ Demos.register('depth-field', function (canvas) {
 
     /* Stars, on a unit sphere. Brightness is fixed per star and quantised into
      * five bands at build time, so a frame costs five fillStyle assignments
-     * instead of two hundred and sixty string concatenations. */
+     * instead of a hundred and seventy string concatenations. */
     var BANDS = 5;
     starBands = [];
     for (var b = 0; b < BANDS; b++) starBands.push({ a: (b + 1) / BANDS, pts: [] });
-    for (var s = 0; s < 260; s++) {
+    for (var s = 0; s < 170; s++) {
       // Uniform on the sphere: acos of a uniform z, not a uniform polar angle,
       // which would crowd them at the poles.
       var ct = rand() * 2 - 1, st2 = Math.sqrt(1 - ct * ct), ph = rand() * Math.PI * 2;
@@ -125,7 +125,9 @@ Demos.register('depth-field', function (canvas) {
     }
 
     /* The armillary. Five great circles, each defined by its normal, sampled at
-     * 132 points. One of them carries graduations. */
+     * 84 points — which is where a ring at this radius stops visibly gaining a
+     * curve and starts only costing projections. One of them carries
+     * graduations. */
     rings = [];
     var incl = [0.0, 0.62, -0.48, 1.22, 2.05];
     for (var g = 0; g < incl.length; g++) {
@@ -144,7 +146,7 @@ Demos.register('depth-field', function (canvas) {
     }
 
     motes = [];
-    for (var i = 0; i < 104; i++) {
+    for (var i = 0; i < 92; i++) {
       motes.push({
         th: rand() * Math.PI * 2,
         k: 0.12 + rand() * 1.5,          // distance from the axis, as a fraction of z
@@ -220,6 +222,13 @@ Demos.register('depth-field', function (canvas) {
   window.addEventListener('resize', onResize, { passive: true });
 
   var light = R.norm3(R.v3(-0.45, -0.7, 0.8));
+  /* The palette never changes out here, so the shading is a lookup rather than
+   * a calculation. And the faces get flat fills: a gradient across a face is
+   * the right call in the hero, where a solid is four hundred pixels across and
+   * lit hard, and it is invisible at the quarter-alpha these are drawn at.
+   * Paying full price for a difference nobody can see is how a background ends
+   * up costing more than the page. */
+  var RAMP = R.shadeRamp('#b9b1a4', { light: '#f4ece0', shadow: '#2b2722', ambient: 0.34 });
 
   /* ------------------------------------------------------------ the sky ---
    * Everything in here is at SKY radius and moves with camera rotation only. */
@@ -228,7 +237,7 @@ Demos.register('depth-field', function (canvas) {
 
     for (i = 0; i < starBands.length; i++) {
       var band = starBands[i];
-      ctx.fillStyle = 'rgba(' + ink.star + ',' + (band.a * 0.34 * ink.k).toFixed(3) + ')';
+      ctx.fillStyle = 'rgba(' + ink.star + ',' + (band.a * 0.44 * ink.k).toFixed(3) + ')';
       for (j = 0; j < band.pts.length; j++) {
         var st = band.pts[j];
         p = R.project(st, cam, W, H);
@@ -252,11 +261,11 @@ Demos.register('depth-field', function (canvas) {
     ctx.lineWidth = 1;
     for (i = 0; i < rings.length; i++) {
       var ring = rings[i];
-      ctx.strokeStyle = 'rgba(' + ink.ring + ',' + (0.09 * ink.k).toFixed(3) + ')';
+      ctx.strokeStyle = 'rgba(' + ink.ring + ',' + (0.18 * ink.k).toFixed(3) + ')';
       ctx.beginPath();
       var open = false;
-      for (j = 0; j <= 132; j++) {
-        p = R.project(onRing(ring, (j / 132) * Math.PI * 2, 0), cam, W, H);
+      for (j = 0; j <= 84; j++) {
+        p = R.project(onRing(ring, (j / 84) * Math.PI * 2, 0), cam, W, H);
         // A ring that surrounds the camera has half its points behind the lens.
         // Breaking the path there rather than joining across is the difference
         // between a circle and a chord slashed across the frame.
@@ -266,14 +275,14 @@ Demos.register('depth-field', function (canvas) {
       ctx.stroke();
 
       if (!ring.graduated) continue;
-      /* Graduations every three degrees, long every fifteen. Nobody will read
+      /* Graduations every six degrees, long every thirty. Nobody will read
        * them. They are there because a scale that goes all the way round is the
        * detail that separates an instrument from a decorative circle, and the
        * page can afford one thing that only rewards looking twice. */
       ctx.strokeStyle = 'rgba(' + ink.ring + ',' + (0.13 * ink.k).toFixed(3) + ')';
       ctx.beginPath();
-      for (j = 0; j < 120; j++) {
-        var ang = (j / 120) * Math.PI * 2;
+      for (j = 0; j < 60; j++) {
+        var ang = (j / 60) * Math.PI * 2;
         var a1 = R.project(onRing(ring, ang, 0), cam, W, H);
         var a2 = R.project(onRing(ring, ang, j % 5 === 0 ? 0.026 : 0.011), cam, W, H);
         if (!a1 || !a2) continue;
@@ -303,11 +312,19 @@ Demos.register('depth-field', function (canvas) {
 
       fog = Math.pow(G.clamp(1 - (pr.z - NEAR) / FIELD, 0, 1), 1.5);
       defocus = G.clamp(Math.abs(pr.z - 700) / 1100, 0, 1);
-      size = o.r * pr.f * (1 + defocus * 4.5) * 7;
+      /* Capped. A defocused mote close to the lens wants to be two hundred
+       * pixels of circle of confusion, and at the alpha it is drawn with that
+       * is a quarter of a megapixel of blending for something the eye reads as
+       * a smudge. The cap costs a little honesty in the bokeh and buys back
+       * most of the frame. */
+      size = Math.min(120, o.r * pr.f * (1 + defocus * 4.5) * 7);
       if (size < 0.6) continue;
       var midM = G.clamp(Math.abs(pr.x - W / 2) / (W * 0.34), 0, 1);
-      ctx.globalAlpha = G.clamp(fog * (0.3 - defocus * 0.19) * (0.7 + Math.sin(t * 0.7 + o.tw) * 0.3)
+      var alpha = G.clamp(fog * (0.3 - defocus * 0.19) * (0.7 + Math.sin(t * 0.7 + o.tw) * 0.3)
         * (0.34 + 0.66 * midM), 0, 0.34);
+      // Below this the blit changes no pixel a display can show.
+      if (alpha < 0.012) continue;
+      ctx.globalAlpha = alpha;
 
       /* The streak. Screen displacement per frame is (distance from the
        * vanishing point) x (depth travelled / depth), which falls straight out
@@ -375,18 +392,31 @@ Demos.register('depth-field', function (canvas) {
        * solid from ever becoming a backdrop. */
       var near = G.clamp((300 - sc) / 150, 0, 1);
       var clear = (0.16 + 0.84 * mid * mid) * near * near;
-      if (clear < 0.01) continue;
+      // Bail early rather than paying a gradient per face to composite
+      // something under four percent alpha. Below that it is not a faint
+      // object, it is a bill.
+      if (clear < 0.045) continue;
 
       // Same trick as the hero: defocus is spent on edge contrast rather than
       // on a blur filter, because a blur filter here costs the whole frame.
       if (defocus > 0.3) {
-        var halo = sc * (2.4 + defocus * 2.4);
+        // Capped: the halo of a solid passing close is a several-hundred-pixel
+        // scaled blit, and two of those in a frame cost more than everything
+        // else in this file put together.
+        var halo = Math.min(260, sc * (2.4 + defocus * 2.4));
         ctx.globalAlpha = G.clamp(defocus * 0.24 * fog * clear, 0, 0.24);
         ctx.drawImage(SPRITES[3], pr.x - halo / 2, pr.y - halo / 2, halo, halo);
       }
 
       ctx.globalAlpha = 1;
-      var body = G.clamp(fog * (1 - defocus * 0.34) * clear * 0.62, 0, 0.62);
+      /* Mass and lattice are budgeted separately. Tying the wireframe's alpha
+       * to the fill's, as this did at first, meant a solid could only ever be a
+       * shaded shape with some lines faintly on it — and near the lens, where
+       * the fill is strongest, the lines lost. Which is backwards: the closer
+       * one of these gets, the more it should read as a construction and the
+       * less as a rock. So the fill stays light and the lattice carries it. */
+      var mass = G.clamp(fog * (1 - defocus * 0.34) * clear, 0, 1);
+      var body = mass * 0.42;
       R.drawSolid(ctx, o.mesh, {
         x: pr.x, y: pr.y,
         scale: sc,
@@ -394,9 +424,8 @@ Demos.register('depth-field', function (canvas) {
         depth: 0,
         focal: 560,
         light: light,
-        base: '#b9b1a4',
-        highlight: '#f4ece0',
-        shadow: '#2b2722',
+        ramp: RAMP,
+        flat: true,
         // No accent out here. The one colour allowed to point at things lives
         // in the content, and a drifting shape is never pointing at anything.
         edge: null,
@@ -416,7 +445,7 @@ Demos.register('depth-field', function (canvas) {
           stroke: 'rgba(' + ink.wire + ',1)',
           vertex: o.giant ? 'rgba(' + ink.wire + ',1)' : null,
           width: o.giant ? 0.9 : 0.7,
-          alpha: G.clamp(body * (1 - defocus / 0.55) * 0.85 * ink.k, 0, 0.6)
+          alpha: G.clamp(mass * (1 - defocus / 0.55) * 0.62 * ink.k, 0, 0.55)
         });
       }
     }
