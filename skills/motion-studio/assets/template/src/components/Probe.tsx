@@ -73,7 +73,8 @@ export const Probe: React.FC = () => {
 					font: Math.round(fontPx * k * 10) / 10,
 					weight: Number(cs.fontWeight) || 400,
 					family: cs.fontFamily.split(',')[0].replace(/["']/g, '').trim(),
-					upper: cs.textTransform === 'uppercase' || (/\p{L}{2}/u.test(n.textContent) && n.textContent === n.textContent.toUpperCase()),
+					// only scripts with case count: Hebrew/Arabic/CJK text equals its own uppercase but is not "all caps"
+					upper: cs.textTransform === 'uppercase' || (/(\p{Lu}|\p{Ll}).*(\p{Lu}|\p{Ll})/u.test(n.textContent) && n.textContent === n.textContent.toUpperCase() && n.textContent !== n.textContent.toLowerCase()),
 					ls: Math.round(((parseFloat(cs.letterSpacing) || 0) / (parseFloat(cs.fontSize) || 1)) * 1000) / 1000,
 					color: svg && cs.fill !== 'none' ? cs.fill : cs.color,
 					op: Math.round(op * 100) / 100,
