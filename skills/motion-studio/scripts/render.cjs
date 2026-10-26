@@ -112,14 +112,32 @@ const ff = (a) => execFileSync('ffmpeg', ['-v', 'error', '-y', ...a], {stdio: ['
 		const out = path.join(proj, 'out', draft ? `draft${format ? `-${format}` : ''}.mp4` : `render${format ? `-${format}` : ''}.mp4`);
 		const audio = tl.audio ? path.join(path.dirname(tlFile), tl.audio) : null;
 		const mux = ['-f', 'concat', '-safe', '0', '-i', path.join(dir, 'list.txt')];
+		const tail = ['-c:v', 'copy', '-movflags', '+faststart', out];
 		if (audio && fs.existsSync(audio)) {
-			// AAC produces peaks above the WAV (measured: up to 2 dB on heavily amplified speech). A limiter 1 dB below
-			// the mix ceiling keeps the MP4 peak within what qa.py requires, without touching loudness.
-			const tp = ((tl.loudness || {}).tp ?? -3) - 1;
-			mux.push('-i', audio, '-map', '0:v:0', '-map', '1:a:0', '-af', `alimiter=limit=${Math.pow(10, tp / 20).toFixed(3)}:attack=5:release=80:level=false`, '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-t', String(durationInFrames / fps));
+			// The mix is already loudness-normalized with a true-peak ceiling (mix.py). AAC can still overshoot, and
+			// ffmpeg's alimiter proved non-monotonic here (a lower limit gave a HIGHER encoded peak), so: encode clean,
+			// measure the encoded true peak, and if it is over the ceiling, re-encode with exactly the needed gain cut.
+			const ceiling = Math.min(-1.0, ((tl.loudness || {}).tp ?? -1.5) + 0.5);
+			const enc = (gainDb) => ff([...mux, '-i', audio, '-map', '0:v:0', '-map', '1:a:0', ...(gainDb ? ['-af', `volume=${gainDb.toFixed(2)}dB`] : []),
+				'-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-t', String(durationInFrames / fps), ...tail]);
+			const truePeak = () => {
+				const r = require('child_process').spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', out, '-map', '0:a:0', '-af', 'ebur128=peak=true', '-f', 'null', '-'], {encoding: 'utf8'});
+				const m = /True peak:\s*\n\s*Peak:\s*(-?[\d.]+)/.exec(r.stderr || '');
+				return m ? Number(m[1]) : null;
+			};
+			let gain = 0;
+			enc(gain);
+			let peak = truePeak();
+			for (let i = 0; i < 3 && peak !== null && peak > ceiling; i++) {
+				gain += ceiling - peak - 0.2;
+				enc(gain);
+				peak = truePeak();
+			}
+			if (gain) console.error(`audio: true peak corrected by ${gain.toFixed(2)} dB to ${peak} dBTP`);
+		} else {
+			console.error('no audio: timeline.audio does not exist (run mix.py first)');
+			ff([...mux, ...tail]);
 		}
-		else console.error('no audio: timeline.audio does not exist (run mix.py first)');
-		ff([...mux, '-c:v', 'copy', '-movflags', '+faststart', out]);
 		outputs.push({format: format || 'score', out: path.relative(proj, out), cenas_refeitas: done, cenas_reaproveitadas: tl.scenes.length - done.length});
 	}
 	await browser.close({silent: true});
