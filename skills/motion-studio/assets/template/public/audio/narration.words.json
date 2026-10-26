@@ -1,0 +1,177 @@
+{
+ "text": "Raw clips in. Edited video out. No timeline. No editing app. Every frame is code. Sound, designed by math. And a free voice that reads every word. Motion Studio. Made entirely in code.",
+ "provider": "kokoro",
+ "voice": "af_heart",
+ "model": null,
+ "duration": 18.5,
+ "wpm": 163,
+ "approx": false,
+ "absolute": true,
+ "words": [
+  {
+   "word": "Raw",
+   "start": 0.379,
+   "end": 0.593
+  },
+  {
+   "word": "clips",
+   "start": 0.593,
+   "end": 0.949
+  },
+  {
+   "word": "in.",
+   "start": 0.949,
+   "end": 1.269
+  },
+  {
+   "word": "Edited",
+   "start": 1.696,
+   "end": 2.125
+  },
+  {
+   "word": "video",
+   "start": 2.125,
+   "end": 2.483
+  },
+  {
+   "word": "out.",
+   "start": 2.483,
+   "end": 2.876
+  },
+  {
+   "word": "No",
+   "start": 3.466,
+   "end": 3.602
+  },
+  {
+   "word": "timeline.",
+   "start": 3.602,
+   "end": 4.316
+  },
+  {
+   "word": "No",
+   "start": 4.576,
+   "end": 4.714
+  },
+  {
+   "word": "editing",
+   "start": 4.714,
+   "end": 5.197
+  },
+  {
+   "word": "app.",
+   "start": 5.197,
+   "end": 5.576
+  },
+  {
+   "word": "Every",
+   "start": 6.112,
+   "end": 6.409
+  },
+  {
+   "word": "frame",
+   "start": 6.409,
+   "end": 6.707
+  },
+  {
+   "word": "is",
+   "start": 6.707,
+   "end": 6.826
+  },
+  {
+   "word": "code.",
+   "start": 6.826,
+   "end": 7.212
+  },
+  {
+   "word": "Sound,",
+   "start": 7.92,
+   "end": 8.37
+  },
+  {
+   "word": "designed",
+   "start": 8.49,
+   "end": 8.902
+  },
+  {
+   "word": "by",
+   "start": 8.902,
+   "end": 9.005
+  },
+  {
+   "word": "math.",
+   "start": 9.005,
+   "end": 9.34
+  },
+  {
+   "word": "And",
+   "start": 10.093,
+   "end": 10.271
+  },
+  {
+   "word": "a",
+   "start": 10.271,
+   "end": 10.331
+  },
+  {
+   "word": "free",
+   "start": 10.331,
+   "end": 10.568
+  },
+  {
+   "word": "voice",
+   "start": 10.568,
+   "end": 10.865
+  },
+  {
+   "word": "that",
+   "start": 10.865,
+   "end": 11.103
+  },
+  {
+   "word": "reads",
+   "start": 11.103,
+   "end": 11.4
+  },
+  {
+   "word": "every",
+   "start": 11.4,
+   "end": 11.697
+  },
+  {
+   "word": "word.",
+   "start": 11.697,
+   "end": 12.083
+  },
+  {
+   "word": "Motion",
+   "start": 13.004,
+   "end": 13.397
+  },
+  {
+   "word": "Studio.",
+   "start": 13.397,
+   "end": 13.954
+  },
+  {
+   "word": "Made",
+   "start": 14.482,
+   "end": 14.732
+  },
+  {
+   "word": "entirely",
+   "start": 14.732,
+   "end": 15.231
+  },
+  {
+   "word": "in",
+   "start": 15.231,
+   "end": 15.356
+  },
+  {
+   "word": "code.",
+   "start": 15.356,
+   "end": 15.762
+  }
+ ]
+}

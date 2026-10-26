@@ -1,0 +1,137 @@
+{
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "duration": 18.5,
+ "audio": "audio/mix.wav",
+ "narration": {
+  "file": "audio/narration.wav",
+  "start": 0,
+  "gain_db": 0
+ },
+ "music": {
+  "gain_db": -15,
+  "duck_db": -9,
+  "fade_in": 0.2,
+  "fade_out": 1.2,
+  "file": "audio/music.wav"
+ },
+ "scenes": [
+  {
+   "id": "hook",
+   "start": 0.0,
+   "end": 3.2333
+  },
+  {
+   "id": "no-tools",
+   "start": 3.2333,
+   "end": 5.8667
+  },
+  {
+   "id": "code",
+   "start": 5.8667,
+   "end": 7.6667
+  },
+  {
+   "id": "sound",
+   "start": 7.6667,
+   "end": 9.8667
+  },
+  {
+   "id": "voice",
+   "start": 9.8667,
+   "end": 12.7667
+  },
+  {
+   "id": "close",
+   "start": 12.7667,
+   "end": 18.5
+  }
+ ],
+ "sfx": [
+  {
+   "at": 0.6,
+   "type": "pop",
+   "gain_db": -16
+  },
+  {
+   "at": 2.467,
+   "type": "impact",
+   "gain_db": -18
+  },
+  {
+   "at": 3.083,
+   "type": "swoosh",
+   "gain_db": -20,
+   "dur": 0.3
+  },
+  {
+   "at": 4.3,
+   "type": "click",
+   "gain_db": -12
+  },
+  {
+   "at": 5.2,
+   "type": "click",
+   "gain_db": -12
+  },
+  {
+   "at": 5.717,
+   "type": "swoosh",
+   "gain_db": -20,
+   "dur": 0.3
+  },
+  {
+   "at": 6.833,
+   "type": "tick",
+   "gain_db": -14
+  },
+  {
+   "at": 7.517,
+   "type": "swoosh",
+   "gain_db": -20,
+   "dur": 0.3
+  },
+  {
+   "at": 7.933,
+   "type": "riser",
+   "gain_db": -22,
+   "dur": 0.8
+  },
+  {
+   "at": 9.0,
+   "type": "impact",
+   "gain_db": -17
+  },
+  {
+   "at": 9.717,
+   "type": "swoosh",
+   "gain_db": -20,
+   "dur": 0.3
+  },
+  {
+   "at": 10.567,
+   "type": "shimmer",
+   "gain_db": -20
+  },
+  {
+   "at": 12.617,
+   "type": "swoosh",
+   "gain_db": -20,
+   "dur": 0.3
+  },
+  {
+   "at": 13.0,
+   "type": "impact",
+   "gain_db": -15
+  }
+ ],
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "budget": {
+  "full_renders": 4,
+  "stills": 40
+ }
+}

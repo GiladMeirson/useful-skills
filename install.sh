@@ -16,6 +16,7 @@ SKILLS="canvas-atelier|skills/canvas-atelier|Gallery-quality drawing & animation
 physics-2d|skills/physics-2d|A small, tested 2D rigid-body physics engine
 caveman|skills/caveman|Ultra-compressed responses, ~65% fewer tokens
 matrix-agents-skill|skills/matrix-agents-skill|Turns session learnings into new project skills
+motion-studio|skills/motion-studio|Motion-design videos in code (Remotion), EN/HE, voice+SFX+music
 skill-report|.claude/skills/skill-report|Transparency footer: which skills/tools ran"
 
 usage() {

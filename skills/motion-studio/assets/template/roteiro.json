@@ -1,0 +1,179 @@
+{
+ "format": "reels",
+ "fps": 30,
+ "start": 0.35,
+ "tail": 1.6,
+ "voice": {
+  "provider": "edge",
+  "lang": "en",
+  "voice": "en-US-AndrewMultilingualNeural"
+ },
+ "music": {
+  "file": "audio/music.wav",
+  "gain_db": -15,
+  "duck_db": -9,
+  "fade_in": 0.2,
+  "fade_out": 1.2
+ },
+ "cut": {
+  "on": "phrase",
+  "lead": 0.2,
+  "sfx": {
+   "type": "swoosh",
+   "gain_db": -20,
+   "dur": 0.3,
+   "lead": 0.15
+  }
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "budget": {
+  "full_renders": 4,
+  "stills": 40
+ },
+ "scenes": [
+  {
+   "id": "hook",
+   "say": [
+    {
+     "text": "Raw clips in."
+    },
+    {
+     "text": "Edited video out.",
+     "pause": 0.25
+    }
+   ],
+   "cues": {
+    "clips": "word:clips",
+    "out": "word:out"
+   },
+   "sfx": [
+    {
+     "at": "clips",
+     "type": "pop",
+     "gain_db": -16
+    },
+    {
+     "at": "out",
+     "type": "impact",
+     "gain_db": -18
+    }
+   ],
+   "hold": 0.35,
+   "cut_sfx": false
+  },
+  {
+   "id": "no-tools",
+   "say": [
+    {
+     "text": "No timeline. No editing app."
+    }
+   ],
+   "cues": {
+    "timeline": "word:timeline.end",
+    "app": "word:app"
+   },
+   "sfx": [
+    {
+     "at": "timeline",
+     "type": "click",
+     "gain_db": -12
+    },
+    {
+     "at": "app",
+     "type": "click",
+     "gain_db": -12
+    }
+   ]
+  },
+  {
+   "id": "code",
+   "say": [
+    {
+     "text": "Every frame is code."
+    }
+   ],
+   "cues": {
+    "code": "word:code"
+   },
+   "sfx": [
+    {
+     "at": "code",
+     "type": "tick",
+     "gain_db": -14
+    }
+   ]
+  },
+  {
+   "id": "sound",
+   "say": [
+    {
+     "text": "Sound, designed by math."
+    }
+   ],
+   "cues": {
+    "sound": "word:Sound",
+    "math": "word:math"
+   },
+   "sfx": [
+    {
+     "at": "sound",
+     "type": "riser",
+     "gain_db": -22,
+     "dur": 0.8
+    },
+    {
+     "at": "math",
+     "type": "impact",
+     "gain_db": -17
+    }
+   ]
+  },
+  {
+   "id": "voice",
+   "say": [
+    {
+     "text": "And a free voice that reads every word."
+    }
+   ],
+   "cues": {
+    "voice": "word:voice"
+   },
+   "sfx": [
+    {
+     "at": "voice",
+     "type": "shimmer",
+     "gain_db": -20
+    }
+   ],
+   "hold": 0.55
+  },
+  {
+   "id": "close",
+   "say": [
+    {
+     "text": "Motion Studio.",
+     "pause": 0.45
+    },
+    {
+     "text": "Made entirely in code.",
+     "closed": true
+    }
+   ],
+   "cues": {
+    "name": "word:Motion",
+    "made": "word:Made"
+   },
+   "sfx": [
+    {
+     "at": "name",
+     "type": "impact",
+     "gain_db": -15
+    }
+   ],
+   "hold": 1.0
+  }
+ ]
+}

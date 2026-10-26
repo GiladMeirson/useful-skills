@@ -1,0 +1,264 @@
+{
+ "cuts": {
+  "hook": 0.0,
+  "no-tools": 3.2333,
+  "code": 5.8667,
+  "sound": 7.6667,
+  "voice": 9.8667,
+  "close": 12.7667
+ },
+ "ev": {
+  "clips": 0.6,
+  "out": 2.4667,
+  "timeline": 4.3,
+  "app": 5.2,
+  "code": 6.8333,
+  "sound": 7.9333,
+  "math": 9.0,
+  "voice": 10.5667,
+  "name": 13.0,
+  "made": 14.4667
+ },
+ "phrases": [
+  {
+   "scene": "hook",
+   "i": 0,
+   "start": 0.35,
+   "end": 1.42,
+   "text": "Raw clips in.",
+   "from": 0,
+   "to": 2
+  },
+  {
+   "scene": "hook",
+   "i": 1,
+   "start": 1.67,
+   "end": 2.884,
+   "text": "Edited video out.",
+   "from": 3,
+   "to": 5
+  },
+  {
+   "scene": "no-tools",
+   "i": 0,
+   "start": 3.434,
+   "end": 5.582,
+   "text": "No timeline. No editing app.",
+   "from": 6,
+   "to": 10
+  },
+  {
+   "scene": "code",
+   "i": 0,
+   "start": 6.082,
+   "end": 7.383,
+   "text": "Every frame is code.",
+   "from": 11,
+   "to": 14
+  },
+  {
+   "scene": "sound",
+   "i": 0,
+   "start": 7.883,
+   "end": 9.566,
+   "text": "Sound, designed by math.",
+   "from": 15,
+   "to": 18
+  },
+  {
+   "scene": "voice",
+   "i": 0,
+   "start": 10.066,
+   "end": 12.221,
+   "text": "And a free voice that reads every word.",
+   "from": 19,
+   "to": 26
+  },
+  {
+   "scene": "close",
+   "i": 0,
+   "start": 12.971,
+   "end": 14.095,
+   "text": "Motion Studio.",
+   "from": 27,
+   "to": 28
+  },
+  {
+   "scene": "close",
+   "i": 1,
+   "start": 14.445,
+   "end": 15.904,
+   "text": "Made entirely in code.",
+   "from": 29,
+   "to": 32
+  }
+ ],
+ "words": [
+  {
+   "word": "Raw",
+   "start": 0.379,
+   "end": 0.593
+  },
+  {
+   "word": "clips",
+   "start": 0.593,
+   "end": 0.949
+  },
+  {
+   "word": "in.",
+   "start": 0.949,
+   "end": 1.269
+  },
+  {
+   "word": "Edited",
+   "start": 1.696,
+   "end": 2.125
+  },
+  {
+   "word": "video",
+   "start": 2.125,
+   "end": 2.483
+  },
+  {
+   "word": "out.",
+   "start": 2.483,
+   "end": 2.876
+  },
+  {
+   "word": "No",
+   "start": 3.466,
+   "end": 3.602
+  },
+  {
+   "word": "timeline.",
+   "start": 3.602,
+   "end": 4.316
+  },
+  {
+   "word": "No",
+   "start": 4.576,
+   "end": 4.714
+  },
+  {
+   "word": "editing",
+   "start": 4.714,
+   "end": 5.197
+  },
+  {
+   "word": "app.",
+   "start": 5.197,
+   "end": 5.576
+  },
+  {
+   "word": "Every",
+   "start": 6.112,
+   "end": 6.409
+  },
+  {
+   "word": "frame",
+   "start": 6.409,
+   "end": 6.707
+  },
+  {
+   "word": "is",
+   "start": 6.707,
+   "end": 6.826
+  },
+  {
+   "word": "code.",
+   "start": 6.826,
+   "end": 7.212
+  },
+  {
+   "word": "Sound,",
+   "start": 7.92,
+   "end": 8.37
+  },
+  {
+   "word": "designed",
+   "start": 8.49,
+   "end": 8.902
+  },
+  {
+   "word": "by",
+   "start": 8.902,
+   "end": 9.005
+  },
+  {
+   "word": "math.",
+   "start": 9.005,
+   "end": 9.34
+  },
+  {
+   "word": "And",
+   "start": 10.093,
+   "end": 10.271
+  },
+  {
+   "word": "a",
+   "start": 10.271,
+   "end": 10.331
+  },
+  {
+   "word": "free",
+   "start": 10.331,
+   "end": 10.568
+  },
+  {
+   "word": "voice",
+   "start": 10.568,
+   "end": 10.865
+  },
+  {
+   "word": "that",
+   "start": 10.865,
+   "end": 11.103
+  },
+  {
+   "word": "reads",
+   "start": 11.103,
+   "end": 11.4
+  },
+  {
+   "word": "every",
+   "start": 11.4,
+   "end": 11.697
+  },
+  {
+   "word": "word.",
+   "start": 11.697,
+   "end": 12.083
+  },
+  {
+   "word": "Motion",
+   "start": 13.004,
+   "end": 13.397
+  },
+  {
+   "word": "Studio.",
+   "start": 13.397,
+   "end": 13.954
+  },
+  {
+   "word": "Made",
+   "start": 14.482,
+   "end": 14.732
+  },
+  {
+   "word": "entirely",
+   "start": 14.732,
+   "end": 15.231
+  },
+  {
+   "word": "in",
+   "start": 15.231,
+   "end": 15.356
+  },
+  {
+   "word": "code.",
+   "start": 15.356,
+   "end": 15.762
+  }
+ ],
+ "beats": []
+}

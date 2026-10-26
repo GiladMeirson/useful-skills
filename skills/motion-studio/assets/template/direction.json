@@ -1,0 +1,19 @@
+{
+ "concept": "A self-portrait of the skill: every claim in the voiceover is shown as a primitive shape doing that job.",
+ "law": "Light paper, near-black ink and four flat primaries with roles: vermilion = the spoken word, blue = machine/code, yellow = sound, green = done. Medium-weight Archivo, big shapes, small type.",
+ "motif": "A single circle (the 'clip') that becomes a square (the 'video'), then a cursor, a waveform dot, a mouth, and finally the O of the wordmark.",
+ "options": [
+  {"name": "A", "idea": "Primitive system: geometry that reorganizes on light paper, shapes are the heroes, type is medium."},
+  {"name": "B", "idea": "Halftone and code: mono-led, dithered field resolving into words on a 16 px grid."}
+ ],
+ "chosen": "A",
+ "approved_by": "agent",
+ "scenes": [
+  {"id": "hook", "layout": "two stacked halves, shape travels top to bottom", "entrance": "circle morphs to square on the spoken word", "hero": "the circle-to-square morph"},
+  {"id": "no-tools", "layout": "horizontal timeline band across the middle third", "entrance": "tracks slide in from the left then get struck out", "hero": "a fake editing timeline being crossed out"},
+  {"id": "code", "layout": "offset code card upper-left, big brace lower-right", "entrance": "slide up with line-by-line typing", "hero": "the code window"},
+  {"id": "sound", "layout": "full-bleed bar grid", "entrance": "bars cascade up from the bottom", "hero": "waveform made of primary bars"},
+  {"id": "voice", "layout": "bottom-heavy captions under a pulsing mouth shape", "entrance": "iris opens from the circle", "hero": "word-by-word captions"},
+  {"id": "close", "layout": "centered wordmark with orbiting primitives", "entrance": "primitives assemble into the wordmark", "hero": "the Motion Studio wordmark"}
+ ]
+}

@@ -1,0 +1,133 @@
+{
+ "format": "reels",
+ "fps": 30,
+ "start": 0.3,
+ "tail": 1.4,
+ "voice": {
+  "provider": "edge",
+  "lang": "he",
+  "voice": "he-IL-HilaNeural"
+ },
+ "_voice_alternatives": {
+  "elevenlabs": {
+   "provider": "elevenlabs",
+   "lang": "he",
+   "model": "eleven_v4",
+   "voice": "<voice_id>",
+   "settings": {
+    "stability": 0.5,
+    "similarity_boost": 0.8
+   },
+   "style": "[warmly]"
+  },
+  "male_free": {
+   "provider": "edge",
+   "lang": "he",
+   "voice": "he-IL-AvriNeural",
+   "speed": 1.05
+  }
+ },
+ "music": {
+  "file": "audio/music.wav",
+  "gain_db": -15,
+  "duck_db": -9,
+  "fade_in": 0.2,
+  "fade_out": 1.2
+ },
+ "_music_alternative_elevenlabs": {
+  "eleven": "warm minimal electronic, soft punchy drums, 110 bpm, uplifting, no vocals",
+  "gain_db": -15,
+  "duck_db": -9
+ },
+ "cut": {
+  "on": "phrase",
+  "lead": 0.2,
+  "sfx": {
+   "type": "swoosh",
+   "gain_db": -20,
+   "dur": 0.3,
+   "lead": 0.15
+  }
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "scenes": [
+  {
+   "id": "hook",
+   "say": [
+    {
+     "text": "חלמת משהו מוזר הלילה?"
+    }
+   ],
+   "cues": {
+    "weird": "word:מוזר"
+   },
+   "sfx": [
+    {
+     "at": "weird",
+     "type": "pop",
+     "gain_db": -15
+    }
+   ],
+   "cut_sfx": false
+  },
+  {
+   "id": "how",
+   "say": [
+    {
+     "text": "כתוב אותו במשפט אחד,"
+    },
+    {
+     "text": "והבינה המלאכותית מפרשת אותו בשבילך.",
+     "pause": 0.2
+    }
+   ],
+   "cues": {
+    "ai": "word:המלאכותית"
+   },
+   "sfx": [
+    {
+     "at": "ai",
+     "eleven": "soft magical shimmer, rising sparkle",
+     "dur": 1.2,
+     "gain_db": -18
+    }
+   ]
+  },
+  {
+   "id": "proof",
+   "say": [
+    {
+     "text": "סמלים, רגשות, ומה זה אומר עלייך."
+    }
+   ]
+  },
+  {
+   "id": "close",
+   "say": [
+    {
+     "text": "דרימולייזר.",
+     "speak": "דְּרִימוֹלַייזֶר.",
+     "pause": 0.4
+    },
+    {
+     "text": "נסו בחינם.",
+     "closed": true
+    }
+   ],
+   "cues": {
+    "name": "word:דרימולייזר."
+   },
+   "sfx": [
+    {
+     "at": "name",
+     "type": "impact",
+     "gain_db": -16
+    }
+   ],
+   "hold": 1.0
+  }
+ ]
+}

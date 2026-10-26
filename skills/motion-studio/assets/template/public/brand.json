@@ -1,0 +1,17 @@
+{
+ "name": "Motion Studio",
+ "lang": "en",
+ "colors": {
+  "bg": "#F4F1EA",
+  "ink": "#16181D",
+  "accent": "#DB4321",
+  "muted": "#6B6F78",
+  "line": "#DCD7CC",
+  "second": "#2F5BFF",
+  "third": "#F5BE1E",
+  "fourth": "#1FA971"
+ },
+ "fonts": {"display": "Archivo", "body": "Archivo", "mono": "JetBrains Mono"},
+ "logo": null,
+ "source": "demo direction A (primitive system)"
+}

@@ -1,0 +1,14 @@
+{
+ "_note": "spoken forms for Hebrew narration (niqqud/phonetic); project lexicon.json overrides",
+ "AI": "אֵיי-אַיי",
+ "UI": "יוּ-אַיי",
+ "API": "אֵיי-פִּי-אַיי",
+ "SaaS": "סָאס",
+ "Claude": "קְלוֹד",
+ "ChatGPT": "צֶ'ט ג'י-פִּי-טִי",
+ "GPU": "ג'י-פִּי-יוּ",
+ "Remotion": "רִימוֹשְׁן",
+ "Instagram": "אִינְסְטָגְרָם",
+ "TikTok": "טִיקְטוֹק",
+ "YouTube": "יוּטְיוּב"
+}

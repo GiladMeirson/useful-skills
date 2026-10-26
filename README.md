@@ -1,24 +1,27 @@
 # useful-skills
 
-Five install-ready [Agent Skills](https://github.com/GiladMeirson/useful-skills) — canvas rendering, 2D physics, terse replies, self-improving sessions, and a transparency footer. Each one is a self-contained `SKILL.md` (plus, for some, reference docs and helper scripts).
+Six install-ready [Agent Skills](https://github.com/GiladMeirson/useful-skills) — canvas rendering, 2D physics, motion-design video, terse replies, self-improving sessions, and a transparency footer. Each one is a self-contained `SKILL.md` (plus, for some, reference docs and helper scripts).
 
 They work in **[Claude Code](https://claude.com/claude-code)** and **[GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)** — same file format, different folder. Drop one in and the agent picks it up next session.
 
 **Full docs, with live demos and a builder that writes your exact install command:** open [`index.html`](index.html) in a browser, or see the published version linked from this repo.
 
-## The five skills
+## The six skills
 
 | Skill | What it does | Claude Code | Copilot |
 |---|---|:--:|:--:|
 | [`canvas-atelier`](skills/canvas-atelier) | Gallery-quality drawing & animation on HTML canvas — landmark rigs with asserted proportions, gradient stops computed from surface normals, organic curves, animation-principle-driven motion, and a diagnostic critique pass. | full | full |
 | [`physics-2d`](skills/physics-2d) | A small, tested 2D rigid-body physics engine — gravity, collisions, bouncing, friction, stacking, joints, raycasting, a deterministic fixed-timestep loop. | full | full |
 | [`caveman`](skills/caveman) | Ultra-compressed responses — drops articles, filler, and hedging while keeping full technical accuracy. Frontmatter claims a measured ~65% token reduction. | full | full |
+| [`motion-studio`](skills/motion-studio) | Motion-design videos made in code with Remotion — reels, explainers, launch films, or raw clips cut into captioned reels — in English or Hebrew (RTL). Voiceover, SFX and music free (edge-tts, synthesized in code) or from ElevenLabs; mixed to -14 LUFS and gated by automatic lint, layout and QA checks. | full | full³ |
 | [`matrix-agents-skill`](skills/matrix-agents-skill) | A meta-skill that watches a coding session for reusable knowledge and proposes turning it into a new skill. | full | adapted¹ |
 | [`skill-report`](.claude/skills/skill-report) | A one-line transparency footer showing which skills/subagents/web tools ran on each turn. | full | best-effort² |
 
 ¹ Detects the host's skills directory and memory file at runtime. Copilot has no `AskUserQuestion` and no hooks, so the interview runs as plain chat and the `/forge` trigger word carries the weight — see [`references/host-agents.md`](skills/matrix-agents-skill/references/host-agents.md).
 
 ² The footer is portable; the *guarantee* is not. Its Stop hook reads the Claude Code transcript, and Copilot has no post-turn interception point — see [`references/github-copilot.md`](.claude/skills/skill-report/references/github-copilot.md).
+
+³ Needs Node, Python (uv) and ffmpeg on the machine, because the agent renders and mixes locally — `scripts/doctor.py` checks. Full guide: [`skills/motion-studio/README.md`](skills/motion-studio/README.md).
 
 ## Install
 
@@ -88,6 +91,22 @@ npx degit GiladMeirson/useful-skills/.claude/skills/skill-report .claude/skills/
 
 It also needs its Stop hook merged into your project's `.claude/settings.json` — copying the folder alone is not enough. See [`index.html`](index.html#skill-report) or [`.claude/settings.json`](.claude/settings.json) for the exact JSON. Under Copilot there is no hook to register; add the standing instruction from [`references/github-copilot.md`](.claude/skills/skill-report/references/github-copilot.md) to `.github/copilot-instructions.md` instead.
 
+## motion-studio in 60 seconds
+
+```sh
+npx degit GiladMeirson/useful-skills/skills/motion-studio .claude/skills/motion-studio   # this project
+# or: npx skills add GiladMeirson/useful-skills --skill motion-studio
+python .claude/skills/motion-studio/scripts/doctor.py                                    # Node, uv, ffmpeg present?
+```
+
+Then ask your agent: *"Make a 20-second 9:16 reel in Hebrew about my app, female voice"* — or *"Cut my raw clip into a captioned reel."* It asks you to pick a voice and an art direction, plays you the audio mix, shows a contact sheet, and delivers an MP4 that passed its QA gate.
+
+- **Free by default:** edge-tts voices (Hebrew: Hila / Avri), music and SFX synthesized in code.
+- **ElevenLabs optional:** put `ELEVENLABS_API_KEY=...` in the project's `.env` or `~/.config/motion-studio/.env`; Hebrew uses `eleven_v4`. Nothing is spent without a `--dry` estimate and your yes.
+- **Learns your taste:** every "that broke" becomes a rule in `~/.config/motion-studio/lessons.md`, shared by every project and kept across updates.
+
+Full usage, ElevenLabs setup and Hebrew notes: [`skills/motion-studio/README.md`](skills/motion-studio/README.md).
+
 ## What's a skill?
 
 A skill is a folder the agent reads before it works: one `SKILL.md` describing when to use it and how, plus optional reference docs and helper scripts it opens only when needed. No build step, no configuration, no runtime.
@@ -97,9 +116,10 @@ The format is shared. Claude Code reads `.claude/skills/`; GitHub Copilot reads 
 ## Repository layout
 
 ```
-skills/                       the four portable, general-purpose skills
+skills/                       the five portable, general-purpose skills
   canvas-atelier/
   physics-2d/
+  motion-studio/
   caveman/
   matrix-agents-skill/
 .claude/skills/skill-report/  a project-scoped skill, dogfooded by this repo itself

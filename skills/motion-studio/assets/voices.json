@@ -1,0 +1,64 @@
+{
+ "question": {
+  "en": "How do you want the voice for this video?",
+  "he": "איזה קול תרצה לסרטון הזה?"
+ },
+ "he": {
+  "edge": [
+   {
+    "id": "he-IL-HilaNeural",
+    "note": "female, warm, default"
+   },
+   {
+    "id": "he-IL-AvriNeural",
+    "note": "male, clear"
+   }
+  ],
+  "kokoro": []
+ },
+ "en": {
+  "edge": [
+   {
+    "id": "en-US-AndrewMultilingualNeural",
+    "note": "male, warm narrator, default"
+   },
+   {
+    "id": "en-US-AvaMultilingualNeural",
+    "note": "female, bright"
+   },
+   {
+    "id": "en-US-BrianMultilingualNeural",
+    "note": "male, casual"
+   },
+   {
+    "id": "en-US-EmmaMultilingualNeural",
+    "note": "female, friendly"
+   },
+   {
+    "id": "en-GB-RyanNeural",
+    "note": "male, British"
+   }
+  ],
+  "kokoro": [
+   {
+    "id": "af_heart",
+    "note": "female, best quality"
+   },
+   {
+    "id": "am_michael",
+    "note": "male"
+   },
+   {
+    "id": "bf_emma",
+    "note": "female, British"
+   }
+  ]
+ },
+ "elevenlabs": {
+  "check_url": "https://api.elevenlabs.io/v2/voices?page_size=10",
+  "key_steps": "Create it at https://elevenlabs.io/app/settings/api-keys with Text to Speech, Voices (Read), Sound Effects, Music and User (Read, for the credits check). Save it yourself as ELEVENLABS_API_KEY=... in the video folder's .env, or once for all projects in ~/.config/motion-studio/.env (Windows: %USERPROFILE%\\.config\\motion-studio\\.env). Never paste it in chat.",
+  "cost_note": "Free plan: 10k credits/month, personal use only, no PCM/music on some tiers (the scripts fall back to MP3). Models: Hebrew -> eleven_v4 (default) / eleven_v4_turbo / eleven_v3; English -> eleven_multilingual_v2 (default) or eleven_v4. eleven_multilingual_v2 and flash_v2_5 do NOT speak Hebrew.",
+  "list_voices": "uv run <skill>/scripts/eleven.py voices --lang he"
+ },
+ "offline_hebrew_note": "No offline Hebrew voice ships with this skill. If you need one, Phonikud TTS (open source, Piper-based) can generate the WAV; then run align.py --lang he for word timings."
+}

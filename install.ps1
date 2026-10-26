@@ -31,7 +31,7 @@
 
 .PARAMETER Skill
   Name of the skill to install (canvas-atelier, physics-2d, caveman,
-  matrix-agents-skill, skill-report). Omit for an interactive picker.
+  matrix-agents-skill, motion-studio, skill-report). Omit for an interactive picker.
 
 .PARAMETER Agent
   claude | copilot | both. Which agent's directory layout to install into.
@@ -107,6 +107,7 @@ $Skills = [ordered]@{
   'physics-2d'          = @{ Src = 'skills/physics-2d';           Desc = 'A small, tested 2D rigid-body physics engine';        Agents = 'both' }
   'caveman'             = @{ Src = 'skills/caveman';              Desc = 'Ultra-compressed responses, ~65% fewer tokens';       Agents = 'both' }
   'matrix-agents-skill' = @{ Src = 'skills/matrix-agents-skill';  Desc = 'Turns session learnings into new project skills';     Agents = 'both' }
+  'motion-studio'       = @{ Src = 'skills/motion-studio';        Desc = 'Motion-design videos in code (Remotion), EN/HE';      Agents = 'both' }
   'skill-report'        = @{ Src = '.claude/skills/skill-report'; Desc = 'Transparency footer: which skills/tools ran';         Agents = 'claude-best' }
 }
 

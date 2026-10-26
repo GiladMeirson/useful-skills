@@ -1,0 +1,20 @@
+[
+ {
+  "file": "music.wav",
+  "role": "music",
+  "title": "generated uplift bed",
+  "author": "musicgen.py",
+  "license": "generated",
+  "attribution": "",
+  "params": {
+   "mood": "uplift",
+   "bpm": 118,
+   "key": "D",
+   "seed": 7,
+   "hits": [
+    7.67,
+    12.77
+   ]
+  }
+ }
+]
